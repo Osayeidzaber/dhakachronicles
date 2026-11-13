@@ -26,6 +26,7 @@ const schema = z.object({
   INSTAGRAM_APP_SECRET: optional,
   INSTAGRAM_REDIRECT_URI: optional,
   INSTAGRAM_EXPECTED_USERNAME: z.string().default("dhakachronicles"),
+  INSTAGRAM_WEBHOOK_VERIFY_TOKEN: optional,
   AI_SEO_API_URL: optional,
   AI_SEO_API_KEY: optional,
   AI_SEO_MODEL: optional,

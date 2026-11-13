@@ -59,13 +59,16 @@ function authed(path: string, auth: GraphAuth): URL {
 
 /** Facebook Login for Business dialog for the Unified Login configuration. */
 export function authorizeUrl(appId: string, configId: string, redirectUri: string, state: string): string {
-  const u = new URL(`https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`);
+  // Mirrors the "Login URL" Meta generates for the configuration (unversioned dialog).
+  const u = new URL("https://www.facebook.com/dialog/oauth");
   u.searchParams.set("client_id", appId);
   u.searchParams.set("config_id", configId);
+  u.searchParams.set("display", "popup");
+  u.searchParams.set("override_default_response_type", "true");
   u.searchParams.set("redirect_uri", redirectUri);
   u.searchParams.set("response_type", "code");
-  u.searchParams.set("override_default_response_type", "true");
   u.searchParams.set("state", state);
+  u.searchParams.set("prompt", "login");
   return u.toString();
 }
 

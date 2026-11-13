@@ -25,7 +25,7 @@ import { authorSchema, categorySchema, tagSchema, type TransitionInput } from "@
 import { deleteMedia, updateMediaMeta } from "@/lib/media/service";
 import { generateSeoSuggestions } from "@/lib/seo/ai";
 import { runSync, syncOptionsSchema, processImport } from "@/lib/instagram/sync";
-import { disconnect as disconnectInstagram } from "@/lib/instagram/oauth";
+import { connectWithToken, disconnect as disconnectInstagram } from "@/lib/instagram/oauth";
 import type { Article, Media } from "@/lib/db/types";
 
 async function attempt<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
@@ -302,6 +302,16 @@ export async function instagramRetryAction(importId: string): Promise<void> {
     await audit(session.userId, "instagram.retry", "instagram_import", importId, { result: res });
     if (res !== "imported") throw new AppError("Import failed again; see the error message.", "VALIDATION");
   }, "Imported");
+}
+
+const tokenSchema = z.string().trim().min(20, "Paste the full access token").max(2000).regex(/^[A-Za-z0-9_\-.|]+$/, "That doesn't look like an access token");
+
+export async function instagramTokenConnectAction(formData: FormData): Promise<void> {
+  await formAttempt("/admin/instagram", async () => {
+    const session = await requireSession("instagram.manage");
+    const res = await connectWithToken(session.userId, tokenSchema.parse(str(formData, "token")));
+    return res;
+  }, "Instagram connected");
 }
 
 export async function instagramDisconnectAction(): Promise<void> {

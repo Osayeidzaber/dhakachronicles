@@ -4,7 +4,7 @@ import { can } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { instagramConfig } from "@/lib/env";
 import { Empty, Flash, PageHeader, fmt } from "@/components/admin/ui";
-import { instagramAutoImportAction, instagramDisconnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
+import { instagramAutoImportAction, instagramDisconnectAction, instagramTokenConnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
 import type { InstagramAccount, InstagramImport, SyncRun } from "@/lib/db/types";
 
 export const metadata = { title: "Instagram" };
@@ -83,6 +83,19 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
               </form>
             )}
           </div>
+        )}
+        {manage && cfg && (
+          <form action={instagramTokenConnectAction} className="mt-4 max-w-xl space-y-2 border-t border-neutral-200 pt-4 text-sm">
+            <label className="block font-medium" htmlFor="ig-token">
+              Or paste an access token
+            </label>
+            <p className="text-xs text-neutral-500">
+              Meta App Dashboard → Instagram API → API setup with Unified login → Generate access tokens. The token is checked against @
+              {cfg.expectedUsername}, stored encrypted, and never shown again.
+            </p>
+            <input id="ig-token" name="token" type="password" autoComplete="off" required className="input font-mono" />
+            <button className="btn">Connect with token</button>
+          </form>
         )}
       </section>
 

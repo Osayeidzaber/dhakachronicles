@@ -50,26 +50,39 @@ export async function completeConnect(userId: string, code: string, state: strin
   }
 
   const tok = await exchangeCode({ appId: cfg.appId, appSecret: cfg.appSecret, redirectUri: cfg.redirectUri, code });
-  const shared = await listAssignedAccounts({ token: tok.access_token, appSecret: cfg.appSecret });
+  return storeToken(userId, tok.access_token, tok.expires_in);
+}
+
+/**
+ * Connect with a system-user token generated in the Meta App Dashboard
+ * (API setup with Unified login → Generate access tokens). Same checks as OAuth.
+ */
+export async function connectWithToken(userId: string, accessToken: string): Promise<{ username: string }> {
+  return storeToken(userId, accessToken.trim(), undefined);
+}
+
+async function storeToken(userId: string, accessToken: string, expiresIn: number | undefined): Promise<{ username: string }> {
+  const cfg = requireConfig();
+  const admin = createAdminClient();
+  const shared = await listAssignedAccounts({ token: accessToken, appSecret: cfg.appSecret });
   const me = shared.find((a) => usernameMatches(a.username, cfg.expectedUsername));
 
   if (!me) {
     const names = shared.map((a) => "@" + a.username).join(", ") || "no Instagram account";
     await audit(userId, "instagram.connect_rejected", "instagram_account", null, { shared: names, expected: cfg.expectedUsername });
-    throw new AppError(`You shared ${names}, but this site only accepts @${cfg.expectedUsername}. Nothing was connected.`, "FORBIDDEN");
+    throw new AppError(`This token gives access to ${names}, but this site only accepts @${cfg.expectedUsername}. Nothing was connected.`, "FORBIDDEN");
   }
-  const igUserId = me.id;
 
   const account = check(
     await admin
       .from("instagram_accounts")
       .upsert(
         {
-          ig_user_id: igUserId,
+          ig_user_id: me.id,
           username: me.username,
           account_type: "business",
           status: "connected",
-          token_expires_at: tok.expires_in ? new Date(Date.now() + tok.expires_in * 1000).toISOString() : null,
+          token_expires_at: expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null,
           token_refreshed_at: new Date().toISOString(),
           last_error: null,
           connected_by: userId,
@@ -83,7 +96,7 @@ export async function completeConnect(userId: string, code: string, state: strin
   check(
     await admin.from("instagram_tokens").upsert({
       account_id: account.id,
-      encrypted_access_token: encryptSecret(tok.access_token, cfg.encryptionKey),
+      encrypted_access_token: encryptSecret(accessToken, cfg.encryptionKey),
       scopes: IG_SCOPES,
       updated_at: new Date().toISOString(),
     }),

@@ -29,7 +29,7 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [~] R2 bucket, token, custom domain, CORS (`docs/R2_SETUP.md`)
 
 ## M5 — Instagram (@dhakachronicles)
-- [x] OAuth with Instagram Login, username check, encrypted tokens, refresh
+- [x] OAuth with Unified Login (config ID), username check, encrypted system-user token
 - [x] Sync: pagination, carousels, duplicate detection, R2 upload, drafts, notifications
 - [x] Historical import options, retries with backoff, history, auto-import via cron
 - [~] Meta app, tester role or App Review (`docs/INSTAGRAM_SETUP.md`)

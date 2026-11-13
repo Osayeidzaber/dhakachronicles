@@ -5,7 +5,7 @@ import { toActionError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
-/** Admin-only: redirects to Instagram Login. */
+/** Admin-only: redirects to the Meta Unified Login dialog. */
 export async function GET(req: Request) {
   try {
     const session = await requireSession("instagram.manage");

@@ -35,3 +35,5 @@
 **D-017 · AI SEO is optional and provider-agnostic.** It works with any OpenAI-compatible endpoint, is never required, and every suggestion is reviewed by an editor.
 
 **D-018 · Tests use PGlite.** The real migrations run against stubbed Supabase `auth` and roles in-process, so RLS tests need no Docker.
+
+**D-019 · Instagram uses the Unified Login setup.** Meta no longer offers "Instagram API with Instagram Login" to new apps. We use the Facebook Login for Business dialog with a configuration ID, store the never-expiring Business Integration System User token encrypted, call `graph.facebook.com` with `appsecret_proof`, and pick the account from `/me/assigned_instagram_accounts` (only `dhakachronicles` is accepted). Supersedes the Instagram Login parts of earlier notes.

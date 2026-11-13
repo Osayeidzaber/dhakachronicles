@@ -85,7 +85,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <p className="mb-2 text-xs text-neutral-500">Secrets are set as server environment variables (never stored in the browser or the database in plain text).</p>
         <ul className="space-y-1">
           <Status ok={!!r2Config()} label="Cloudflare R2 media storage" />
-          <Status ok={!!instagramConfig()} label="Instagram API (Instagram Login)" />
+          <Status ok={!!instagramConfig()} label="Instagram API (Unified Login)" />
           <Status ok={!!env().CRON_SECRET} label="Supabase Cron secret" />
           <Status ok={!!aiSeoConfig()} label="AI SEO suggestions (optional)" />
         </ul>

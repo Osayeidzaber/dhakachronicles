@@ -5,20 +5,20 @@ import { instagramConfig } from "@/lib/env";
 import { AppError, check } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { encryptSecret } from "@/lib/instagram/crypto";
-import { IG_SCOPES, authorizeUrl, exchangeCode, getMe, toLongLivedToken } from "@/lib/instagram/client";
+import { IG_SCOPES, authorizeUrl, exchangeCode, listAssignedAccounts } from "@/lib/instagram/client";
 
 function requireConfig() {
   const cfg = instagramConfig();
   if (!cfg) {
     throw new AppError(
-      "Instagram is not configured. Set INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET, INSTAGRAM_REDIRECT_URI and TOKEN_ENCRYPTION_KEY.",
+      "Instagram is not configured. Set INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET, INSTAGRAM_CONFIG_ID, INSTAGRAM_REDIRECT_URI and TOKEN_ENCRYPTION_KEY.",
       "NOT_CONFIGURED",
     );
   }
   return cfg;
 }
 
-/** Start the Instagram Login flow with a single-use, user-bound CSRF state. */
+/** Start the Unified Login flow with a single-use, user-bound CSRF state. */
 export async function beginConnect(userId: string): Promise<string> {
   const cfg = requireConfig();
   const state = randomBytes(24).toString("base64url");
@@ -27,7 +27,7 @@ export async function beginConnect(userId: string): Promise<string> {
       .from("oauth_states")
       .insert({ state, provider: "instagram", user_id: userId, expires_at: new Date(Date.now() + 10 * 60_000).toISOString() }),
   );
-  return authorizeUrl(cfg.appId, cfg.redirectUri, state);
+  return authorizeUrl(cfg.appId, cfg.configId, cfg.redirectUri, state);
 }
 
 /** Usernames compare case-insensitively and ignore a leading "@". */
@@ -37,8 +37,8 @@ export function usernameMatches(actual: string, expected: string): boolean {
 }
 
 /**
- * Finish the flow: verify state, exchange the code, upgrade to a long-lived token,
- * and only store it if the account is the expected one (@dhakachronicles).
+ * Finish the flow: verify state, exchange the code for a system-user token, and only
+ * store it if the shared Instagram accounts include the expected one (@dhakachronicles).
  */
 export async function completeConnect(userId: string, code: string, state: string): Promise<{ username: string }> {
   const cfg = requireConfig();
@@ -49,18 +49,16 @@ export async function completeConnect(userId: string, code: string, state: strin
     throw new AppError("Invalid or expired authorization state. Please try connecting again.", "VALIDATION");
   }
 
-  const short = await exchangeCode({ appId: cfg.appId, appSecret: cfg.appSecret, redirectUri: cfg.redirectUri, code });
-  const long = await toLongLivedToken(cfg.appSecret, short.access_token);
-  const me = await getMe(long.access_token);
-  const igUserId = me.user_id ?? me.id;
+  const tok = await exchangeCode({ appId: cfg.appId, appSecret: cfg.appSecret, redirectUri: cfg.redirectUri, code });
+  const shared = await listAssignedAccounts({ token: tok.access_token, appSecret: cfg.appSecret });
+  const me = shared.find((a) => usernameMatches(a.username, cfg.expectedUsername));
 
-  if (!usernameMatches(me.username, cfg.expectedUsername)) {
-    await audit(userId, "instagram.connect_rejected", "instagram_account", igUserId, { username: me.username, expected: cfg.expectedUsername });
-    throw new AppError(
-      `You authorized @${me.username}, but this site only accepts @${cfg.expectedUsername}. Nothing was connected.`,
-      "FORBIDDEN",
-    );
+  if (!me) {
+    const names = shared.map((a) => "@" + a.username).join(", ") || "no Instagram account";
+    await audit(userId, "instagram.connect_rejected", "instagram_account", null, { shared: names, expected: cfg.expectedUsername });
+    throw new AppError(`You shared ${names}, but this site only accepts @${cfg.expectedUsername}. Nothing was connected.`, "FORBIDDEN");
   }
+  const igUserId = me.id;
 
   const account = check(
     await admin
@@ -69,9 +67,9 @@ export async function completeConnect(userId: string, code: string, state: strin
         {
           ig_user_id: igUserId,
           username: me.username,
-          account_type: me.account_type ?? null,
+          account_type: "business",
           status: "connected",
-          token_expires_at: new Date(Date.now() + long.expires_in * 1000).toISOString(),
+          token_expires_at: tok.expires_in ? new Date(Date.now() + tok.expires_in * 1000).toISOString() : null,
           token_refreshed_at: new Date().toISOString(),
           last_error: null,
           connected_by: userId,
@@ -85,7 +83,7 @@ export async function completeConnect(userId: string, code: string, state: strin
   check(
     await admin.from("instagram_tokens").upsert({
       account_id: account.id,
-      encrypted_access_token: encryptSecret(long.access_token, cfg.encryptionKey),
+      encrypted_access_token: encryptSecret(tok.access_token, cfg.encryptionKey),
       scopes: IG_SCOPES,
       updated_at: new Date().toISOString(),
     }),

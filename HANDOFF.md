@@ -37,7 +37,7 @@ real, verified articles.
 Next.js **16** App Router (has breaking changes — read `node_modules/next/dist/docs/` before coding; e.g.
 `middleware` is now `proxy.ts`, request APIs/params are async, `revalidateTag(tag, profile)` needs 2 args),
 TypeScript strict, Tailwind v4, Supabase (Postgres, Auth, RLS, Cron), Cloudflare R2 (S3 SDK, presigned URLs),
-Instagram Graph API (official Instagram Login only — no scraping), Tiptap (JSON content), Sharp, Zod v4,
+Instagram Graph API (official Unified Login, graph.facebook.com — no scraping), Tiptap (JSON content), Sharp, Zod v4,
 Vitest, Vercel-compatible.
 
 ---

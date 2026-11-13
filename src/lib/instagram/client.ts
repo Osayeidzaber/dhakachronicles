@@ -1,12 +1,14 @@
+import { createHmac } from "node:crypto";
 import { z } from "zod";
 
 /**
- * Minimal client for the official "Instagram API with Instagram Login"
- * (graph.instagram.com). No scraping, no unofficial endpoints.
+ * Minimal client for the official "Instagram API with Unified Login"
+ * (graph.facebook.com, Business Integration System User token). No scraping,
+ * no unofficial endpoints. Permissions come from the Meta login configuration.
  */
-export const GRAPH_VERSION = "v23.0";
-const GRAPH = "https://graph.instagram.com";
-export const IG_SCOPES = ["instagram_business_basic"];
+export const GRAPH_VERSION = "v27.0";
+const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
+export const IG_SCOPES = ["instagram_basic"];
 
 export class InstagramApiError extends Error {
   constructor(
@@ -38,61 +40,52 @@ async function igFetch<T>(url: string, schema: z.ZodType<T>, init?: RequestInit,
   return schema.parse(body);
 }
 
-export function authorizeUrl(appId: string, redirectUri: string, state: string): string {
-  const u = new URL("https://www.instagram.com/oauth/authorize");
+/** Token + app secret. The proof (HMAC of the token) is sent on every call. */
+export interface GraphAuth {
+  token: string;
+  appSecret: string;
+}
+
+export function appSecretProof(token: string, appSecret: string): string {
+  return createHmac("sha256", appSecret).update(token).digest("hex");
+}
+
+function authed(path: string, auth: GraphAuth): URL {
+  const u = new URL(`${GRAPH}${path}`);
+  u.searchParams.set("access_token", auth.token);
+  u.searchParams.set("appsecret_proof", appSecretProof(auth.token, auth.appSecret));
+  return u;
+}
+
+/** Facebook Login for Business dialog for the Unified Login configuration. */
+export function authorizeUrl(appId: string, configId: string, redirectUri: string, state: string): string {
+  const u = new URL(`https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`);
   u.searchParams.set("client_id", appId);
+  u.searchParams.set("config_id", configId);
   u.searchParams.set("redirect_uri", redirectUri);
   u.searchParams.set("response_type", "code");
-  u.searchParams.set("scope", IG_SCOPES.join(","));
+  u.searchParams.set("override_default_response_type", "true");
   u.searchParams.set("state", state);
   return u.toString();
 }
 
 export async function exchangeCode(p: { appId: string; appSecret: string; redirectUri: string; code: string }, f?: FetchLike) {
-  const body = new URLSearchParams({
-    client_id: p.appId,
-    client_secret: p.appSecret,
-    grant_type: "authorization_code",
-    redirect_uri: p.redirectUri,
-    code: p.code,
-  });
-  return igFetch(
-    "https://api.instagram.com/oauth/access_token",
-    z.object({ access_token: z.string(), user_id: z.union([z.string(), z.number()]).transform(String), permissions: z.unknown().optional() }),
-    { method: "POST", body },
-    f,
-  );
+  const u = new URL(`${GRAPH}/oauth/access_token`);
+  u.searchParams.set("client_id", p.appId);
+  u.searchParams.set("client_secret", p.appSecret);
+  u.searchParams.set("redirect_uri", p.redirectUri);
+  u.searchParams.set("code", p.code);
+  return igFetch(u.toString(), z.object({ access_token: z.string(), expires_in: z.number().optional() }), undefined, f);
 }
 
-const longLived = z.object({ access_token: z.string(), expires_in: z.number() });
+export const assignedAccountSchema = z.object({ id: z.string(), username: z.string() });
 
-export async function toLongLivedToken(appSecret: string, shortToken: string, f?: FetchLike) {
-  const u = new URL(`${GRAPH}/access_token`);
-  u.searchParams.set("grant_type", "ig_exchange_token");
-  u.searchParams.set("client_secret", appSecret);
-  u.searchParams.set("access_token", shortToken);
-  return igFetch(u.toString(), longLived, undefined, f);
-}
-
-export async function refreshLongLivedToken(token: string, f?: FetchLike) {
-  const u = new URL(`${GRAPH}/refresh_access_token`);
-  u.searchParams.set("grant_type", "ig_refresh_token");
-  u.searchParams.set("access_token", token);
-  return igFetch(u.toString(), longLived, undefined, f);
-}
-
-export const meSchema = z.object({
-  user_id: z.union([z.string(), z.number()]).transform(String).optional(),
-  id: z.string(),
-  username: z.string(),
-  account_type: z.string().optional(),
-});
-
-export async function getMe(token: string, f?: FetchLike) {
-  const u = new URL(`${GRAPH}/${GRAPH_VERSION}/me`);
-  u.searchParams.set("fields", "user_id,username,account_type");
-  u.searchParams.set("access_token", token);
-  return igFetch(u.toString(), meSchema, undefined, f);
+/** Instagram accounts the client shared with the app during login. */
+export async function listAssignedAccounts(auth: GraphAuth, f?: FetchLike) {
+  const u = authed("/me/assigned_instagram_accounts", auth);
+  u.searchParams.set("fields", "id,username");
+  const res = await igFetch(u.toString(), z.object({ data: z.array(assignedAccountSchema) }), undefined, f);
+  return res.data;
 }
 
 const childSchema = z.object({
@@ -123,14 +116,18 @@ export const MEDIA_FIELDS =
   "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,children{id,media_type,media_url,thumbnail_url}";
 
 /** Fetch one page of the account's media (newest first). */
-export async function listMedia(token: string, opts: { after?: string; limit?: number; since?: Date; until?: Date } = {}, f?: FetchLike) {
-  const u = new URL(`${GRAPH}/${GRAPH_VERSION}/me/media`);
+export async function listMedia(
+  auth: GraphAuth,
+  igUserId: string,
+  opts: { after?: string; limit?: number; since?: Date; until?: Date } = {},
+  f?: FetchLike,
+) {
+  const u = authed(`/${encodeURIComponent(igUserId)}/media`, auth);
   u.searchParams.set("fields", MEDIA_FIELDS);
   u.searchParams.set("limit", String(Math.min(opts.limit ?? 25, 50)));
   if (opts.after) u.searchParams.set("after", opts.after);
   if (opts.since) u.searchParams.set("since", String(Math.floor(opts.since.getTime() / 1000)));
   if (opts.until) u.searchParams.set("until", String(Math.floor(opts.until.getTime() / 1000)));
-  u.searchParams.set("access_token", token);
   const page = await igFetch(u.toString(), mediaPage, undefined, f);
   return { items: page.data, after: page.paging?.next ? page.paging.cursors?.after : undefined };
 }

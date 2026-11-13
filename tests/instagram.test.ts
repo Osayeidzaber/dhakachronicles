@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { decryptSecret, encryptSecret } from "@/lib/instagram/crypto";
-import { authorizeUrl, imageSources, isAllowedMediaHost, listMedia, type IgMedia } from "@/lib/instagram/client";
+import { appSecretProof, authorizeUrl, imageSources, isAllowedMediaHost, listMedia, type IgMedia } from "@/lib/instagram/client";
 import { detectLanguage, draftContent, draftSlug, draftTitle } from "@/lib/instagram/draft";
 import { nextRetryAt, partitionNew } from "@/lib/instagram/sync";
 import { usernameMatches } from "@/lib/instagram/oauth";
@@ -85,10 +85,12 @@ describe("account checks and tokens", () => {
     expect(() => decryptSecret(enc, randomBytes(32).toString("base64"))).toThrow();
   });
 
-  it("builds the official Instagram Login authorize URL with state", () => {
-    const u = new URL(authorizeUrl("123", "https://site.test/api/instagram/callback", "st"));
-    expect(u.host).toBe("www.instagram.com");
-    expect(u.searchParams.get("scope")).toBe("instagram_business_basic");
+  it("builds the Unified Login dialog URL with the configuration and state", () => {
+    const u = new URL(authorizeUrl("123", "cfg9", "https://site.test/api/instagram/callback", "st"));
+    expect(u.host).toBe("www.facebook.com");
+    expect(u.searchParams.get("config_id")).toBe("cfg9");
+    expect(u.searchParams.get("response_type")).toBe("code");
+    expect(u.searchParams.get("scope")).toBeNull();
     expect(u.searchParams.get("state")).toBe("st");
   });
 
@@ -105,10 +107,11 @@ describe("account checks and tokens", () => {
       calls.push(url);
       return new Response(JSON.stringify({ data: [post("1")], paging: { next: "https://next", cursors: { after: "CUR" } } }), { status: 200 });
     }) as unknown as typeof fetch;
-    const page = await listMedia("tok", { limit: 10, after: "PREV" }, fake);
+    const page = await listMedia({ token: "tok", appSecret: "sec" }, "1784", { limit: 10, after: "PREV" }, fake);
     expect(page.items[0].id).toBe("1");
     expect(page.after).toBe("CUR");
     expect(calls[0]).toContain("after=PREV");
-    expect(calls[0]).toContain("graph.instagram.com");
+    expect(calls[0]).toContain("graph.facebook.com/v27.0/1784/media");
+    expect(calls[0]).toContain("appsecret_proof=" + appSecretProof("tok", "sec"));
   });
 });

@@ -38,7 +38,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
         <div className="mb-6 rounded bg-amber-50 p-4 text-sm text-amber-900">
           <p className="font-semibold">Instagram is not configured.</p>
           <p>
-            Set <code>INSTAGRAM_APP_ID</code>, <code>INSTAGRAM_APP_SECRET</code>, <code>INSTAGRAM_REDIRECT_URI</code> and <code>TOKEN_ENCRYPTION_KEY</code>, then follow
+            Set <code>INSTAGRAM_APP_ID</code>, <code>INSTAGRAM_APP_SECRET</code>, <code>INSTAGRAM_CONFIG_ID</code>, <code>INSTAGRAM_REDIRECT_URI</code> and <code>TOKEN_ENCRYPTION_KEY</code>, then follow
             <code> docs/INSTAGRAM_SETUP.md</code>. Nothing is imported until the official Meta app is set up and <b>@dhakachronicles</b> is authorized.
           </p>
         </div>

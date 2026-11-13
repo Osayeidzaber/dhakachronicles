@@ -7,14 +7,13 @@ import { log } from "@/lib/logger";
 import { ingestImage } from "@/lib/media/service";
 import { buildFolder } from "@/lib/media/validation";
 import { docToText } from "@/lib/content/tiptap";
-import { decryptSecret, encryptSecret } from "@/lib/instagram/crypto";
+import { decryptSecret } from "@/lib/instagram/crypto";
 import {
   InstagramApiError,
   igMediaSchema,
   imageSources,
   isAllowedMediaHost,
   listMedia,
-  refreshLongLivedToken,
   type IgMedia,
 } from "@/lib/instagram/client";
 import { detectLanguage, draftContent, draftSlug, draftTitle } from "@/lib/instagram/draft";
@@ -56,34 +55,24 @@ export function partitionNew<T extends { id: string }>(items: T[], knownIds: Ite
 
 type Admin = ReturnType<typeof createAdminClient>;
 
-export async function getConnectedAccount(admin: Admin): Promise<{ account: InstagramAccount; token: string } | null> {
+export async function getConnectedAccount(admin: Admin): Promise<{ account: InstagramAccount; token: string; appSecret: string } | null> {
   const cfg = instagramConfig();
   if (!cfg) return null;
   const { data: account } = await admin.from("instagram_accounts").select("*").order("created_at").limit(1).maybeSingle();
   if (!account) return null;
   const { data: tok } = await admin.from("instagram_tokens").select("encrypted_access_token").eq("account_id", account.id).maybeSingle();
   if (!tok) return null;
-  return { account: account as InstagramAccount, token: decryptSecret(tok.encrypted_access_token, cfg.encryptionKey) };
+  return { account: account as InstagramAccount, token: decryptSecret(tok.encrypted_access_token, cfg.encryptionKey), appSecret: cfg.appSecret };
 }
 
-/** Refresh the long-lived token when it expires within 10 days (tokens must be ≥24h old). */
-export async function refreshTokenIfNeeded(admin: Admin, account: InstagramAccount, token: string): Promise<string> {
-  const cfg = instagramConfig();
-  if (!cfg || !account.token_expires_at) return token;
-  const expiresIn = new Date(account.token_expires_at).getTime() - Date.now();
-  if (expiresIn > 10 * 86400_000) return token;
-  if (expiresIn <= 0) {
-    await admin.from("instagram_accounts").update({ status: "token_expired", last_error: "Access token expired. Reconnect the account." }).eq("id", account.id);
-    throw new AppError("Instagram token expired. Reconnect the account.", "UNAUTHORIZED");
-  }
-  const fresh = await refreshLongLivedToken(token);
-  await admin.from("instagram_tokens").update({ encrypted_access_token: encryptSecret(fresh.access_token, cfg.encryptionKey), updated_at: new Date().toISOString() }).eq("account_id", account.id);
-  await admin
-    .from("instagram_accounts")
-    .update({ token_expires_at: new Date(Date.now() + fresh.expires_in * 1000).toISOString(), token_refreshed_at: new Date().toISOString() })
-    .eq("id", account.id);
-  log.info("instagram.token_refreshed", { accountId: account.id });
-  return fresh.access_token;
+/**
+ * System-user tokens normally never expire (no refresh API needed). If the
+ * configuration set an expiry and it has passed, mark the account for reconnect.
+ */
+export async function ensureTokenValid(admin: Admin, account: InstagramAccount): Promise<void> {
+  if (!account.token_expires_at || new Date(account.token_expires_at).getTime() > Date.now()) return;
+  await admin.from("instagram_accounts").update({ status: "token_expired", last_error: "Access token expired. Reconnect the account." }).eq("id", account.id);
+  throw new AppError("Instagram token expired. Reconnect the account.", "UNAUTHORIZED");
 }
 
 async function downloadImage(url: string): Promise<Buffer> {
@@ -192,13 +181,14 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
   const result: SyncResult = { runId: run.id, fetched: 0, imported: 0, skipped: 0, failed: 0 };
 
   try {
-    const token = await refreshTokenIfNeeded(admin, account, conn.token);
+    await ensureTokenValid(admin, account);
+    const auth = { token: conn.token, appSecret: conn.appSecret };
     let after: string | undefined;
     const since = options.since ? new Date(options.since) : undefined;
     const until = options.until ? new Date(`${options.until}T23:59:59Z`) : undefined;
 
     for (let page = 0; page < options.maxPages && result.fetched < options.maxPosts; page++) {
-      const { items, after: next } = await listMedia(token, { after, limit: options.pageSize, since, until });
+      const { items, after: next } = await listMedia(auth, account.ig_user_id, { after, limit: options.pageSize, since, until });
       const batch = items.slice(0, options.maxPosts - result.fetched);
       result.fetched += batch.length;
 

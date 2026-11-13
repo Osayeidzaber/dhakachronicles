@@ -24,6 +24,7 @@ const schema = z.object({
   R2_PUBLIC_BASE_URL: optional,
   INSTAGRAM_APP_ID: optional,
   INSTAGRAM_APP_SECRET: optional,
+  INSTAGRAM_CONFIG_ID: optional,
   INSTAGRAM_REDIRECT_URI: optional,
   INSTAGRAM_EXPECTED_USERNAME: z.string().default("dhakachronicles"),
   INSTAGRAM_WEBHOOK_VERIFY_TOKEN: optional,
@@ -65,12 +66,13 @@ export function r2Config() {
 
 export function instagramConfig() {
   const e = env();
-  if (!e.INSTAGRAM_APP_ID || !e.INSTAGRAM_APP_SECRET || !e.INSTAGRAM_REDIRECT_URI || !e.TOKEN_ENCRYPTION_KEY) {
+  if (!e.INSTAGRAM_APP_ID || !e.INSTAGRAM_APP_SECRET || !e.INSTAGRAM_CONFIG_ID || !e.INSTAGRAM_REDIRECT_URI || !e.TOKEN_ENCRYPTION_KEY) {
     return null;
   }
   return {
     appId: e.INSTAGRAM_APP_ID,
     appSecret: e.INSTAGRAM_APP_SECRET,
+    configId: e.INSTAGRAM_CONFIG_ID,
     redirectUri: e.INSTAGRAM_REDIRECT_URI,
     encryptionKey: e.TOKEN_ENCRYPTION_KEY,
     expectedUsername: e.INSTAGRAM_EXPECTED_USERNAME.toLowerCase(),

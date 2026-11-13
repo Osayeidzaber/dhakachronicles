@@ -1,91 +1,252 @@
 @import "tailwindcss";
 
 /*
- * Temporary, intentionally plain styling. The public frontend will be redesigned;
- * keep tokens here so a redesign can swap them in one place.
+ * Dhaka Chronicles: pure black, white as the only accent.
+ * Instrument Serif headlines, Inter UI, Hind Siliguri for Bangla.
  */
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --muted: #6b6b6b;
-  --border: #e5e5e5;
-  --accent: #b91c1c;
+  --background: #000000;
+  --foreground: #ffffff;
+  --muted: #8a8a8a;
+  --subtle: #5c5c5c;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --surface: #070707;
+  --surface-2: #0d0d0d;
+  --surface-3: #141414;
+  --accent: #ffffff;
+  color-scheme: dark;
+
+  /*
+   * The CMS's older screens use Tailwind's neutral scale and bg-white. Inverting the
+   * scale makes every one of them dark without touching their markup.
+   */
+  --color-neutral-50: #0a0a0a;
+  --color-neutral-100: #141414;
+  --color-neutral-200: #1f1f1f;
+  --color-neutral-300: #2e2e2e;
+  --color-neutral-400: #5c5c5c;
+  --color-neutral-500: #8a8a8a;
+  --color-neutral-600: #a3a3a3;
+  --color-neutral-700: #c4c4c4;
+  --color-neutral-800: #e0e0e0;
+  --color-neutral-900: #f5f5f5;
+  --color-neutral-950: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
   --color-border: var(--border);
+  --color-line: var(--border-strong);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-accent: var(--accent);
-  --font-sans: "Noto Sans Bengali", "Hind Siliguri", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--nf-inter), var(--nf-bangla), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--nf-serif), Georgia, serif;
+  --font-bangla: var(--nf-bangla), var(--nf-inter), sans-serif;
+  /* shadcn base tokens */
+  --color-primary: #ffffff;
+  --color-primary-foreground: #000000;
+  --color-secondary: #141414;
+  --color-secondary-foreground: #ffffff;
+  --color-card: #070707;
+  --color-card-foreground: #ffffff;
+  --color-popover: #0a0a0a;
+  --color-popover-foreground: #ffffff;
+  --color-muted-foreground: #8a8a8a;
+  --color-input: rgba(255, 255, 255, 0.14);
+  --color-ring: rgba(255, 255, 255, 0.5);
+  --color-destructive: #ef4444;
+  --color-sidebar: #030303;
+  --color-sidebar-foreground: #ffffff;
+  --color-sidebar-accent: #141414;
+  --color-sidebar-accent-foreground: #ffffff;
+  --color-sidebar-border: rgba(255, 255, 255, 0.06);
+  --color-sidebar-ring: rgba(255, 255, 255, 0.5);
+  --radius: 0.75rem;
 }
 
+html {
+  background: #000;
+}
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+:lang(bn) body,
+[lang="bn"] {
+  font-family: var(--font-bangla);
+}
+::selection {
+  background: #fff;
+  color: #000;
+}
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 3px;
 }
 
 @layer components {
+  .font-display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+  }
+  :lang(bn) .font-display {
+    font-family: var(--font-bangla);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .kicker {
+    @apply text-[11px] font-medium tracking-[0.12em] text-muted uppercase;
+  }
   .input {
-    @apply w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-200;
+    @apply h-11 w-full rounded-xl border border-line bg-[#0a0a0a] px-3 text-sm text-white transition outline-none placeholder:text-subtle focus:border-white/40;
+  }
+  textarea.input,
+  select.input[multiple] {
+    @apply h-auto py-2.5;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-1 rounded border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line bg-transparent px-4 text-sm font-medium whitespace-nowrap text-white transition hover:border-white/40 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-700;
+    @apply border-white bg-white text-black hover:bg-neutral-800 hover:text-black;
+    background: #fff;
+    color: #000;
+  }
+  .btn-primary:hover {
+    background: #e5e5e5;
   }
   .btn-danger {
-    @apply border-red-600 bg-white text-red-700 hover:bg-red-50;
+    @apply border-red-500/40 text-red-300 hover:bg-red-500/10;
   }
   .card {
-    @apply rounded-lg border border-neutral-200 bg-white p-4;
+    @apply rounded-2xl border border-border bg-surface p-5;
   }
   .badge {
-    @apply inline-block rounded px-2 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
   .table {
     @apply w-full text-left text-sm;
   }
   .table th {
-    @apply border-b border-neutral-200 px-2 py-2 font-medium text-neutral-500;
+    @apply border-b border-border px-3 py-3 text-xs font-medium text-muted;
   }
   .table td {
-    @apply border-b border-neutral-100 px-2 py-2 align-top;
+    @apply border-b border-white/5 px-3 py-3 align-top;
+  }
+  .table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .seg {
+    @apply inline-flex gap-1 rounded-full border border-border bg-surface-2 p-1;
+  }
+  .seg > * {
+    @apply rounded-full px-3.5 py-1.5 text-[13px] text-neutral-600 transition;
+  }
+  .seg > [aria-current="true"],
+  .seg > [aria-selected="true"],
+  .seg > [aria-pressed="true"] {
+    @apply bg-white text-black;
+    background: #fff;
+    color: #000;
+  }
+  .hairline-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .reveal {
+    animation: reveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff;
+  animation: live-pulse 1.6s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .live-dot {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
   }
 }
 
 /* Article body typography (public) */
 .prose-article {
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   line-height: 1.8;
+  color: #e5e5e5;
 }
 .prose-article > * + * {
-  margin-top: 1.1em;
+  margin-top: 1.2em;
 }
 .prose-article h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.3;
+  font-family: var(--font-serif);
+  font-size: 2.1rem;
+  font-weight: 400;
+  line-height: 1.15;
   margin-top: 1.6em;
+  color: #fff;
 }
 .prose-article h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.3rem;
+  font-weight: 600;
   margin-top: 1.4em;
+  color: #fff;
+}
+:lang(bn) .prose-article h2 {
+  font-family: var(--font-bangla);
+  font-weight: 600;
 }
 .prose-article a {
-  color: var(--accent);
+  color: #fff;
   text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
 }
 .prose-article blockquote {
-  border-left: 2px solid var(--border);
-  padding-left: 1rem;
-  color: var(--muted);
+  font-family: var(--font-serif);
   font-style: italic;
+  font-size: 1.9rem;
+  line-height: 1.25;
+  color: #fff;
+  margin: 2rem 0;
 }
 .prose-article ul {
   list-style: disc;
@@ -98,28 +259,36 @@ body {
 .prose-article hr {
   border-color: var(--border);
 }
+.prose-article img {
+  border-radius: 16px;
+}
 .prose-article figcaption {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--muted);
-  margin-top: 0.4rem;
+  margin-top: 0.6rem;
 }
 
 /* Tiptap editor surface (admin) */
 .tiptap-editor .ProseMirror {
-  min-height: 420px;
+  min-height: 460px;
   outline: none;
-  padding: 1rem;
+  padding: 1.25rem;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #e5e5e5;
 }
 .tiptap-editor .ProseMirror > * + * {
-  margin-top: 0.75em;
+  margin-top: 0.8em;
 }
 .tiptap-editor .ProseMirror h2 {
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  color: #fff;
 }
 .tiptap-editor .ProseMirror h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
 }
 .tiptap-editor .ProseMirror ul {
   list-style: disc;
@@ -130,21 +299,29 @@ body {
   padding-left: 1.5rem;
 }
 .tiptap-editor .ProseMirror blockquote {
-  border-left: 3px solid #d4d4d4;
-  padding-left: 1rem;
-  color: #525252;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.5rem;
+  color: #fff;
 }
 .tiptap-editor .ProseMirror a {
-  color: #1d4ed8;
   text-decoration: underline;
 }
 .tiptap-editor .ProseMirror img {
   max-width: 100%;
   height: auto;
+  border-radius: 12px;
 }
 .tiptap-editor .ProseMirror img.ProseMirror-selectednode {
-  outline: 3px solid #3b82f6;
+  outline: 2px solid #fff;
 }
 .tiptap-editor .ProseMirror hr {
-  border-color: #d4d4d4;
+  border-color: var(--border);
+}
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--subtle);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }

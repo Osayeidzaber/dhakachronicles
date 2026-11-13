@@ -4,18 +4,22 @@ import type { ArticleStatus } from "@/lib/db/types";
 export function Flash({ ok, error }: { ok?: string; error?: string }) {
   if (!ok && !error) return null;
   return (
-    <p role={error ? "alert" : "status"} className={`mb-4 rounded p-3 text-sm ${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>
+    <p
+      role={error ? "alert" : "status"}
+      className={`reveal my-4 flex items-center gap-2.5 rounded-xl border p-3 text-sm ${error ? "border-red-500/30 bg-red-500/5 text-red-200" : "border-white/15 bg-white/[0.03] text-white"}`}
+    >
+      <span className={`h-2 w-2 shrink-0 rounded-full ${error ? "bg-red-400" : "bg-white"}`} />
       {error ?? ok}
     </p>
   );
 }
 
 const STATUS_STYLE: Record<ArticleStatus, string> = {
-  draft: "bg-neutral-100 text-neutral-700",
-  pending_review: "bg-amber-100 text-amber-800",
-  scheduled: "bg-blue-100 text-blue-800",
-  published: "bg-green-100 text-green-800",
-  archived: "bg-neutral-200 text-neutral-500",
+  draft: "border border-white/20 text-neutral-700",
+  pending_review: "border border-dashed border-white/40 text-white",
+  scheduled: "bg-[#262626] text-white",
+  published: "bg-white text-black",
+  archived: "border border-white/10 text-subtle",
 };
 
 export function StatusBadge({ status }: { status: ArticleStatus }) {
@@ -24,8 +28,8 @@ export function StatusBadge({ status }: { status: ArticleStatus }) {
 
 export function PageHeader({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-2xl font-semibold">{title}</h1>
+    <div className="reveal mb-7 flex flex-wrap items-end justify-between gap-3">
+      <h1 className="font-display text-[clamp(2.2rem,4vw,3.2rem)] leading-none">{title}</h1>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -45,10 +49,21 @@ export function Pager({ page, totalPages, href }: { page: number; totalPages: nu
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="rounded border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-500">{children}</p>;
+  return <p className="rounded-2xl border border-dashed border-line p-10 text-center text-sm text-neutral-500">{children}</p>;
 }
 
 export function fmt(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Dhaka" }).format(new Date(iso));
+}
+
+/** "5 min ago" style relative time for recent events, date for older ones. */
+export function timeAgo(iso: string | null | undefined, now = Date.now()): string {
+  if (!iso) return "—";
+  const s = Math.round((now - new Date(iso).getTime()) / 1000);
+  if (s < 45) return "just now";
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  if (s < 7 * 86400) return `${Math.round(s / 86400)} d ago`;
+  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Dhaka" }).format(new Date(iso));
 }

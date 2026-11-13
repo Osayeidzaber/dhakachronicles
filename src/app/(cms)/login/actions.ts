@@ -38,7 +38,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
   } catch (err) {
     return { error: toActionError(err).error };
   }
-  redirect(safeNext(parsed.data.next));
+  redirect(`/welcome?next=${encodeURIComponent(safeNext(parsed.data.next))}`);
 }
 
 export async function signOut(): Promise<void> {

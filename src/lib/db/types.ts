@@ -18,6 +18,7 @@ export interface Profile {
   avatar_url: string | null;
   role: AppRole | null;
   is_active: boolean;
+  last_seen_at?: string | null;
   created_at: string;
   updated_at: string;
 }

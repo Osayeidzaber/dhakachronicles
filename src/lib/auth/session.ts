@@ -43,3 +43,11 @@ export async function requireSession(permission?: Permission): Promise<StaffSess
   }
   return session;
 }
+
+/** Record "last active" for the team page, at most every 5 minutes. */
+export async function touchLastSeen(session: StaffSession): Promise<void> {
+  const seen = session.profile.last_seen_at ? new Date(session.profile.last_seen_at).getTime() : 0;
+  if (Date.now() - seen < 5 * 60_000) return;
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  await createAdminClient().from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("id", session.userId);
+}

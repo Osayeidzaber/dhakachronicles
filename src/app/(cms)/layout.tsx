@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../globals.css";
+import { fontVars } from "../fonts";
 
 // Staff pages are always per-request (auth cookies); never prerendered or cached.
 export const dynamic = "force-dynamic";
@@ -12,8 +13,8 @@ export const metadata: Metadata = {
 /** Root layout for staff-only pages (admin dashboard and login). */
 export default function CmsRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-neutral-50 text-neutral-900">{children}</body>
+    <html lang="en" className={fontVars}>
+      <body className="min-h-screen bg-black text-white">{children}</body>
     </html>
   );
 }

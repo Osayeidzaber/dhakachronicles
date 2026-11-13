@@ -1,5 +1,7 @@
 import { requirePageSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { formatBytes } from "@/lib/analytics";
 import { r2Config } from "@/lib/env";
 import { Empty, Flash, PageHeader, Pager, fmt } from "@/components/admin/ui";
 import { deleteMediaAction, updateMediaAction } from "../actions";
@@ -21,8 +23,9 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Media library" />
+      <PageHeader title="Media" />
       <Flash ok={sp.ok} error={sp.error} />
+      <StorageCard />
       {!r2Config() && (
         <p className="mb-4 rounded bg-amber-50 p-3 text-sm text-amber-800">
           Cloudflare R2 is not configured. Set the R2_* variables (see SETUP docs) to enable uploads.
@@ -63,5 +66,35 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
       )}
       <Pager page={page} totalPages={Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE))} href={(p) => `/admin/media?page=${p}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}`} />
     </>
+  );
+}
+
+const LIMIT = 10 * 1024 ** 3;
+
+/** Total R2 usage: originals plus generated AVIF/WebP sizes. */
+async function StorageCard() {
+  const { data } = await createAdminClient().from("media").select("file_size, variants, source");
+  const rows = (data ?? []) as { file_size: number; variants: { size?: number; format?: string }[] | null; source: string }[];
+  const originals = rows.reduce((s, r) => s + (r.file_size ?? 0), 0);
+  const variants = rows.reduce((s, r) => s + (r.variants ?? []).reduce((v, x) => v + (x.size ?? 0), 0), 0);
+  const total = originals + variants;
+  return (
+    <section className="card mb-6 grid gap-5 md:grid-cols-[1.2fr_1fr]">
+      <div>
+        <h2 className="text-[13px] text-muted">Storage used</h2>
+        <p className="mt-2 text-4xl font-medium tracking-tight tabular-nums">
+          {formatBytes(total)} <span className="text-base font-normal text-muted">of 10 GB free tier</span>
+        </p>
+        <div className="mt-4 h-1.5 rounded bg-white/10">
+          <div className="h-1.5 rounded bg-white" style={{ width: `${Math.min(100, (total / LIMIT) * 100).toFixed(1)}%` }} />
+        </div>
+      </div>
+      <dl className="grid grid-cols-2 gap-3 text-xs text-muted">
+        <div><dt>Files</dt><dd className="text-lg text-white tabular-nums">{rows.length.toLocaleString()}</dd></div>
+        <div><dt>From Instagram</dt><dd className="text-lg text-white tabular-nums">{rows.filter((r) => r.source === "instagram").length}</dd></div>
+        <div><dt>Originals</dt><dd className="text-lg text-white tabular-nums">{formatBytes(originals)}</dd></div>
+        <div><dt>Optimized copies</dt><dd className="text-lg text-white tabular-nums">{formatBytes(variants)}</dd></div>
+      </dl>
+    </section>
   );
 }

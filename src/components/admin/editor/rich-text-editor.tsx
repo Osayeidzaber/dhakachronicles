@@ -10,7 +10,7 @@ import type { TiptapDoc } from "@/lib/db/types";
 
 function Btn({ on, active, children, label }: { on: () => void; active?: boolean; children: React.ReactNode; label: string }) {
   return (
-    <button type="button" onClick={on} aria-label={label} title={label} className={`rounded px-2 py-1 text-sm ${active ? "bg-neutral-900 text-white" : "hover:bg-neutral-100"}`}>
+    <button type="button" onClick={on} aria-label={label} title={label} className={`rounded px-2 py-1 text-sm ${active ? "bg-white text-black" : "hover:bg-neutral-100"}`}>
       {children}
     </button>
   );
@@ -99,7 +99,7 @@ export function RichTextEditor({ value, onChange, lang, articleId }: { value: Ti
 
   if (!editor) return <div className="card min-h-[420px] text-sm text-neutral-500">Loading editor…</div>;
   return (
-    <div className="tiptap-editor rounded-lg border border-neutral-300 bg-white">
+    <div className="tiptap-editor rounded-lg border border-line bg-surface">
       <Toolbar editor={editor} onImage={() => setPicker(true)} />
       <EditorContent editor={editor} />
       <MediaPicker

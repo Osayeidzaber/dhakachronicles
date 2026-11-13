@@ -16,7 +16,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ id: st
   if (!data) notFound();
   const a = data as Article & { featured: { public_url: string } | null };
   return (
-    <article className="mx-auto max-w-3xl bg-white p-6" lang={a.language}>
+    <article className="mx-auto max-w-3xl bg-black p-6" lang={a.language}>
       <p className="mb-4 rounded bg-amber-50 p-2 text-sm text-amber-800">Preview · status: {a.status}</p>
       <h1 className="text-3xl font-bold">{a.title}</h1>
       {a.subtitle && <p className="mt-2 text-lg text-neutral-600">{a.subtitle}</p>}

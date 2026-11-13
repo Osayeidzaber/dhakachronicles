@@ -175,4 +175,39 @@ describe("media and instagram functions", () => {
     for (let i = 0; i < 4; i++) hits.push((await db.query<{ ok: boolean }>("select rate_limit_hit('t', 3, 60) as ok")).rows[0].ok);
     expect(hits).toEqual([true, true, true, false]);
   });
+
+  it("records live readers via heartbeat and only shows them to staff", async () => {
+    await as("anon", null, () => db.query("select reader_heartbeat('sess-aaaaaaaaaaaaaaaa', null, 'bn')"));
+    await as("anon", null, () => db.query("select reader_heartbeat('sess-bbbbbbbbbbbbbbbb', null, 'xx')"));
+    await expect(db.query("insert into reader_presence (session_id) values ('short')")).rejects.toThrow();
+    const anon = await as("anon", null, () => db.query<{ r: unknown }>("select live_readers() as r"));
+    expect(anon.rows[0].r).toBeNull();
+    const anonRows = await as("anon", null, () => db.query("select * from reader_presence"));
+    expect(anonRows.rows).toHaveLength(0);
+    const staff = await as("authenticated", WRITER, () => db.query<{ r: { total: number } }>("select live_readers() as r"));
+    expect(staff.rows[0].r.total).toBe(2);
+  });
+
+  it("counts hourly views by language only for published articles", async () => {
+    const { rows } = await db.query<{ id: string }>("select id from articles where status='published' limit 1");
+    await db.query(`select record_article_view('${rows[0].id}')`);
+    const h = await db.query<{ n: number }>("select coalesce(sum(views),0)::int n from site_hourly_views");
+    expect(h.rows[0].n).toBeGreaterThan(0);
+    await expect(db.exec("insert into site_hourly_views (hour, language) values (now(), 'fr')")).rejects.toThrow();
+  });
+
+  it("restricts Instagram import mode to draft or publish", async () => {
+    await db.exec("insert into instagram_accounts (ig_user_id, username) values ('ig-mode', 'x')");
+    const r = await db.query<{ m: string }>("select import_mode m from instagram_accounts where ig_user_id='ig-mode'");
+    expect(r.rows[0].m).toBe("draft");
+    await expect(db.exec("update instagram_accounts set import_mode='auto' where ig_user_id='ig-mode'")).rejects.toThrow();
+  });
+
+  it("lets each account read only its own activity unless editor", async () => {
+    await db.exec(`insert into audit_logs (user_id, action, target_type) values ('${WRITER}','x.own','t'), ('${ADMIN}','x.other','t')`);
+    const w = await as("authenticated", WRITER, () => db.query<{ action: string }>("select action from audit_logs where action like 'x.%'"));
+    expect(w.rows.map((r) => r.action)).toEqual(["x.own"]);
+    const e = await as("authenticated", EDITOR, () => db.query("select action from audit_logs where action like 'x.%'"));
+    expect(e.rows).toHaveLength(2);
+  });
 });

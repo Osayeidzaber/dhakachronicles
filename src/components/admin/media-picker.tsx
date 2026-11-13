@@ -53,7 +53,7 @@ export function MediaPicker({ open, onClose, onPick, articleId }: { open: boolea
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true" aria-label="Media library">
-      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-lg bg-white">
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-2xl border border-line bg-[#0a0a0a]">
         <div className="flex flex-wrap items-center gap-2 border-b p-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load(q)} placeholder="Search filenames…" className="input max-w-xs" />
           <button type="button" className="btn" onClick={() => load(q)}>Search</button>

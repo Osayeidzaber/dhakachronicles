@@ -1,3 +1,5 @@
+import { HighlightButton } from "@/components/admin/highlight-button";
+import { readHighlight } from "@/lib/highlight";
 import Link from "next/link";
 import { requirePageSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
@@ -57,6 +59,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
   };
   const canPublish = can(session.profile.role, "article.publish");
 
+  const pinned = canPublish ? ((await readHighlight())?.article_id ?? null) : null;
   return (
     <>
       <PageHeader title="Articles">
@@ -112,7 +115,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
             </select>
             <button className="btn">Apply to selected</button>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+          <div className="overflow-x-auto rounded-lg border border-border bg-surface">
             <table className="table">
               <thead>
                 <tr>
@@ -123,6 +126,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                   <th>Category</th>
                   <th>Writer</th>
                   <th>Updated</th>
+                  {canPublish && <th className="w-12"><span className="sr-only">Highlight</span></th>}
                 </tr>
               </thead>
               <tbody>
@@ -135,14 +139,15 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                       <Link href={`/admin/articles/${a.id}`} className="font-medium hover:underline" lang={a.language}>
                         {a.title}
                       </Link>
-                      {a.source_type === "instagram" && <span className="badge ml-2 bg-pink-100 text-pink-800">Instagram</span>}
-                      {a.status === "scheduled" && <div className="text-xs text-blue-700">Scheduled {fmt(a.scheduled_at)}</div>}
+                      {a.source_type === "instagram" && <span className="badge ml-2 border border-white/20 text-neutral-700">Instagram</span>}
+                      {a.status === "scheduled" && <div className="text-xs text-muted">Scheduled {fmt(a.scheduled_at)}</div>}
                     </td>
                     <td className="uppercase">{a.language}</td>
                     <td><StatusBadge status={a.status} /></td>
                     <td>{a.category?.name_en ?? "—"}</td>
                     <td>{a.creator?.full_name || "—"}</td>
                     <td className="whitespace-nowrap">{fmt(a.updated_at)}</td>
+                    {canPublish && <td>{a.status === "published" && <HighlightButton articleId={a.id} active={pinned === a.id} compact />}</td>}
                   </tr>
                 ))}
               </tbody>

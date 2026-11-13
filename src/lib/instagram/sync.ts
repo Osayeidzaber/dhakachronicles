@@ -17,7 +17,11 @@ import {
   type IgMedia,
 } from "@/lib/instagram/client";
 import { detectLanguage, draftContent, draftSlug, draftTitle } from "@/lib/instagram/draft";
-import type { InstagramAccount } from "@/lib/db/types";
+import type { InstagramAccount, Lang } from "@/lib/db/types";
+import { notifyDiscord } from "@/lib/discord";
+import { revalidateArticle } from "@/lib/articles/revalidate";
+import { articlePath } from "@/lib/seo/defaults";
+import { siteUrl } from "@/lib/env";
 
 export const syncOptionsSchema = z.object({
   maxPosts: z.coerce.number().int().min(1).max(1000).default(50),
@@ -86,6 +90,43 @@ async function downloadImage(url: string): Promise<Buffer> {
   return buf;
 }
 
+/**
+ * After the draft exists: publish it when the account is in "publish" mode,
+ * then tell Discord either way.
+ */
+async function finishImport(admin: Admin, articleId: string, accountId: string | null, permalink: string | null) {
+  let mode = "draft";
+  if (accountId) {
+    const { data } = await admin.from("instagram_accounts").select("import_mode").eq("id", accountId).maybeSingle();
+    mode = (data?.import_mode as string | undefined) ?? "draft";
+  }
+  const { data: art } = await admin
+    .from("articles")
+    .update(mode === "publish" ? { status: "published" } : {})
+    .eq("id", articleId)
+    .select("id, language, slug, title, status, featured_image:media!articles_featured_image_id_fkey(public_url)")
+    .single();
+  if (!art) return;
+  const image = (art.featured_image as { public_url?: string } | null)?.public_url ?? null;
+  if (art.status === "published") {
+    revalidateArticle({ language: art.language as Lang, slug: art.slug as string });
+    await notifyDiscord("instagram_published", {
+      title: art.title as string,
+      description: "New Instagram post published on the site.",
+      url: `${siteUrl()}${articlePath(art.language as Lang, art.slug as string)}`,
+      imageUrl: image,
+      fields: permalink ? [{ name: "Instagram", value: permalink }] : undefined,
+    });
+  } else {
+    await notifyDiscord("instagram_imported", {
+      title: art.title as string,
+      description: "New Instagram post saved as a draft. Review it before publishing.",
+      url: `${siteUrl()}/admin/articles/${art.id}`,
+      imageUrl: image,
+    });
+  }
+}
+
 /** Process one import row end to end: media → R2, then an atomic draft creation. */
 export async function processImport(admin: Admin, importId: string): Promise<"imported" | "failed" | "skipped"> {
   const { data: row } = await admin.from("instagram_imports").select("*").eq("id", importId).single();
@@ -114,7 +155,7 @@ export async function processImport(admin: Admin, importId: string): Promise<"im
     const caption = media.caption ?? "";
     const title = draftTitle(caption, ts);
     const content = draftContent(caption, media.permalink);
-    check(
+    const articleId = check(
       await admin.rpc("create_instagram_draft", {
         p_import_id: importId,
         p_language: detectLanguage(caption),
@@ -128,6 +169,7 @@ export async function processImport(admin: Admin, importId: string): Promise<"im
     if (failures.length) {
       await admin.from("instagram_imports").update({ error_message: `Imported with skipped media: ${failures.join("; ")}` }).eq("id", importId);
     }
+    await finishImport(admin, String(articleId), row.account_id as string | null, media.permalink ?? null);
     return "imported";
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
@@ -137,6 +179,7 @@ export async function processImport(admin: Admin, importId: string): Promise<"im
       .update({ status: "failed", error_message: message.slice(0, 1000), next_retry_at: retry?.toISOString() ?? null })
       .eq("id", importId);
     log.warn("instagram.import_failed", { importId, attempts, message });
+    if (!retry) await notifyDiscord("instagram_failed", { title: "Instagram import failed", description: message.slice(0, 500), url: `${siteUrl()}/admin/instagram?tab=failed` });
     return "failed";
   }
 }

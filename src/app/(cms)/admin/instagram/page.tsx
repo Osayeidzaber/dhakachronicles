@@ -4,6 +4,9 @@ import { can } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { instagramConfig } from "@/lib/env";
 import { Empty, Flash, PageHeader, fmt } from "@/components/admin/ui";
+import { instagramModeAction } from "../newsroom-actions";
+import { HighlightButton } from "@/components/admin/highlight-button";
+import { readHighlight } from "@/lib/highlight";
 import { instagramAutoImportAction, instagramDisconnectAction, instagramTokenConnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
 import type { InstagramAccount, InstagramImport, SyncRun } from "@/lib/db/types";
 
@@ -17,7 +20,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
   const cfg = instagramConfig();
   const tab = sp.tab === "failed" ? "failed" : "all";
 
-  let importsQuery = supabase.from("instagram_imports").select("*").order("media_timestamp", { ascending: false }).limit(50);
+  let importsQuery = supabase.from("instagram_imports").select("*, article:articles(status)").order("media_timestamp", { ascending: false }).limit(50);
   if (tab === "failed") importsQuery = importsQuery.eq("status", "failed");
   const [{ data: acc }, { data: runs }, { data: imports }, { count: importedCount }, { count: failedCount }] = await Promise.all([
     supabase.from("instagram_accounts").select("*").limit(1).maybeSingle(),
@@ -26,7 +29,8 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
     supabase.from("instagram_imports").select("id", { count: "exact", head: true }).eq("status", "imported"),
     supabase.from("instagram_imports").select("id", { count: "exact", head: true }).eq("status", "failed"),
   ]);
-  const account = acc as InstagramAccount | null;
+  const account = acc as (InstagramAccount & { import_mode?: string }) | null;
+  const pinned = (await readHighlight())?.article_id ?? null;
   const connected = account?.status === "connected" || account?.status === "token_expired" || account?.status === "error";
 
   return (
@@ -35,7 +39,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
       <Flash ok={sp.connected ? `Connected @${sp.connected}` : sp.ok} error={sp.error} />
 
       {!cfg && (
-        <div className="mb-6 rounded bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="mb-6 rounded-2xl border border-line p-4 text-sm text-neutral-700">
           <p className="font-semibold">Instagram is not configured.</p>
           <p>
             Set <code>INSTAGRAM_APP_ID</code>, <code>INSTAGRAM_APP_SECRET</code>, <code>INSTAGRAM_CONFIG_ID</code>, <code>INSTAGRAM_REDIRECT_URI</code> and <code>TOKEN_ENCRYPTION_KEY</code>, then follow
@@ -45,7 +49,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
       )}
 
       <section className="card mb-6">
-        <h2 className="mb-3 font-semibold">Connection</h2>
+        <h2 className="mb-3 text-[15px] font-medium">Connection</h2>
         <dl className="grid max-w-xl grid-cols-2 gap-1 text-sm">
           <dt className="text-neutral-500">Expected account</dt>
           <dd>@{cfg?.expectedUsername ?? "dhakachronicles"}</dd>
@@ -102,7 +106,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
       {manage && connected && account && (
         <div className="mb-6 grid gap-6 lg:grid-cols-2">
           <section className="card">
-            <h2 className="mb-2 font-semibold">Sync now</h2>
+            <h2 className="mb-2 text-[15px] font-medium">Sync now</h2>
             <form action={instagramSyncAction} className="space-y-2 text-sm">
               <div className="grid grid-cols-3 gap-2">
                 <label>
@@ -132,7 +136,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
             </form>
           </section>
           <section className="card">
-            <h2 className="mb-2 font-semibold">Automatic synchronization</h2>
+            <h2 className="mb-2 text-[15px] font-medium">Automatic synchronization</h2>
             <form action={instagramAutoImportAction} className="space-y-2 text-sm">
               <label className="flex items-center gap-2">
                 <input type="checkbox" name="auto_import" defaultChecked={account.auto_import} /> Check for new posts every 15 minutes (Supabase Cron)
@@ -143,13 +147,35 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
         </div>
       )}
 
+      {manage && connected && account && (
+        <section className="card mb-6">
+          <h2 className="text-[15px] font-medium">When a new post appears</h2>
+          <p className="mt-1 mb-4 text-[13px] text-muted">Checked every 15 minutes when automatic sync is on. Discord is told either way (Settings → Discord).</p>
+          <form action={instagramModeAction} className="grid gap-3 md:grid-cols-2">
+            {[
+              ["publish", "Publish automatically", "Goes live on the site right away, with the caption as the story."],
+              ["draft", "Save as draft", "An editor reviews and publishes it."],
+            ].map(([value, title, desc]) => (
+              <label key={value} className="flex cursor-pointer gap-3 rounded-2xl border border-line p-4 transition has-[:checked]:border-white">
+                <input type="radio" name="mode" value={value} defaultChecked={(account.import_mode ?? "draft") === value} className="mt-1 accent-white" />
+                <span>
+                  <span className="block font-medium">{title}</span>
+                  <span className="mt-1 block text-[13px] text-muted">{desc}</span>
+                </span>
+              </label>
+            ))}
+            <button className="btn btn-primary justify-self-start">Save</button>
+          </form>
+        </section>
+      )}
+
       <section className="card mb-6">
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="font-semibold">Imported posts</h2>
-          <Link href="/admin/instagram" className={`badge ${tab === "all" ? "bg-neutral-900 text-white" : "bg-neutral-100"}`}>
+          <h2 className="text-[15px] font-medium">Imported posts</h2>
+          <Link href="/admin/instagram" className={`badge ${tab === "all" ? "bg-white text-black" : "bg-neutral-100"}`}>
             All
           </Link>
-          <Link href="/admin/instagram?tab=failed" className={`badge ${tab === "failed" ? "bg-neutral-900 text-white" : "bg-neutral-100"}`}>
+          <Link href="/admin/instagram?tab=failed" className={`badge ${tab === "failed" ? "bg-white text-black" : "bg-neutral-100"}`}>
             Failed
           </Link>
         </div>
@@ -186,7 +212,20 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                       {i.status}
                       {i.status === "failed" && <div className="text-xs text-neutral-500">attempts {i.attempts}{i.next_retry_at ? `, retry ${fmt(i.next_retry_at)}` : ""}</div>}
                     </td>
-                    <td>{i.article_id ? <Link className="underline" href={`/admin/articles/${i.article_id}`}>Open draft</Link> : "—"}</td>
+                    <td>
+                      {i.article_id ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link className="underline" href={`/admin/articles/${i.article_id}`}>
+                            Open
+                          </Link>
+                          {(i as InstagramImport & { article?: { status: string } | null }).article?.status === "published" && manage && (
+                            <HighlightButton articleId={i.article_id} active={pinned === i.article_id} compact />
+                          )}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td>
                       {manage && i.status === "failed" && (
                         <form action={instagramRetryAction.bind(null, i.id)}>
@@ -203,7 +242,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
       </section>
 
       <section className="card">
-        <h2 className="mb-3 font-semibold">Sync history</h2>
+        <h2 className="mb-3 text-[15px] font-medium">Sync history</h2>
         {!runs?.length ? (
           <Empty>No syncs yet.</Empty>
         ) : (

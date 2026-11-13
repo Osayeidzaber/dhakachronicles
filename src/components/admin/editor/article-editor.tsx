@@ -349,7 +349,7 @@ export function ArticleEditor(props: EditorProps) {
               {props.tags.map((t) => {
                 const on = form.tag_ids.includes(t.id);
                 return (
-                  <button key={t.id} type="button" className={`badge border ${on ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"}`} onClick={() => set("tag_ids", on ? form.tag_ids.filter((x) => x !== t.id) : [...form.tag_ids, t.id])}>
+                  <button key={t.id} type="button" className={`badge border ${on ? "border-neutral-900 bg-white text-black" : "border-neutral-300"}`} onClick={() => set("tag_ids", on ? form.tag_ids.filter((x) => x !== t.id) : [...form.tag_ids, t.id])}>
                     {form.language === "bn" ? t.name_bn : t.name_en}
                   </button>
                 );

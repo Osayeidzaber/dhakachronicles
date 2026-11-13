@@ -123,6 +123,17 @@ export async function transitionArticle(id: string, raw: TransitionInput | unkno
     });
   }
   revalidateArticle(article);
+  if (article.status === "published" && existing.status !== "published") {
+    const { notifyDiscord } = await import("@/lib/discord");
+    const { siteUrl } = await import("@/lib/env");
+    const { articlePath } = await import("@/lib/seo/defaults");
+    await notifyDiscord("article_published", {
+      title: article.title,
+      description: article.excerpt ?? undefined,
+      url: `${siteUrl()}${articlePath(article.language, article.slug)}`,
+      fields: [{ name: "By", value: session.profile.full_name || session.email || "Staff" }],
+    });
+  }
   return article;
 }
 

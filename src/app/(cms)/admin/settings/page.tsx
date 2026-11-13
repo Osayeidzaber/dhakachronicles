@@ -3,15 +3,18 @@ import { createClient } from "@/lib/supabase/server";
 import { aiSeoConfig, instagramConfig, r2Config, env } from "@/lib/env";
 import { Flash, PageHeader } from "@/components/admin/ui";
 import { saveSettingsAction } from "../actions";
+import { saveDiscordAction, testDiscordAction } from "../newsroom-actions";
+import { DISCORD_EVENTS, DISCORD_EVENT_LABELS, getDiscordSettings } from "@/lib/discord";
 import { seoDefaults, socialLinks, logoMediaId } from "@/lib/settings";
 
 export const metadata = { title: "Settings" };
 
 function Status({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <li className="flex items-center gap-2 text-sm">
-      <span className={`badge ${ok ? "bg-green-100 text-green-800" : "bg-neutral-200 text-neutral-600"}`}>{ok ? "configured" : "not set"}</span>
-      {label}
+    <li className="flex items-center gap-3 border-t border-white/5 py-3 text-sm first:border-0">
+      <span className={`h-2 w-2 rounded-full ${ok ? "bg-white" : "border border-muted"}`} aria-hidden="true" />
+      <span className="flex-1">{label}</span>
+      <span className="text-xs text-muted">{ok ? "Connected" : "Not set"}</span>
     </li>
   );
 }
@@ -25,11 +28,53 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const name = (s.site_name ?? {}) as { en?: string; bn?: string };
   const social = socialLinks(s);
   const seo = seoDefaults(s);
+  const discord = await getDiscordSettings();
 
   return (
     <>
       <PageHeader title="Settings" />
       <Flash ok={sp.ok} error={sp.error} />
+
+      <section className="card mb-6 max-w-3xl">
+        <h2 className="text-[15px] font-medium">Discord notifications</h2>
+        <p className="mt-1 text-[13px] text-muted">
+          In Discord: channel settings → Integrations → Webhooks → New webhook → Copy URL. It is stored encrypted and never shown again.
+        </p>
+        <form action={saveDiscordAction} className="mt-4 flex flex-col gap-4">
+          <label className="block text-[13px] text-neutral-600">
+            Webhook URL {discord.configured && <span className="ml-1 text-white">· saved</span>}
+            <input
+              name="webhook_url"
+              type="password"
+              autoComplete="off"
+              placeholder={discord.configured ? "Leave empty to keep the saved webhook" : "https://discord.com/api/webhooks/…"}
+              className="input mt-1.5"
+            />
+          </label>
+          <fieldset className="grid gap-2 sm:grid-cols-2">
+            <legend className="mb-2 text-[13px] text-neutral-600">Send a message when</legend>
+            {DISCORD_EVENTS.map((e) => (
+              <label key={e} className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-line px-4 py-3 text-sm has-[:checked]:border-white/40">
+                {DISCORD_EVENT_LABELS[e]}
+                <input type="checkbox" name={`event_${e}`} defaultChecked={discord.events[e]} className="h-4 w-4 accent-white" />
+              </label>
+            ))}
+          </fieldset>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn btn-primary">Save</button>
+            {discord.configured && (
+              <button name="clear" value="1" className="btn btn-danger">
+                Remove webhook
+              </button>
+            )}
+          </div>
+        </form>
+        {discord.configured && (
+          <form action={testDiscordAction} className="mt-3">
+            <button className="btn h-9 text-xs">Send test message</button>
+          </form>
+        )}
+      </section>
       <form action={saveSettingsAction} className="card max-w-3xl space-y-4">
         <h2 className="font-semibold">Website</h2>
         <div className="grid gap-2 md:grid-cols-2">
@@ -81,7 +126,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       </form>
 
       <section className="card mt-6 max-w-3xl">
-        <h2 className="mb-2 font-semibold">Integrations</h2>
+        <h2 className="mb-2 text-[15px] font-medium">Integrations</h2>
         <p className="mb-2 text-xs text-neutral-500">Secrets are set as server environment variables (never stored in the browser or the database in plain text).</p>
         <ul className="space-y-1">
           <Status ok={!!r2Config()} label="Cloudflare R2 media storage" />

@@ -1,4 +1,5 @@
 <!-- BEGIN:nextjs-agent-rules -->
+n> Starting fresh on a new device/agent? Read `HANDOFF.md` first.
 
 ## This is NOT the Next.js you know
 

@@ -9,6 +9,12 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  if (path === "/privacy") {
+    // Stable URL for the Meta app's Privacy Policy field.
+    const url = request.nextUrl.clone();
+    url.pathname = "/en/privacy";
+    return NextResponse.redirect(url, 308);
+  }
   if (path === "/") {
     const url = request.nextUrl.clone();
     url.pathname = `/${process.env.DEFAULT_LANGUAGE === "en" ? "en" : "bn"}`;
@@ -44,5 +50,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/login", "/api/media/:path*", "/api/instagram/:path*"],
+  matcher: ["/", "/privacy", "/admin/:path*", "/login", "/api/media/:path*", "/api/instagram/:path*"],
 };

@@ -52,6 +52,11 @@ export function SiteFooter({ lang, siteName, social }: { lang: Lang; siteName: s
             </li>
           ))}
           <li>
+            <Link href={`/${lang}/privacy`} className="underline">
+              {lang === "bn" ? "গোপনীয়তা নীতি" : "Privacy"}
+            </Link>
+          </li>
+          <li>
             <a href={`/${lang}/rss.xml`} className="underline">
               RSS
             </a>

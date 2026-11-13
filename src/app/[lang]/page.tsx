@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLang, t } from "@/lib/i18n";
 import { isConfigured } from "@/lib/public-data";
-import { listBreaking, listFeatured, listLatest } from "@/lib/articles/queries";
+import { listBreaking, listFeatured, listLatest, type ArticleCard as Card, type Page } from "@/lib/articles/queries";
+import { log } from "@/lib/logger";
 import { articlePath } from "@/lib/seo/defaults";
 import { ArticleCard } from "@/components/public/article-card";
 
@@ -13,7 +14,15 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   if (!isLang(lang)) notFound();
   if (!isConfigured()) return null;
 
-  const [breaking, featured, latest] = await Promise.all([listBreaking(lang), listFeatured(lang, 4), listLatest(lang, { pageSize: 13 })]);
+  let data: [Card[], Card[], Page<Card>];
+  try {
+    data = await Promise.all([listBreaking(lang), listFeatured(lang, 4), listLatest(lang, { pageSize: 13 })]);
+  } catch (err) {
+    // Database unreachable or not migrated yet: render empty instead of failing the build.
+    log.error("home.load_failed", { err });
+    data = [[], [], { items: [], page: 1, pageSize: 13, total: 0, totalPages: 1 }];
+  }
+  const [breaking, featured, latest] = data;
   const featuredIds = new Set(featured.map((f) => f.id));
   const lead = featured[0] ?? latest.items[0];
   const rest = latest.items.filter((a) => a.id !== lead?.id && !featuredIds.has(a.id));

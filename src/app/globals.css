@@ -82,7 +82,7 @@ body {
   text-decoration: underline;
 }
 .prose-article blockquote {
-  border-left: 4px solid var(--border);
+  border-left: 2px solid var(--border);
   padding-left: 1rem;
   color: var(--muted);
   font-style: italic;

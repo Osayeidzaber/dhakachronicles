@@ -1,59 +1,56 @@
 # MASTER TODO — Dhaka Chronicles
 
-Bilingual (Bangla/English) news platform. One Next.js project (frontend + backend together),
-Supabase (Postgres, Auth, RLS, Cron), Cloudflare R2, Instagram Graph API.
+Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 
-Legend: [x] done · [ ] to do · [~] needs external credentials
+## M1 — Database & Supabase
+- [x] Schema, RLS, workflow functions, seed, cron script
+- [x] Server-only clients, provisioning script
+- [x] DB/RLS tests in PGlite
+- [~] Link the real project → `npx supabase db push` → seed → `npm run provision-admin`
 
-## Milestone 1 — Database & Supabase foundation
-- [x] Next.js 16 + TypeScript strict + Tailwind scaffold
-- [x] Core schema migration (profiles, articles, categories, tags, authors, media, article_media, article_tags, revisions, instagram_*, notifications, audit_logs, site_settings, analytics, rate_limits, job_runs)
-- [x] RLS policies + role helpers (admin / editor / writer)
-- [x] Workflow functions (scheduled publishing, Instagram draft creation, tag replacement)
-- [x] Seed categories, Supabase Cron script
-- [x] Server-only Supabase clients (URL & keys never sent to the browser)
-- [x] Admin provisioning script (no public sign-up)
-- [x] DB tests in PGlite (slugs, translations, scheduling, RLS, duplicate imports)
-- [~] Link real Supabase project and `supabase db push`
-- [~] Provision first admin
+## M2 — Auth & permissions
+- [x] Login/logout (rate-limited), proxy session refresh, /admin guard
+- [x] `requireSession` / `requirePageSession`, permission matrix that mirrors RLS
+- [x] Team page: invite by email, change roles, deactivate; no self-promotion
+- [x] Audit logging
 
-## Milestone 2 — Auth & permissions
-- [ ] Login / logout pages, session handling
-- [ ] Server-side permission helpers (requireRole)
-- [ ] Team management: invite users, change roles
-- [ ] Audit logging helper
+## M3 — CMS & workflow
+- [x] Article list: search, language, status, category and source filters, bulk actions, pagination
+- [x] Tiptap editor: headings, bold/italic, lists, quotes, links, images with captions/alt, YouTube embeds, horizontal rules
+- [x] Autosave, validation, preview, slug duplicate check, unsaved-changes warning
+- [x] Workflow: save, submit, approve, publish, schedule, unpublish, archive, restore
+- [x] Translations, revisions with restore, delete (admin)
+- [x] Categories, tags, authors CRUD; settings; notifications
+- [x] Cron publish endpoint + cache revalidation
 
-## Milestone 3 — CMS & editorial workflow
-- [ ] Article list (search, filters, language/status, bulk actions)
-- [ ] Tiptap editor (headings, lists, quotes, links, images + captions, embeds, HR), autosave
-- [ ] Workflow actions: save, submit, approve, publish, schedule, unpublish, archive, restore
-- [ ] Translation linking (create bn/en version), revisions view
-- [ ] Categories, tags, authors CRUD
-- [ ] Cron endpoint `/api/cron/publish` + cache revalidation
+## M4 — Media (R2)
+- [x] Presign → finalize, byte validation, Sharp WebP/AVIF variants, EXIF stripping
+- [x] Library: upload (multiple), browse, preview, metadata, delete (guarded)
+- [~] R2 bucket, token, custom domain, CORS (`docs/R2_SETUP.md`)
 
-## Milestone 4 — Media (Cloudflare R2)
-- [ ] Presigned upload → finalize (validate bytes, Sharp variants, WebP/AVIF)
-- [ ] Media library: browse, preview, metadata, delete (guarded)
-- [~] R2 bucket, API token, custom domain
+## M5 — Instagram (@dhakachronicles)
+- [x] OAuth with Instagram Login, username check, encrypted tokens, refresh
+- [x] Sync: pagination, carousels, duplicate detection, R2 upload, drafts, notifications
+- [x] Historical import options, retries with backoff, history, auto-import via cron
+- [~] Meta app, tester role or App Review (`docs/INSTAGRAM_SETUP.md`)
 
-## Milestone 5 — Instagram (@dhakachronicles)
-- [ ] Instagram Login OAuth, encrypted token storage, refresh
-- [ ] Username check (must be `dhakachronicles`)
-- [ ] Sync: pagination, carousel children, duplicate detection, R2 upload, draft creation
-- [ ] Historical import options, retries, admin UI
-- [~] Meta developer app + permissions
+## M6 — SEO
+- [x] Metadata, OG/Twitter, canonical, hreflang
+- [x] NewsArticle, Breadcrumb and Organization JSON-LD
+- [x] sitemap.xml, news-sitemap.xml, per-language RSS, robots.txt
+- [x] SEO validator in the editor; optional AI suggestions
 
-## Milestone 6 — SEO
-- [ ] Metadata, OG, canonical, hreflang
-- [ ] NewsArticle / Breadcrumb / Organization JSON-LD
-- [ ] sitemap.xml, Google News sitemap, RSS, robots.txt
-- [ ] SEO validator, optional AI SEO generator
+## M7 — Basic public frontend
+- [x] /bn and /en: home (breaking, featured, latest), latest, article, category, tag, author, search
+- [x] Language switcher, related articles, pagination, loading/error/404 states, view counter
 
-## Milestone 7 — Basic public frontend
-- [ ] /bn and /en: home, breaking, latest, featured, category, article, author, search
-- [ ] Language switcher, pagination, loading/error/empty states
+## M8 — Docs & release
+- [x] README, DECISIONS, CHANGELOG, CONTRIBUTING, setup guides, .env.example
+- [x] typecheck, lint, 70 tests and production build all pass
+- [~] Deploy to Vercel + run `supabase/cron.sql`
 
-## Milestone 8 — Docs & release
-- [ ] README, DECISIONS, CHANGELOG, CONTRIBUTING
-- [ ] Full test suite, lint, typecheck, production build
-- [ ] Vercel deployment guide
+## Next / nice to have
+- [ ] End-to-end tests against a real Supabase project (Playwright) once credentials exist
+- [ ] Generated Supabase types (`supabase gen types`) to replace the hand-written `db/types.ts`
+- [ ] Analytics dashboard built on `article_daily_views`
+- [ ] Final public frontend design (owner)

@@ -1,0 +1,228 @@
+import "server-only";
+import { createClient } from "@/lib/supabase/server";
+import { requireSession } from "@/lib/auth/session";
+import { can, canEditArticle } from "@/lib/auth/permissions";
+import { AppError, check } from "@/lib/errors";
+import { audit } from "@/lib/audit";
+import { docToText } from "@/lib/content/tiptap";
+import { slugify } from "@/lib/content/slug";
+import { otherLang } from "@/lib/i18n";
+import { revalidateArticle } from "@/lib/articles/revalidate";
+import { planTransition } from "@/lib/articles/workflow";
+import {
+  articleInputSchema,
+  transitionSchema,
+  type ArticleInput,
+  type TransitionInput,
+} from "@/lib/articles/validation";
+import type { Article, Lang } from "@/lib/db/types";
+
+const EDITORIAL_ONLY = ["is_breaking", "is_featured"] as const;
+
+function toRow(input: ArticleInput) {
+  const { tag_ids: _tags, ...rest } = input;
+  void _tags;
+  return { ...rest, content_text: docToText(input.content) };
+}
+
+async function getForWrite(id: string): Promise<Article> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("articles").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new AppError("Article not found.", "NOT_FOUND");
+  return data as Article;
+}
+
+export async function assertSlugAvailable(language: Lang, slug: string, exceptId?: string) {
+  const supabase = await createClient();
+  let q = supabase.from("articles").select("id").eq("language", language).eq("slug", slug);
+  if (exceptId) q = q.neq("id", exceptId);
+  const { data } = await q.limit(1);
+  if (data && data.length > 0) throw new AppError(`The slug "${slug}" is already used in ${language}.`, "CONFLICT");
+}
+
+export async function createArticle(raw: unknown, translationGroupId?: string): Promise<Article> {
+  const session = await requireSession("article.create");
+  const input = articleInputSchema.parse(raw);
+  await assertSlugAvailable(input.language, input.slug);
+
+  const row: Record<string, unknown> = {
+    ...toRow(input),
+    status: "draft",
+    created_by: session.userId,
+    updated_by: session.userId,
+  };
+  if (translationGroupId) row.translation_group_id = translationGroupId;
+  if (!can(session.profile.role, "article.publish")) for (const k of EDITORIAL_ONLY) row[k] = false;
+
+  const supabase = await createClient();
+  const article = check(await supabase.from("articles").insert(row).select("*").single()) as Article;
+  if (input.tag_ids.length) {
+    check(await supabase.rpc("set_article_tags", { p_article_id: article.id, p_tag_ids: input.tag_ids }));
+  }
+  await audit(session.userId, "article.create", "article", article.id, { language: article.language });
+  return article;
+}
+
+export async function updateArticle(id: string, raw: unknown): Promise<Article> {
+  const session = await requireSession();
+  const existing = await getForWrite(id);
+  if (!canEditArticle(session.profile.role, session.userId, existing)) {
+    throw new AppError("You cannot edit this article.", "FORBIDDEN");
+  }
+  const input = articleInputSchema.parse(raw);
+  if (input.language !== existing.language) throw new AppError("Language cannot be changed; create a translation instead.", "VALIDATION");
+  if (input.slug !== existing.slug) await assertSlugAvailable(input.language, input.slug, id);
+
+  const row: Record<string, unknown> = { ...toRow(input), updated_by: session.userId };
+  if (!can(session.profile.role, "article.publish")) for (const k of EDITORIAL_ONLY) delete row[k];
+
+  const supabase = await createClient();
+  const article = check(await supabase.from("articles").update(row).eq("id", id).select("*").single()) as Article;
+  check(await supabase.rpc("set_article_tags", { p_article_id: id, p_tag_ids: input.tag_ids }));
+
+  await audit(session.userId, "article.update", "article", id);
+  if (article.status === "published" || existing.slug !== article.slug) revalidateArticle(existing);
+  if (article.status === "published") revalidateArticle(article);
+  return article;
+}
+
+export async function transitionArticle(id: string, raw: TransitionInput | unknown): Promise<Article> {
+  const session = await requireSession();
+  const input = transitionSchema.parse(raw);
+  const existing = await getForWrite(id);
+  if (!canEditArticle(session.profile.role, session.userId, existing)) {
+    throw new AppError("You cannot change this article.", "FORBIDDEN");
+  }
+  const plan = planTransition(existing.status, input, session.profile.role, session.userId);
+
+  if (plan.status === "published" || plan.status === "scheduled") {
+    if (!existing.title.trim() || !existing.content_text.trim()) {
+      throw new AppError("An article needs a title and body before it can be published.", "VALIDATION");
+    }
+  }
+
+  const supabase = await createClient();
+  const article = check(
+    await supabase
+      .from("articles")
+      .update({ ...plan.patch, updated_by: session.userId })
+      .eq("id", id)
+      .select("*")
+      .single(),
+  ) as Article;
+
+  await audit(session.userId, plan.auditAction, "article", id, { from: existing.status, to: article.status });
+  if (input.action === "submit") {
+    const admin = (await import("@/lib/supabase/admin")).createAdminClient();
+    await admin.rpc("notify_editors", {
+      p_type: "review_requested",
+      p_title: "Article submitted for review",
+      p_body: article.title,
+      p_link: `/admin/articles/${id}`,
+    });
+  }
+  revalidateArticle(article);
+  return article;
+}
+
+/** Create the other-language version of a story as a new draft in the same translation group. */
+export async function createTranslation(id: string): Promise<Article> {
+  const source = await getForWrite(id);
+  const target = otherLang(source.language);
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("articles")
+    .select("id")
+    .eq("translation_group_id", source.translation_group_id)
+    .eq("language", target)
+    .maybeSingle();
+  if (existing) throw new AppError(`A ${target} translation already exists.`, "CONFLICT");
+
+  const base = slugify(source.slug) || "article";
+  let slug = base;
+  for (let i = 2; i < 50; i++) {
+    const { data } = await supabase.from("articles").select("id").eq("language", target).eq("slug", slug).limit(1);
+    if (!data?.length) break;
+    slug = `${base}-${i}`;
+  }
+
+  const { data: tags } = await supabase.from("article_tags").select("tag_id").eq("article_id", id);
+  return createArticle(
+    {
+      language: target,
+      title: source.title,
+      subtitle: source.subtitle,
+      slug,
+      excerpt: null,
+      content: { type: "doc", content: [] },
+      featured_image_id: source.featured_image_id,
+      featured_image_alt: null,
+      category_id: source.category_id,
+      author_id: source.author_id,
+      tag_ids: (tags ?? []).map((t: { tag_id: string }) => t.tag_id),
+      is_breaking: false,
+      is_featured: false,
+    },
+    source.translation_group_id,
+  );
+}
+
+export async function deleteArticle(id: string): Promise<void> {
+  const session = await requireSession("article.delete");
+  const existing = await getForWrite(id);
+  const supabase = await createClient();
+  check(await supabase.from("articles").delete().eq("id", id));
+  await audit(session.userId, "article.delete", "article", id, { title: existing.title });
+  revalidateArticle(existing);
+}
+
+export async function restoreRevision(articleId: string, revisionId: string): Promise<Article> {
+  const session = await requireSession();
+  const existing = await getForWrite(articleId);
+  if (!canEditArticle(session.profile.role, session.userId, existing)) throw new AppError("Forbidden", "FORBIDDEN");
+  const supabase = await createClient();
+  const { data: rev } = await supabase
+    .from("article_revisions")
+    .select("*")
+    .eq("id", revisionId)
+    .eq("article_id", articleId)
+    .maybeSingle();
+  if (!rev) throw new AppError("Revision not found.", "NOT_FOUND");
+  const meta = rev.metadata_snapshot as Record<string, unknown>;
+  const article = check(
+    await supabase
+      .from("articles")
+      .update({
+        content: rev.content_snapshot,
+        content_text: docToText(rev.content_snapshot),
+        title: meta.title,
+        subtitle: meta.subtitle,
+        excerpt: meta.excerpt,
+        updated_by: session.userId,
+      })
+      .eq("id", articleId)
+      .select("*")
+      .single(),
+  ) as Article;
+  await audit(session.userId, "article.restore_revision", "article", articleId, { revisionId });
+  if (article.status === "published") revalidateArticle(article);
+  return article;
+}
+
+export type BulkAction = "archive" | "publish" | "return_to_draft" | "delete";
+
+export async function bulkArticles(ids: string[], action: BulkAction): Promise<{ done: number; failed: string[] }> {
+  const failed: string[] = [];
+  let done = 0;
+  for (const id of ids.slice(0, 100)) {
+    try {
+      if (action === "delete") await deleteArticle(id);
+      else await transitionArticle(id, { action });
+      done++;
+    } catch (err) {
+      failed.push(`${id}: ${err instanceof Error ? err.message : "error"}`);
+    }
+  }
+  return { done, failed };
+}

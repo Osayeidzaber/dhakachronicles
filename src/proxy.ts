@@ -1,12 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Refreshes the Supabase session cookie and guards /admin. Runs on the server.
+/**
+ * Runs on the server before matching routes:
+ *  - "/" redirects to the default language
+ *  - refreshes the Supabase session cookie (httpOnly) for staff routes
+ *  - redirects signed-out users away from /admin
+ */
 export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  if (path === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${process.env.DEFAULT_LANGUAGE === "en" ? "en" : "bn"}`;
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return response; // not configured yet
+  if (!url || !key) return response;
 
   const supabase = createServerClient(url, key, {
     cookies: {
@@ -15,23 +27,22 @@ export async function proxy(request: NextRequest) {
         for (const { name, value } of list) request.cookies.set(name, value);
         response = NextResponse.next({ request });
         for (const { name, value, options } of list) {
-          response.cookies.set(name, value, { ...options, httpOnly: true });
+          response.cookies.set(name, value, { ...options, httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
         }
       },
     },
   });
 
   const { data } = await supabase.auth.getUser();
-  const path = request.nextUrl.pathname;
   if (path.startsWith("/admin") && !data.user) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
-    login.searchParams.set("next", path);
+    login.search = `?next=${encodeURIComponent(path)}`;
     return NextResponse.redirect(login);
   }
   return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login", "/api/:path*"],
+  matcher: ["/", "/admin/:path*", "/login", "/api/media/:path*", "/api/instagram/:path*"],
 };

@@ -18,6 +18,8 @@ alter default privileges in schema public grant all on functions to anon, authen
 const ADMIN = "00000000-0000-0000-0000-00000000000a";
 const WRITER = "00000000-0000-0000-0000-00000000000b";
 const NOBODY = "00000000-0000-0000-0000-00000000000c";
+const EDITOR = "00000000-0000-0000-0000-00000000000d";
+const WRITER2 = "00000000-0000-0000-0000-00000000000e";
 let db: PGlite;
 
 async function as<T>(role: "anon" | "authenticated", sub: string | null, fn: () => Promise<T>) {
@@ -33,14 +35,15 @@ beforeAll(async () => {
   await db.exec(readFileSync(join(__dirname, "../supabase/seed.sql"), "utf8"));
   await db.exec(`
     insert into auth.users (id, raw_app_meta_data) values
-      ('${ADMIN}', '{"role":"admin"}'), ('${WRITER}', '{"role":"writer"}'), ('${NOBODY}', '{"role":"superuser"}');
+      ('${ADMIN}', '{"role":"admin"}'), ('${WRITER}', '{"role":"writer"}'), ('${NOBODY}', '{"role":"superuser"}'),
+      ('${EDITOR}', '{"role":"editor"}'), ('${WRITER2}', '{"role":"writer"}');
   `);
 }, 60_000);
 
 describe("schema", () => {
   it("provisions roles only from app_metadata", async () => {
     const { rows } = await db.query<{ id: string; role: string | null }>("select id, role from profiles order by id");
-    expect(rows.map((r) => r.role)).toEqual(["admin", "writer", null]);
+    expect(rows.map((r) => r.role)).toEqual(["admin", "writer", null, "editor", "writer"]);
   });
 
   it("enforces slug uniqueness per language but allows same slug across languages", async () => {
@@ -107,5 +110,69 @@ describe("row level security", () => {
     await db.exec(`update articles set title='Changed' where slug='w-draft'`);
     const { rows } = await db.query<{ n: number }>(`select count(*)::int n from article_revisions r join articles a on a.id=r.article_id where a.slug='w-draft'`);
     expect(rows[0].n).toBe(1);
+  });
+
+  it("editors can publish any article; timestamps are set", async () => {
+    await as("authenticated", EDITOR, () => db.exec(`update articles set status='published' where slug='w-draft'`));
+    const { rows } = await db.query<{ published_at: string | null; first_published_at: string | null }>(
+      "select published_at, first_published_at from articles where slug='w-draft'",
+    );
+    expect(rows[0].published_at).not.toBeNull();
+    expect(rows[0].first_published_at).not.toBeNull();
+  });
+
+  it("writers cannot edit another writer's draft or their own published article", async () => {
+    await as("authenticated", WRITER2, () =>
+      db.exec(`insert into articles (language, title, slug, created_by) values ('en','W2','w2-draft','${WRITER2}')`));
+    await as("authenticated", WRITER, () => db.exec(`update articles set title='hijack' where slug='w2-draft'`));
+    await as("authenticated", WRITER, () => db.exec(`update articles set title='edit live' where slug='w-draft'`));
+    const { rows } = await db.query<{ slug: string; title: string }>("select slug, title from articles where slug in ('w2-draft','w-draft') order by slug");
+    expect(rows.find((r) => r.slug === "w2-draft")?.title).toBe("W2");
+    expect(rows.find((r) => r.slug === "w-draft")?.title).toBe("Changed");
+  });
+
+  it("writers cannot set breaking/featured flags", async () => {
+    await as("authenticated", WRITER, () =>
+      db.exec(`insert into articles (language, title, slug, is_breaking, is_featured, created_by) values ('en','F','w-flags',true,true,'${WRITER}')`));
+    const { rows } = await db.query<{ is_breaking: boolean; is_featured: boolean }>("select is_breaking, is_featured from articles where slug='w-flags'");
+    expect(rows[0]).toEqual({ is_breaking: false, is_featured: false });
+  });
+
+  it("instagram tokens are never readable by staff", async () => {
+    const rows = await as("authenticated", ADMIN, async () => (await db.query("select * from instagram_tokens")).rows);
+    expect(rows).toHaveLength(0);
+  });
+});
+
+describe("media and instagram functions", () => {
+  it("refuses to delete media used by a published article, allows unused media", async () => {
+    await db.exec(`insert into media (id, r2_key, public_url, original_filename, mime_type, file_size, status)
+      values ('aaaaaaaa-0000-0000-0000-000000000001','k1','https://m/1','a.jpg','image/jpeg',1,'ready'),
+             ('aaaaaaaa-0000-0000-0000-000000000002','k2','https://m/2','b.jpg','image/jpeg',1,'ready')`);
+    await db.exec(`update articles set featured_image_id='aaaaaaaa-0000-0000-0000-000000000001' where slug='sched'`);
+    await expect(db.exec(`delete from media where id='aaaaaaaa-0000-0000-0000-000000000001'`)).rejects.toThrow(/published/);
+    await db.exec(`delete from media where id='aaaaaaaa-0000-0000-0000-000000000002'`);
+  });
+
+  it("creates an Instagram draft atomically, idempotently, and notifies editors", async () => {
+    await db.exec(`insert into instagram_imports (id, instagram_media_id, media_type, caption, permalink)
+      values ('bbbbbbbb-0000-0000-0000-000000000001','ig-200','IMAGE','Caption text','https://www.instagram.com/p/x/')`);
+    const call = `select create_instagram_draft('bbbbbbbb-0000-0000-0000-000000000001','en','Caption text','caption-text-ig-200',
+      '{"type":"doc","content":[]}'::jsonb,'Caption text', array[]::uuid[]) as id`;
+    const first = (await db.query<{ id: string }>(call)).rows[0].id;
+    const second = (await db.query<{ id: string }>(call)).rows[0].id;
+    expect(second).toBe(first);
+    const { rows } = await db.query<{ status: string; source_type: string; imp: string }>(
+      `select a.status, a.source_type, i.status as imp from articles a join instagram_imports i on i.article_id=a.id where a.id='${first}'`,
+    );
+    expect(rows[0]).toEqual({ status: "draft", source_type: "instagram", imp: "imported" });
+    const n = await db.query<{ n: number }>("select count(*)::int n from notifications where type='instagram_import'");
+    expect(n.rows[0].n).toBe(2); // admin + editor
+  });
+
+  it("rate limiter allows up to the limit within a window", async () => {
+    const hits = [];
+    for (let i = 0; i < 4; i++) hits.push((await db.query<{ ok: boolean }>("select rate_limit_hit('t', 3, 60) as ok")).rows[0].ok);
+    expect(hits).toEqual([true, true, true, false]);
   });
 });

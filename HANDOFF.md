@@ -42,35 +42,17 @@ Vitest, Vercel-compatible.
 
 ---
 
-## 3. Current state (what's done)
+## 3. Current state (updated 2026-11-13)
 
-| Area | Status | Where |
-|---|---|---|
-| Next.js scaffold | done | `src/app` (still the default page) |
-| Core DB schema | done | `supabase/migrations/20261113000001_core_schema.sql` |
-| RLS + role helpers | done | `supabase/migrations/20261113000002_rls_policies.sql` |
-| Workflow SQL functions + default settings | done | `supabase/migrations/20261113000003_workflow_functions.sql` |
-| Seed categories (bn/en) | done | `supabase/seed.sql` |
-| Supabase Cron jobs | written, run manually after deploy | `supabase/cron.sql` |
-| Server-only env + Supabase clients | done | `src/lib/env.ts`, `src/lib/supabase/server.ts`, `src/lib/supabase/admin.ts` |
-| Session refresh + /admin guard | done | `src/proxy.ts` |
-| First-admin provisioning | done | `scripts/provision-admin.mjs` (`npm run provision-admin -- email "Name"`) |
-| DB tests (11, passing) | done | `tests/db.test.ts` (runs migrations in PGlite) |
-| Supabase setup guide | done | `SUPABASE_SETUP.md` |
-| Real Supabase project connected | **NOT done** — waiting for owner's credentials | |
+All 8 milestones are **implemented**. See `MASTER_TODO.md` for details and `README.md` for the architecture.
+typecheck, lint, 70 tests (`npm test`, including DB/RLS tests in PGlite) and `npm run build` all pass.
 
-Everything else (auth UI, CMS, editor, media, Instagram, SEO, public site) is **not started**. See `MASTER_TODO.md`.
+Still **not connected** (needs the owner's credentials): the Supabase project, the R2 bucket, the Meta/Instagram app,
+and Vercel deployment plus `supabase/cron.sql`. Setup guides: `SUPABASE_SETUP.md`, `docs/R2_SETUP.md`,
+`docs/INSTAGRAM_SETUP.md`, `docs/DEPLOYMENT.md`.
 
-### Verify the current state
-```bash
-npm install
-npm test          # 11 DB tests in PGlite (no Docker needed)
-npm run typecheck
-npm run lint
-```
-There is no Docker/Postgres on the original machine; PGlite stubs Supabase's `auth` schema, roles and `auth.uid()`.
-
----
+Next.js note: `cacheComponents` is OFF on purpose (DECISIONS D-008). Pages use `revalidate` and publishing calls `revalidatePath`.
+There are two root layouts: `src/app/[lang]/layout.tsx` (public, sets `<html lang>`) and `src/app/(cms)/layout.tsx` (admin/login).
 
 ## 4. Database design (key decisions)
 
@@ -111,54 +93,14 @@ There is no Docker/Postgres on the original machine; PGlite stubs Supabase's `au
 
 ---
 
-## 5. Planned architecture for the rest (follow this)
+## 5. Architecture
+See `README.md` (module map) and `DECISIONS.md`.
 
-```
-src/
-  app/
-    (public)/[lang]/...        # bn | en public pages (Server Components)
-    admin/...                  # CMS dashboard (auth required)
-    login/
-    api/cron/publish, api/cron/instagram-sync, api/media/presign, api/media/finalize,
-    api/instagram/connect, api/instagram/callback
-    sitemap.ts, robots.ts, news-sitemap.xml, [lang]/rss.xml
-  lib/
-    env.ts, supabase/{server,admin}.ts
-    auth/        # getSession, requireRole
-    articles/    # queries.ts (public reads), service.ts (workflow actions), validation.ts (zod)
-    media/       # r2.ts, images.ts (sharp variants), validation (magic bytes)
-    instagram/   # oauth.ts, client.ts (Graph API), sync.ts, crypto.ts
-    seo/         # metadata.ts, jsonld.ts, validator.ts, ai.ts (optional provider)
-  components/public, components/admin
-```
+## 6. Docs
+All the required docs exist. Keep `MASTER_TODO.md` and `CHANGELOG.md` updated.
 
-- **Media upload flow:** server issues presigned PUT to `tmp/` in R2 → browser uploads → `finalize` endpoint
-  downloads, validates real bytes (Sharp), creates WebP/AVIF responsive variants under
-  `articles/YYYY/MM/<article-id>/`, `authors/`, `categories/`, `branding/`, saves `media` row, deletes tmp.
-- **Instagram flow:** Instagram Login (Business Login) OAuth with `oauth_states` CSRF → exchange for long-lived
-  token → fetch `/me` and **reject unless username == `dhakachronicles`** (set status `username_mismatch`, don't
-  sync) → paginate `/me/media` (fields incl. children for carousels) → skip known `instagram_media_id`s →
-  download images server-side → R2 → `create_instagram_draft` (caption preserved verbatim, permalink, timestamp).
-  Configurable historical import (count, date range, page limit). Retries with backoff. Refresh long-lived token
-  before expiry. Never auto-publish. Document the Meta app setup (permissions, app review, test users).
-- **SEO:** `generateMetadata` per page, canonical + hreflang via translation group, NewsArticle/Breadcrumb/
-  Organization JSON-LD, sitemap, Google News sitemap (last 48h published), RSS per language, robots.
-  SEO validator (missing meta, lengths, alt text, duplicate slug). Optional AI SEO generator behind an API key —
-  never required for publishing. Don't claim scores guarantee rankings.
-- **Revalidation:** after publish/unpublish/edit call `revalidatePath`/`revalidateTag` for affected pages.
-
----
-
-## 6. Still-to-create docs
-`README.md` (still create-next-app default — replace), `DECISIONS.md`, `CHANGELOG.md`, `CONTRIBUTING.md`.
-Remaining required tests: auth, role permissions in app layer, article create/edit, publication, public access,
-R2 upload handling, Instagram duplicate detection (app layer), SEO metadata, sitemap.
-
-## 7. Environment variables (`.env.example`)
-`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (all server-only), `SITE_URL`,
-`CRON_SECRET`, `TOKEN_ENCRYPTION_KEY`. Still to add: R2 (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
-`R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`), Instagram (`INSTAGRAM_APP_ID`,
-`INSTAGRAM_APP_SECRET`, `INSTAGRAM_REDIRECT_URI`), optional AI key.
+## 7. Environment variables
+See `.env.example`. Every variable is server-only.
 
 ## 8. Next steps (in order)
 1. When the owner gives Supabase credentials: they fill `.env.local` themselves (don't ask them to paste keys in

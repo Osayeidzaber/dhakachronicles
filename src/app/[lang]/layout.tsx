@@ -8,7 +8,7 @@ import { listBreaking, type ArticleCard } from "@/lib/articles/queries";
 import { LOCALES, isLang, t } from "@/lib/i18n";
 import { env, siteUrl } from "@/lib/env";
 import { getSiteChrome } from "@/lib/public-data";
-import { seoDefaults, siteName, socialLinks } from "@/lib/settings";
+import { CONTACT_EMAIL, seoDefaults, siteName, socialLinks } from "@/lib/settings";
 import { organizationJsonLd, safeJsonLd } from "@/lib/seo/jsonld";
 import { SiteFooter, SiteHeader } from "@/components/public/site-header";
 
@@ -67,7 +67,7 @@ export default async function PublicLayout({ children, params }: { children: Rea
         </a>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd({ name, url: siteUrl(), sameAs: Object.values(social) })) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd({ name, url: siteUrl(), sameAs: Object.values(social), email: CONTACT_EMAIL })) }}
         />
         <SiteHeader lang={lang} siteName={name} categories={categories} breaking={breaking} />
         {!configured && <p className="border-b border-line p-3 text-center text-sm text-muted">{t(lang, "notConfigured")}</p>}

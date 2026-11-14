@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from "@/lib/settings";
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import type { ArticleCard, } from "@/lib/articles/queries";
@@ -91,8 +92,11 @@ export function SiteFooter({ lang, siteName, social, categories }: { lang: Lang;
         <div className="md:col-span-2">
           <Logo height={64} label={siteName} />
           <p className="mt-3 text-sm text-muted">{t(lang, "tagline")}</p>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="mt-4 inline-block text-sm text-neutral-600 underline decoration-white/20 underline-offset-4 transition hover:text-white">
+            {CONTACT_EMAIL}
+          </a>
           {Object.keys(social).length > 0 && (
-            <ul className="mt-6 flex flex-wrap gap-2">
+            <ul className="mt-5 flex flex-wrap gap-2">
               {Object.entries(social).map(([k, url]) => (
                 <li key={k}>
                   <a href={url} target="_blank" rel="noopener noreferrer" className="btn h-9 text-xs capitalize">

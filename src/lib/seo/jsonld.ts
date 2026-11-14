@@ -2,7 +2,7 @@ import type { Lang } from "@/lib/db/types";
 
 /** schema.org structured data builders. Output is serialized with safeJsonLd(). */
 
-export function organizationJsonLd(p: { name: string; url: string; logoUrl?: string | null; sameAs?: string[] }) {
+export function organizationJsonLd(p: { name: string; url: string; logoUrl?: string | null; sameAs?: string[]; email?: string }) {
   return {
     "@context": "https://schema.org",
     "@type": "NewsMediaOrganization",
@@ -10,6 +10,7 @@ export function organizationJsonLd(p: { name: string; url: string; logoUrl?: str
     url: p.url,
     ...(p.logoUrl ? { logo: { "@type": "ImageObject", url: p.logoUrl } } : {}),
     ...(p.sameAs?.length ? { sameAs: p.sameAs } : {}),
+    ...(p.email ? { email: p.email, contactPoint: { "@type": "ContactPoint", contactType: "editorial", email: p.email } } : {}),
   };
 }
 

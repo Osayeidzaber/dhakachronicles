@@ -5,6 +5,7 @@ import { isConfigured } from "@/lib/public-data";
 import { listPartners } from "@/lib/articles/queries";
 import { PartnerGrid } from "@/components/public/partner-grid";
 import { AdEnquiryForm } from "@/components/public/ad-enquiry-form";
+import { CONTACT_EMAIL, OFFICIAL_SOCIAL } from "@/lib/settings";
 
 export const revalidate = 600;
 
@@ -42,7 +43,7 @@ const T = {
     formNote: "We reply within two working days.",
     rule: "Our rule",
     ruleBody: "Everything paid for is clearly labelled “Sponsored” or “Advertisement”. Our news coverage is never for sale.",
-    dm: "Prefer Instagram?",
+    dm: "Prefer to message or email?",
     dmBtn: "Message us on Instagram",
   },
   bn: {
@@ -65,7 +66,7 @@ const T = {
     formNote: "দুই কর্মদিবসের মধ্যে উত্তর দিই।",
     rule: "আমাদের নীতি",
     ruleBody: "অর্থের বিনিময়ে প্রকাশিত সব কনটেন্টে স্পষ্টভাবে “স্পনসরড” বা “বিজ্ঞাপন” লেখা থাকে। আমাদের খবর কখনো বিক্রি হয় না।",
-    dm: "ইনস্টাগ্রামে কথা বলতে চান?",
+    dm: "মেসেজ বা ইমেইল করতে চান?",
     dmBtn: "ইনস্টাগ্রামে মেসেজ",
   },
 } as const;
@@ -183,8 +184,16 @@ export default async function AdvertisePage({ params }: { params: Promise<{ lang
           </div>
           <div className="flex flex-col items-start gap-2 border-t border-white/10 pt-4">
             <span className="text-[13px] text-muted">{c.dm}</span>
-            <a href="https://ig.me/m/dhakachronicles" target="_blank" rel="noopener noreferrer" className="btn h-11 px-5">
-              {c.dmBtn}
+            <div className="flex flex-wrap gap-2">
+              <a href="https://ig.me/m/dhakachronicles" target="_blank" rel="noopener noreferrer" className="btn h-11 px-5">
+                {c.dmBtn}
+              </a>
+              <a href={OFFICIAL_SOCIAL.facebook} target="_blank" rel="noopener noreferrer" className="btn h-11 px-5">
+                Facebook
+              </a>
+            </div>
+            <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Advertising enquiry")}`} className="text-[14px] text-neutral-600 underline decoration-white/20 underline-offset-4 hover:text-white">
+              {CONTACT_EMAIL}
             </a>
           </div>
         </div>

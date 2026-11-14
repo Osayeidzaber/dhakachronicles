@@ -428,6 +428,28 @@ export async function resetMemberPasswordAction(userId: string, _prev: ResetPass
   }
 }
 
+/**
+ * Main admins only: permanently delete a staff login. Their profile and notifications go with it;
+ * articles, media and audit history stay (the links to them are cleared by the foreign keys).
+ */
+export async function deleteMemberAction(userId: string): Promise<void> {
+  await formAttempt("/admin/team", async () => {
+    const session = await requireSession("team.manage");
+    if (!isOwner(session.email)) throw new AppError("Only the main admins can delete accounts.", "FORBIDDEN");
+    const id = z.uuid().parse(userId);
+    if (id === session.userId) throw new AppError("You can't delete your own account.", "FORBIDDEN");
+    const admin = createAdminClient();
+    const { data: target } = await admin.auth.admin.getUserById(id);
+    const email = target.user?.email ?? null;
+    if (!canManageMember({ id: session.userId, email: session.email, isAdmin: true }, { id, email })) {
+      throw new AppError("The main admins' accounts can't be deleted.", "FORBIDDEN");
+    }
+    const { error } = await admin.auth.admin.deleteUser(id);
+    if (error) throw error;
+    await audit(session.userId, "team.delete", "user", id, { email });
+  }, "Account deleted");
+}
+
 /** Main admins: file every unsorted story under a section with tags right now (the cron also does this). */
 export async function autoSortNowAction(): Promise<void> {
   await formAttempt("/admin/instagram", async () => {

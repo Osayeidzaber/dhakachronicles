@@ -1,5 +1,5 @@
 import { requirePageSession } from "@/lib/auth/session";
-import { SwitchField } from "@/components/admin/form-controls";
+import { HoldSubmit, SwitchField } from "@/components/admin/form-controls";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { can } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -8,7 +8,7 @@ import { Avatar } from "@/components/admin/avatar";
 import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { canManageMember, isOwner } from "@/lib/auth/owners";
-import { inviteUserAction, resetMemberPasswordAction, updateMemberAction } from "../actions";
+import { deleteMemberAction, inviteUserAction, resetMemberPasswordAction, updateMemberAction } from "../actions";
 import { createMemberAction } from "../newsroom-actions";
 import type { Profile } from "@/lib/db/types";
 
@@ -116,7 +116,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
               </div>
               {editable && (
                 <details className="group">
-                  <summary className="cursor-pointer text-xs text-muted hover:text-white">{meOwner ? "Change role, access or password" : "Change role or access"}</summary>
+                  <summary className="cursor-pointer text-xs text-muted hover:text-white">{meOwner ? "Change role, access, password or delete" : "Change role or access"}</summary>
                   <form action={updateMemberAction.bind(null, m.id)} className="mt-3 flex flex-wrap items-center gap-2">
                     <select name="role" defaultValue={m.role ?? "none"} className="input h-9 w-auto">
                       <option value="none">No access</option>
@@ -131,6 +131,12 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                     <div className="mt-3 border-t border-white/5 pt-3">
                       <ResetPasswordButton action={resetMemberPasswordAction.bind(null, m.id)} />
                     </div>
+                  )}
+                  {meOwner && m.id !== session.userId && (
+                    <form action={deleteMemberAction.bind(null, m.id)} className="mt-3 flex flex-col gap-2 border-t border-white/5 pt-3">
+                      <p className="text-xs text-muted">Deletes this login for good. Their stories stay on the site.</p>
+                      <HoldSubmit className="self-start">Hold to delete account</HoldSubmit>
+                    </form>
                   )}
                 </details>
               )}

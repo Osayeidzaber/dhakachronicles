@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" role="img" aria-labelledby="title desc">
+  <title id="title">Dhaka Chronicles: news site and newsroom</title>
+  <desc id="desc">Black editorial cover: white masthead typography, fine rules, and a red-and-green mark on a black canvas.</desc>
+  <rect width="1600" height="620" fill="#000"/>
+  <g fill="none" stroke="#1f1f1f">
+    <path d="M64 96H1536M64 524H1536M1112 96V524"/>
+    <path d="M1160 160H1488M1160 200H1488M1160 240H1488M1160 280H1488M1160 320H1488M1160 360H1488M1160 400H1488M1160 440H1488"/>
+  </g>
+  <circle cx="1324" cy="300" r="74" fill="#006a4e"/>
+  <circle cx="1324" cy="300" r="38" fill="#f42a41"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#f2f2f2">
+    <text x="64" y="64" font-family="monospace" font-size="18" letter-spacing="3">DC / DHAKA CHRONICLES</text>
+    <text x="1536" y="64" text-anchor="end" font-family="monospace" font-size="18" letter-spacing="3" fill="#bdbdbd">EN · বাংলা</text>
+    <text x="56" y="250" font-size="132" font-weight="800" letter-spacing="-7">DHAKA</text>
+    <text x="56" y="370" font-size="132" font-weight="800" letter-spacing="-7">CHRONICLES</text>
+    <text x="64" y="448" font-family="Georgia, serif" font-style="italic" font-size="52" letter-spacing="-1">News from the heart of Bangladesh.</text>
+    <text x="64" y="492" font-size="23" fill="#bdbdbd">A bilingual news site and the newsroom behind it.</text>
+    <text x="64" y="573" font-family="monospace" font-size="17" letter-spacing="2" fill="#bdbdbd">NEXT.JS / SUPABASE / CLOUDFLARE R2</text>
+    <text x="1536" y="573" text-anchor="end" font-family="monospace" font-size="17" letter-spacing="2" fill="#bdbdbd">DHAKA, BANGLADESH</text>
+  </g>
+</svg>

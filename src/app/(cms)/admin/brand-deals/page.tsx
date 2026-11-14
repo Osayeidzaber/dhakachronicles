@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { HoldSubmit } from "@/components/admin/form-controls";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { ImageField } from "@/components/admin/image-field";
 import { requirePageSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Empty, Flash, PageHeader } from "@/components/admin/ui";
@@ -52,9 +53,15 @@ export default async function BrandDealsPage({ searchParams }: { searchParams: P
   const staff = (staffRows ?? []) as Pick<Profile, "id" | "full_name">[];
   const articles = (articleRows ?? []) as { id: string; title: string; language: string }[];
 
+  const { today, weekAhead } = dateWindow();
   const view = sp.view === "list" ? "list" : "board";
   const selected = sp.new ? null : (deals.find((d) => d.id === sp.deal) ?? null);
   const showPanel = !!sp.new || !!selected;
+  const mediaIds = [selected?.logo_media_id, selected?.ad_media_id].filter((x): x is string => !!x);
+  const { data: mediaRows } = mediaIds.length ? await supabase.from("media").select("id, public_url").in("id", mediaIds) : { data: [] };
+  const mediaUrl = (mid: string | null | undefined) => (mid ? (mediaRows ?? []).find((m) => m.id === mid)?.public_url ?? null : null);
+  const live = deals.filter((d) => d.show_on_site).length;
+  const ads = deals.filter((d) => d.ad_enabled && d.stage !== "cancelled" && (!d.ad_ends || d.ad_ends >= today)).length;
   const href = (q: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
     if (view === "list") p.set("view", "list");
@@ -69,7 +76,6 @@ export default async function BrandDealsPage({ searchParams }: { searchParams: P
     for (const d of list) if (d.fee_amount != null) byCur.set(d.currency, (byCur.get(d.currency) ?? 0) + Number(d.fee_amount));
     return byCur.size ? [...byCur].map(([c, a]) => money(a, c)).join(" + ") : "—";
   };
-  const { today, weekAhead } = dateWindow();
   const stats = [
     { k: "Open deals", v: String(open.length) },
     { k: "Contracted value", v: sum(deals.filter((d) => ["contracted", "in_production", "published"].includes(d.stage))) },
@@ -84,7 +90,9 @@ export default async function BrandDealsPage({ searchParams }: { searchParams: P
           New deal
         </Link>
       </PageHeader>
-      <p className="-mt-4 mb-6 text-sm text-muted">Sponsored posts, reels and articles. Paid content must always be labelled “Sponsored”.</p>
+      <p className="-mt-4 mb-6 text-sm text-muted">
+        Sponsored posts, reels, articles and website ads. {live} shown on the Advertise page · {ads} ad{ads === 1 ? "" : "s"} running.
+      </p>
       <Flash ok={sp.ok} error={sp.error} />
 
       <div className="reveal mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -130,7 +138,13 @@ export default async function BrandDealsPage({ searchParams }: { searchParams: P
                         href={href({ deal: d.id })}
                         className={`flex flex-col gap-1.5 rounded-2xl border bg-surface p-3.5 transition hover:border-white/40 ${selected?.id === d.id ? "border-white" : "border-white/[0.08]"}`}
                       >
-                        <span className="text-sm font-medium">{d.brand_name}</span>
+                        <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                          {d.brand_name}
+                          <span className="flex gap-1">
+                            {d.show_on_site && <Badge variant="outline">Site</Badge>}
+                            {d.ad_enabled && <Badge variant="warning">Ad</Badge>}
+                          </span>
+                        </span>
                         {d.deliverables && <span className="line-clamp-2 text-xs text-neutral-600">{d.deliverables}</span>}
                         <span className="flex justify-between text-xs text-muted">
                           <span>{money(d.fee_amount, d.currency)}</span>
@@ -178,7 +192,7 @@ export default async function BrandDealsPage({ searchParams }: { searchParams: P
         </section>
 
         {showPanel && (
-          <aside className="reveal w-full shrink-0 xl:w-[380px]">
+          <aside className="reveal order-first w-full shrink-0 xl:order-none xl:w-[380px]">
             <form action={saveBrandDealAction.bind(null, selected?.id ?? null)} className="card flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <p className="kicker">{selected ? STAGE_LABEL[selected.stage] : "New deal"}</p>
@@ -247,8 +261,49 @@ export default async function BrandDealsPage({ searchParams }: { searchParams: P
                   </label>
                 ))}
               </fieldset>
-              <textarea name="notes" defaultValue={selected?.notes ?? ""} placeholder="Notes" rows={3} className="input" aria-label="Notes" />
-              <SubmitButton className="btn btn-primary" pendingLabel="Adding…">{selected ? "Save deal" : "Add deal"}</SubmitButton>
+              <textarea name="notes" defaultValue={selected?.notes ?? ""} placeholder="Notes (staff only)" rows={3} className="input" aria-label="Notes" />
+
+              <fieldset className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
+                <legend className="px-1 text-xs text-muted">On the website</legend>
+                <label className="flex items-center gap-2 text-sm text-neutral-700">
+                  <input type="checkbox" name="show_on_site" defaultChecked={!!selected?.show_on_site} className="accent-white" /> Show in “Brands we&apos;ve worked with”
+                </label>
+                <ImageField name="logo_media_id" label="Brand logo" defaultId={selected?.logo_media_id} defaultUrl={mediaUrl(selected?.logo_media_id)} hint="Transparent PNG works best" />
+                <textarea name="public_blurb" defaultValue={selected?.public_blurb ?? ""} placeholder="What we did together (public, e.g. “Launch reel, 120k views”)" rows={2} maxLength={300} className="input" aria-label="Public description" />
+                <input name="proof_url" type="url" defaultValue={selected?.proof_url ?? ""} placeholder="Proof link: Instagram post or story URL (https://)" className="input" aria-label="Proof link" />
+                <input name="website_url" type="url" defaultValue={selected?.website_url ?? ""} placeholder="Brand website (https://)" className="input" aria-label="Brand website" />
+                <p className="text-[12px] text-subtle">Fees, contacts and notes are never shown publicly.</p>
+              </fieldset>
+
+              <fieldset className="flex flex-col gap-3 rounded-xl border border-white/[0.08] p-3">
+                <legend className="px-1 text-xs text-muted">Website ad</legend>
+                <label className="flex items-center gap-2 text-sm text-neutral-700">
+                  <input type="checkbox" name="ad_enabled" defaultChecked={!!selected?.ad_enabled} className="accent-white" /> Run an ad on the site
+                </label>
+                <ImageField name="ad_media_id" label="Ad image" aspect="wide" defaultId={selected?.ad_media_id} defaultUrl={mediaUrl(selected?.ad_media_id)} hint="Wide banner, about 1200 × 400" />
+                <input name="ad_link_url" type="url" defaultValue={selected?.ad_link_url ?? ""} placeholder="Where the ad links (https://)" className="input" aria-label="Ad link" />
+                <label className="flex flex-col gap-1.5 text-xs text-muted">
+                  Placement
+                  <select name="ad_placement" defaultValue={selected?.ad_placement ?? "home"} className="input">
+                    <option value="home">Homepage</option>
+                    <option value="article">Inside articles</option>
+                    <option value="both">Homepage and articles</option>
+                  </select>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex flex-col gap-1.5 text-xs text-muted">
+                    Starts
+                    <input name="ad_starts" type="date" defaultValue={selected?.ad_starts ?? ""} className="input" />
+                  </label>
+                  <label className="flex flex-col gap-1.5 text-xs text-muted">
+                    Ends
+                    <input name="ad_ends" type="date" defaultValue={selected?.ad_ends ?? ""} className="input" />
+                  </label>
+                </div>
+                <p className="text-[12px] text-subtle">Ads are always labelled “Advertisement” on the site.</p>
+              </fieldset>
+
+              <SubmitButton className="btn btn-primary" pendingLabel={selected ? "Saving…" : "Adding…"}>{selected ? "Save deal" : "Add deal"}</SubmitButton>
             </form>
             {selected && session.profile.role === "admin" && (
               <form action={deleteBrandDealAction.bind(null, selected.id)} className="mt-2">

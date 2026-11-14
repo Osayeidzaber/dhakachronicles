@@ -318,6 +318,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
         {!runs?.length ? (
           <Empty>No syncs yet.</Empty>
         ) : (
+          <div className="overflow-x-auto">
           <table className="table">
             <thead>
               <tr>
@@ -346,6 +347,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
     </>

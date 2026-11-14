@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLang } from "@/lib/i18n";
+import { isConfigured } from "@/lib/public-data";
+import { listPartners } from "@/lib/articles/queries";
+import { PartnerGrid } from "@/components/public/partner-grid";
 
-export const revalidate = 3600;
+export const revalidate = 600;
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
@@ -33,6 +36,7 @@ export default async function AdvertisePage({ params }: { params: Promise<{ lang
   const { lang } = await params;
   if (!isLang(lang)) notFound();
   const bn = lang === "bn";
+  const partners = isConfigured() ? await listPartners().catch(() => []) : [];
   return (
     <div className="flex flex-col gap-14">
       <header className="reveal flex flex-col gap-4 border-b border-white pb-8">
@@ -52,7 +56,19 @@ export default async function AdvertisePage({ params }: { params: Promise<{ lang
         ))}
       </section>
 
-      <section className="grid gap-8 rounded-2xl border border-line p-8 md:grid-cols-2">
+      {partners.length > 0 && (
+        <section aria-labelledby="worked-h" className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white pb-3">
+            <h2 id="worked-h" className="font-display text-[clamp(2rem,4vw,2.75rem)] leading-none">
+              {bn ? "যাঁদের সঙ্গে কাজ করেছি" : "Brands we've worked with"}
+            </h2>
+            <span className="text-[13px] text-muted">{bn ? `${partners.length}টি ব্র্যান্ড` : `${partners.length} brand${partners.length === 1 ? "" : "s"}`}</span>
+          </div>
+          <PartnerGrid partners={partners} lang={lang} detailed />
+        </section>
+      )}
+
+      <section className="grid gap-8 rounded-2xl border border-line p-6 sm:p-8 md:grid-cols-2">
         <div className="flex flex-col gap-3">
           <h2 className="font-display text-3xl">{bn ? "আমাদের নীতি" : "Our rule"}</h2>
           <p className="text-[15px] leading-relaxed text-neutral-600">

@@ -253,3 +253,37 @@ describe("instagram engagement", () => {
     await expect(db.exec(`insert into instagram_imports (instagram_media_id, media_type, media_timestamp, like_count) values ('neg-1', 'IMAGE', now(), -1)`)).rejects.toThrow();
   });
 });
+
+describe("partners, ads and public team", () => {
+  it("shows only opted-in partners and active ads, never fees or contacts", async () => {
+    await db.exec(`insert into brand_deals (brand_name, fee_amount, contact_email, show_on_site, public_blurb) values ('Shown Co', 5000, 'a@b.co', true, 'Launch campaign'), ('Hidden Co', 9000, null, false, null)`);
+    const { rows } = await as("anon", null, () => db.query<Record<string, unknown>>("select * from public_partners()"));
+    expect(rows.map((r) => r.brand_name)).toContain("Shown Co");
+    expect(rows.map((r) => r.brand_name)).not.toContain("Hidden Co");
+    for (const r of rows) {
+      expect(r).not.toHaveProperty("fee_amount");
+      expect(r).not.toHaveProperty("contact_email");
+    }
+    // An ad needs an image and a link, and an expired ad is not served.
+    await expect(db.exec(`insert into brand_deals (brand_name, ad_enabled) values ('No creative', true)`)).rejects.toThrow();
+    await expect(db.exec(`insert into brand_deals (brand_name, ad_starts, ad_ends) values ('Bad window', '2026-12-02', '2026-12-01')`)).rejects.toThrow();
+    await expect(db.exec(`insert into brand_deals (brand_name, website_url) values ('Plain http', 'http://x.com')`)).rejects.toThrow();
+    const m = await db.query<{ id: string }>(
+      `insert into media (r2_key, public_url, original_filename, mime_type, file_size, folder, status) values ('ads/x.webp', 'https://m/x.webp', 'x.webp', 'image/webp', 10, 'branding', 'ready') returning id`,
+    );
+    const mid = m.rows[0].id;
+    await db.exec(`insert into brand_deals (brand_name, ad_enabled, ad_media_id, ad_link_url, ad_placement) values ('Live ad', true, '${mid}', 'https://brand.example', 'both')`);
+    await db.exec(`insert into brand_deals (brand_name, ad_enabled, ad_media_id, ad_link_url, ad_ends) values ('Old ad', true, '${mid}', 'https://brand.example', '2020-01-01')`);
+    const ads = await as("anon", null, () => db.query<{ brand_name: string }>("select * from active_ads('article')"));
+    expect(ads.rows.map((r) => r.brand_name)).toEqual(["Live ad"]);
+  });
+
+  it("lets anyone read visible team members but only admins edit them", async () => {
+    await db.exec(`insert into team_members (name_en, visible) values ('Visible Person', true), ('Hidden Person', false)`);
+    const pub = await as("anon", null, () => db.query<{ name_en: string }>("select name_en from team_members"));
+    expect(pub.rows.map((r) => r.name_en)).toEqual(["Visible Person"]);
+    await expect(as("authenticated", EDITOR, () => db.exec(`insert into team_members (name_en) values ('Nope')`))).rejects.toThrow();
+    await as("authenticated", ADMIN, () => db.exec(`insert into team_members (name_en) values ('By admin')`));
+    await expect(db.exec(`insert into team_members (name_en, instagram) values ('Bad handle', 'no spaces allowed')`)).rejects.toThrow();
+  });
+});

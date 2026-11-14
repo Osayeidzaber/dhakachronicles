@@ -112,6 +112,16 @@ const checkbox = z
   .union([z.literal("on"), z.literal("true"), z.literal(""), z.undefined(), z.null()])
   .transform((v) => v === "on" || v === "true");
 
+const httpsUrl = z
+  .union([z.url({ protocol: /^https$/ }), z.literal("")])
+  .nullish()
+  .transform((v) => (v ? v : null));
+
+const optionalDate = z
+  .union([z.iso.date(), z.literal("")])
+  .nullish()
+  .transform((v) => (v ? v : null));
+
 export const brandDealSchema = z
   .object({
     brand_name: z.string().trim().min(1).max(200),
@@ -138,7 +148,41 @@ export const brandDealSchema = z
     invoice_sent: checkbox,
     paid: checkbox,
     notes: nullableText(5000),
+    show_on_site: checkbox,
+    logo_media_id: uuidOrNull,
+    website_url: httpsUrl,
+    public_blurb: nullableText(300),
+    proof_url: httpsUrl,
+    ad_enabled: checkbox,
+    ad_media_id: uuidOrNull,
+    ad_link_url: httpsUrl,
+    ad_placement: z.enum(["home", "article", "both"]).default("home"),
+    ad_starts: optionalDate,
+    ad_ends: optionalDate,
   })
+  .refine((d) => !d.ad_enabled || (d.ad_media_id && d.ad_link_url), { message: "An ad needs an image and a link.", path: ["ad_enabled"] })
+  .refine((d) => !d.ad_starts || !d.ad_ends || d.ad_starts <= d.ad_ends, { message: "The ad end date is before its start date.", path: ["ad_ends"] })
   .refine((d) => !d.paid || d.invoice_sent, { message: "Mark the invoice as sent before marking it paid.", path: ["paid"] });
 
 export type BrandDealInput = z.infer<typeof brandDealSchema>;
+
+export const teamMemberSchema = z.object({
+  name_en: z.string().trim().min(1, "Add a name").max(120),
+  name_bn: nullableText(120),
+  role_en: nullableText(120),
+  role_bn: nullableText(120),
+  bio_en: nullableText(600),
+  bio_bn: nullableText(600),
+  photo_media_id: uuidOrNull,
+  author_id: uuidOrNull,
+  instagram: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/^@/, ""))
+    .pipe(z.union([z.literal(""), z.string().regex(/^[A-Za-z0-9._]{1,30}$/, "Instagram handle looks wrong")]))
+    .nullish()
+    .transform((v) => (v ? v : null)),
+  sort_order: z.coerce.number().int().min(0).max(9999).default(0),
+  visible: checkbox,
+});
+export type TeamMemberInput = z.infer<typeof teamMemberSchema>;

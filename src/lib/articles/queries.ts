@@ -241,3 +241,63 @@ export async function listAuthors(): Promise<(Author & { avatar: ArticleImage | 
   if (error) throw error;
   return (data ?? []) as (Author & { avatar: ArticleImage | null })[];
 }
+
+// ---------------------------------------------------------------- partners, ads, team (public)
+const IMAGE_FIELDS = "id, public_url, variants, width, height, alt_text_en, alt_text_bn";
+
+async function imagesById(ids: (string | null)[]): Promise<Map<string, ArticleImage>> {
+  const want = [...new Set(ids.filter((x): x is string => !!x))];
+  if (!want.length) return new Map();
+  const { data } = await createPublicClient().from("media").select(IMAGE_FIELDS).in("id", want);
+  return new Map(((data ?? []) as ArticleImage[]).map((m) => [m.id, m]));
+}
+
+export interface Partner {
+  id: string;
+  brand_name: string;
+  website_url: string | null;
+  public_blurb: string | null;
+  proof_url: string | null;
+  logo: ArticleImage | null;
+}
+
+/** Brands shown publicly (opted in per deal). Fees and contacts are never returned. */
+export async function listPartners(): Promise<Partner[]> {
+  const { data, error } = await createPublicClient().rpc("public_partners");
+  if (error) throw error;
+  const rows = (data ?? []) as (Omit<Partner, "logo"> & { logo_media_id: string | null })[];
+  const imgs = await imagesById(rows.map((r) => r.logo_media_id));
+  return rows.map(({ logo_media_id, ...r }) => ({ ...r, logo: logo_media_id ? (imgs.get(logo_media_id) ?? null) : null }));
+}
+
+export interface SiteAd {
+  id: string;
+  brand_name: string;
+  ad_link_url: string;
+  image: ArticleImage;
+}
+
+/** Ads running today for a placement (Dhaka date window), newest first. */
+export async function listActiveAds(placement: "home" | "article"): Promise<SiteAd[]> {
+  const { data, error } = await createPublicClient().rpc("active_ads", { p_placement: placement });
+  if (error) throw error;
+  const rows = (data ?? []) as { id: string; brand_name: string; ad_link_url: string; ad_media_id: string }[];
+  const imgs = await imagesById(rows.map((r) => r.ad_media_id));
+  return rows.flatMap((r) => {
+    const image = imgs.get(r.ad_media_id);
+    return image ? [{ id: r.id, brand_name: r.brand_name, ad_link_url: r.ad_link_url, image }] : [];
+  });
+}
+
+export type PublicTeamMember = import("@/lib/db/types").TeamMember & { photo: ArticleImage | null; author: { slug: string } | null };
+
+export async function listTeamMembers(): Promise<PublicTeamMember[]> {
+  const { data, error } = await createPublicClient()
+    .from("team_members")
+    .select(`*, photo:media(${IMAGE_FIELDS}), author:authors(slug)`)
+    .eq("visible", true)
+    .order("sort_order")
+    .order("name_en");
+  if (error) throw error;
+  return (data ?? []) as PublicTeamMember[];
+}

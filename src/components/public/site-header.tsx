@@ -28,7 +28,7 @@ export function SiteHeader({ lang, siteName, categories, breaking = [] }: { lang
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1280px] px-4 pt-6 md:px-8 md:pt-8">
+      <div className="mx-auto max-w-[1280px] px-4 pt-4 md:px-8 md:pt-8">
         <div className="flex items-center justify-between gap-4">
           <MobileMenu lang={lang} categories={nav.map((c) => ({ slug: c.slug, name: localized(c, "name", lang) }))} />
           <Link href={`/${lang}`} aria-label={siteName} className="flex flex-1 justify-center transition-opacity duration-300 hover:opacity-85">
@@ -39,9 +39,9 @@ export function SiteHeader({ lang, siteName, categories, breaking = [] }: { lang
             <SearchIcon />
           </Link>
         </div>
-        <p className="mt-2 text-center text-[11px] tracking-[0.2em] text-subtle uppercase">{t(lang, "tagline")}</p>
-        <nav aria-label={t(lang, "sectionsLabel")} className="mt-5 hidden overflow-x-auto border-t border-white/[0.08] md:block">
-          <ul className="flex justify-center gap-7 py-3.5 text-sm whitespace-nowrap">
+        <p className="mt-2 hidden text-center text-[11px] tracking-[0.2em] text-subtle uppercase sm:block">{t(lang, "tagline")}</p>
+        <nav aria-label={t(lang, "sectionsLabel")} className="-mx-4 mt-4 overflow-x-auto border-t border-white/[0.08] [scrollbar-width:none] md:mx-0 md:mt-5 [&::-webkit-scrollbar]:hidden">
+          <ul className="flex w-max min-w-full gap-6 px-4 py-3 text-sm whitespace-nowrap md:justify-center md:gap-7 md:px-0 md:py-3.5">
             <li>
               <NavLink href={`/${lang}`} exact>
                 {t(lang, "home")}

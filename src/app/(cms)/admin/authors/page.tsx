@@ -1,6 +1,7 @@
 import { requirePageSession } from "@/lib/auth/session";
 import { HoldSubmit } from "@/components/admin/form-controls";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { ImageField } from "@/components/admin/image-field";
 import { createClient } from "@/lib/supabase/server";
 import { Empty, Flash, PageHeader } from "@/components/admin/ui";
 import { deleteAuthorAction, saveAuthorAction } from "../actions";
@@ -8,7 +9,7 @@ import type { Author, Profile } from "@/lib/db/types";
 
 export const metadata = { title: "Authors" };
 
-function Fields({ a, staff }: { a?: Author; staff: Pick<Profile, "id" | "full_name">[] }) {
+function Fields({ a, staff }: { a?: Author & { avatar?: { public_url: string } | null }; staff: Pick<Profile, "id" | "full_name">[] }) {
   return (
     <div className="grid gap-2 md:grid-cols-3">
       <input name="name_en" defaultValue={a?.name_en} placeholder="Name (English)" required className="input" />
@@ -26,7 +27,7 @@ function Fields({ a, staff }: { a?: Author; staff: Pick<Profile, "id" | "full_na
             </option>
           ))}
         </select>
-        <input name="avatar_media_id" defaultValue={a?.avatar_media_id ?? ""} placeholder="Avatar media ID (from Media library)" className="input font-mono text-xs" />
+        <ImageField name="avatar_media_id" label="Photo" aspect="round" defaultId={a?.avatar_media_id} defaultUrl={a?.avatar?.public_url} />
       </div>
     </div>
   );
@@ -38,10 +39,10 @@ export default async function AuthorsPage({ searchParams }: { searchParams: Prom
   await requirePageSession("authors.manage");
   const supabase = await createClient();
   const [{ data }, { data: staff }] = await Promise.all([
-    supabase.from("authors").select("*, articles(count)").order("name_en"),
+    supabase.from("authors").select("*, articles(count), avatar:media(public_url)").order("name_en"),
     supabase.from("profiles").select("id, full_name").not("role", "is", null).order("full_name"),
   ]);
-  const rows = (data ?? []) as (Author & { articles: { count: number }[] })[];
+  const rows = (data ?? []) as (Author & { articles: { count: number }[]; avatar: { public_url: string } | null })[];
   const staffList = (staff ?? []) as Pick<Profile, "id" | "full_name">[];
   const staffName = (id: string | null) => staffList.find((s) => s.id === id)?.full_name ?? null;
   const initials = (n: string) =>

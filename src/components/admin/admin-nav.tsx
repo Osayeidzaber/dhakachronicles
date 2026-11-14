@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BadgeDollarSign, FileText, FolderTree, Hash, Image as ImageIcon, Camera as Instagram, LayoutDashboard, PenLine, Settings, UserRound, Users } from "lucide-react";
+import { BadgeDollarSign, Contact, FileText, FolderTree, Hash, Image as ImageIcon, Camera as Instagram, LayoutDashboard, PenLine, Settings, UserRound, Users } from "lucide-react";
 
 const ICONS = {
   overview: LayoutDashboard,
@@ -14,6 +15,7 @@ const ICONS = {
   authors: PenLine,
   brand: BadgeDollarSign,
   team: Users,
+  people: Contact,
   profile: UserRound,
   settings: Settings,
 } as const;
@@ -27,8 +29,14 @@ export interface NavItem {
 
 export function AdminNav({ items }: { items: NavItem[] }) {
   const path = usePathname();
+  const nav = useRef<HTMLElement>(null);
+  // On phones the nav is a horizontal strip: keep the current page in view.
+  useEffect(() => {
+    const el = nav.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (el && nav.current && nav.current.scrollWidth > nav.current.clientWidth) el.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [path]);
   return (
-    <nav aria-label="Admin" className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:overflow-visible md:pb-0">
+    <nav ref={nav} aria-label="Admin" className="flex gap-1 overflow-x-auto px-3 pb-3 [scrollbar-width:none] md:flex-col md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden">
       {items.map((n) => {
         const active = n.href === "/admin" ? path === "/admin" : path === n.href || path.startsWith(`${n.href}/`);
         const Icon = ICONS[n.icon];

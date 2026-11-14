@@ -204,4 +204,32 @@ export interface BrandDeal {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  show_on_site: boolean;
+  logo_media_id: string | null;
+  website_url: string | null;
+  public_blurb: string | null;
+  proof_url: string | null;
+  ad_enabled: boolean;
+  ad_media_id: string | null;
+  ad_link_url: string | null;
+  ad_placement: "home" | "article" | "both";
+  ad_starts: string | null;
+  ad_ends: string | null;
+}
+
+export interface TeamMember {
+  id: string;
+  name_en: string;
+  name_bn: string | null;
+  role_en: string | null;
+  role_bn: string | null;
+  bio_en: string | null;
+  bio_bn: string | null;
+  photo_media_id: string | null;
+  author_id: string | null;
+  instagram: string | null;
+  sort_order: number;
+  visible: boolean;
+  created_at: string;
+  updated_at: string;
 }

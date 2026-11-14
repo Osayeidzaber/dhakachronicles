@@ -7,6 +7,7 @@ import { describeActivity } from "@/lib/analytics";
 import { Flash, fmt, timeAgo } from "@/components/admin/ui";
 import { AvatarUploader } from "@/components/admin/avatar-uploader";
 import { changePasswordAction, updateProfileAction } from "../newsroom-actions";
+import { signOut } from "../../login/actions";
 
 export const metadata = { title: "Profile" };
 
@@ -118,6 +119,16 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           </ol>
         </div>
       </section>
+
+      {/* Phones have no sidebar footer, so the account actions live here too. */}
+      <div className="mt-6 flex gap-2 md:hidden">
+        <Link href="/en" target="_blank" className="btn h-11 flex-1">
+          View site ↗
+        </Link>
+        <form action={signOut} className="flex-1">
+          <button className="btn h-11 w-full">Sign out</button>
+        </form>
+      </div>
     </>
   );
 }

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { preconnect } from "react-dom";
 import "../globals.css";
 import { fontVars } from "../fonts";
 import { PresenceBeacon } from "@/components/public/presence-beacon";
 import { listBreaking, type ArticleCard } from "@/lib/articles/queries";
 import { LOCALES, isLang, t } from "@/lib/i18n";
-import { siteUrl } from "@/lib/env";
+import { env, siteUrl } from "@/lib/env";
 import { getSiteChrome } from "@/lib/public-data";
 import { seoDefaults, siteName, socialLinks } from "@/lib/settings";
 import { organizationJsonLd, safeJsonLd } from "@/lib/seo/jsonld";
@@ -38,6 +39,13 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 
 /** Root layout for the public site: one per language so <html lang> is correct. */
 export default async function PublicLayout({ children, params }: { children: React.ReactNode; params: Promise<{ lang: string }> }) {
+  // Open the connection to the image CDN early: the lead photo is usually the largest paint.
+  try {
+    const media = env().R2_PUBLIC_BASE_URL;
+    if (media) preconnect(new URL(media).origin);
+  } catch {
+    /* no media host configured */
+  }
   const { lang } = await params;
   if (!isLang(lang)) notFound();
   const { settings, categories, configured } = await getSiteChrome();

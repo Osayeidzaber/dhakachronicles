@@ -5,7 +5,8 @@ import { cache } from "react";
 import { formatDate, isLang, localDigits, localized, readMinutes, t } from "@/lib/i18n";
 import { siteUrl } from "@/lib/env";
 import { getSiteChrome, isConfigured } from "@/lib/public-data";
-import { getPublishedArticle, listMostRead, listRelated } from "@/lib/articles/queries";
+import { getPublishedArticle, listActiveAds, listMostRead, listRelated } from "@/lib/articles/queries";
+import { AdSlot } from "@/components/public/ad-slot";
 import { siteName } from "@/lib/settings";
 import { buildArticleMetadata } from "@/lib/seo/metadata";
 import { articlePath, resolveSeo } from "@/lib/seo/defaults";
@@ -59,7 +60,12 @@ export default async function ArticlePage({ params }: { params: Params }) {
   const a = await load(lang, slug);
   if (!a) notFound();
 
-  const [related, { settings }, mostRead] = await Promise.all([listRelated(a), getSiteChrome(), listMostRead(a.language, 3, 6).catch(() => [])]);
+  const [related, { settings }, mostRead, ads] = await Promise.all([
+    listRelated(a),
+    getSiteChrome(),
+    listMostRead(a.language, 3, 6).catch(() => []),
+    listActiveAds("article").catch(() => []),
+  ]);
   const base = siteUrl();
   const url = `${base}${articlePath(a.language, a.slug)}`;
   const seo = resolveSeo(a, base);
@@ -214,6 +220,8 @@ export default async function ArticlePage({ params }: { params: Params }) {
                   {t(lang, "source")}: Instagram →
                 </a>
               )}
+
+              <AdSlot ad={ads[0]} lang={lang} className="mt-10" />
             </div>
           </div>
 

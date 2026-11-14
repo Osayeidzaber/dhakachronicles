@@ -36,7 +36,7 @@ export function ArticleCard({ a, variant = "card", priority = false }: { a: Card
     return (
       <article className="group">
         <Link href={href} className="grid items-center gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-10">
-          <Thumb a={a} sizes="(max-width: 768px) 100vw, 420px" ratio="aspect-[4/5]" priority={priority} />
+          <Thumb a={a} sizes="(max-width: 768px) 100vw, 420px" ratio="aspect-[4/3] md:aspect-[4/5]" priority={priority} />
           <div className="flex flex-col gap-5">
             <Meta a={a} />
             <h2 className="font-display text-[clamp(2.2rem,4.2vw,3.6rem)] leading-[1.04] transition group-hover:text-neutral-700">{a.title}</h2>

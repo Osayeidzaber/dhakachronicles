@@ -67,6 +67,14 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [x] `supabase db push`: brand_deals live on Supabase (2026-11-14)
 - [ ] Admin skeletons (loading.tsx), page transitions, smooth scroll; adapt vendor components to the design
 
+- [x] Brand deals → public: "Brands we've worked with" (logo, what we did, proof link) on Advertise + homepage; staff-only fees/contacts stay private (`public_partners()`)
+- [x] Website ads from brand deals: image + link, placement (home / article / both), date window, labelled "Advertisement", `rel="sponsored nofollow"` (`active_ads()`)
+- [x] Admin → Team page: hand-edited people (photo, EN/BN name, role, bio, Instagram, byline link, order, visible)
+- [x] Image upload field (R2, AVIF/WebP) for logos, ads, team photos and author photos
+- [x] Phone pass: swipeable section bar, shorter lead image, admin top bar (+ new, bell, profile), sign out on profile, nav keeps current page in view
+- [x] Speed: homepage second-wave queries run in parallel; preconnect to the image CDN
+- [ ] Push migration `20261114000007_partners_ads_people.sql` to production
+
 ## Next / nice to have
 - [ ] End-to-end tests against a real Supabase project (Playwright) once credentials exist
 - [ ] Generated Supabase types (`supabase gen types`) to replace the hand-written `db/types.ts`

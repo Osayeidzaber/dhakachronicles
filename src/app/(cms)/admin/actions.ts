@@ -22,7 +22,7 @@ import {
   updateArticle,
   type BulkAction,
 } from "@/lib/articles/service";
-import { authorSchema, brandDealSchema, categorySchema, tagSchema, type TransitionInput } from "@/lib/articles/validation";
+import { authorSchema, brandDealSchema, teamMemberSchema, categorySchema, tagSchema, type TransitionInput } from "@/lib/articles/validation";
 import { deleteMedia, updateMediaMeta } from "@/lib/media/service";
 import { generateSeoSuggestions } from "@/lib/seo/ai";
 import { importSelected, runSync, syncOptionsSchema, processImport } from "@/lib/instagram/sync";
@@ -351,8 +351,10 @@ export async function saveBrandDealAction(id: string | null, formData: FormData)
       if (tag) await admin.from("article_tags").upsert({ article_id: input.article_id, tag_id: tag.id }, { onConflict: "article_id,tag_id", ignoreDuplicates: true });
       revalidatePublic();
     }
-    await audit(session.userId, `brand_deal.${id ? "update" : "create"}`, "brand_deal", id, { brand: input.brand_name, stage: input.stage });
+    await audit(session.userId, `brand_deal.${id ? "update" : "create"}`, "brand_deal", id, { brand: input.brand_name, stage: input.stage, on_site: input.show_on_site, ad: input.ad_enabled });
     revalidatePath("/admin/brand-deals");
+    // Partner logos and ads appear on public pages.
+    revalidatePublic();
   });
 }
 
@@ -457,4 +459,29 @@ export async function instagramRetryInlineAction(importId: string, _prev: RetryS
   } catch (err) {
     return { error: toActionError(err).error };
   }
+}
+
+// ---------------------------------------------------------------- public team page
+export async function saveTeamMemberAction(id: string | null, formData: FormData): Promise<void> {
+  await formAttempt("/admin/people", async () => {
+    const session = await requireSession("team.manage");
+    const input = teamMemberSchema.parse(Object.fromEntries(formData));
+    const supabase = await createClient();
+    if (id) check(await supabase.from("team_members").update(input).eq("id", id));
+    else check(await supabase.from("team_members").insert(input));
+    await audit(session.userId, `team_member.${id ? "update" : "create"}`, "team_member", id, { name: input.name_en, visible: input.visible });
+    revalidatePath("/admin/people");
+    revalidatePublic();
+  }, id ? "Person saved" : "Person added");
+}
+
+export async function deleteTeamMemberAction(id: string): Promise<void> {
+  await formAttempt("/admin/people", async () => {
+    const session = await requireSession("team.manage");
+    const supabase = await createClient();
+    check(await supabase.from("team_members").delete().eq("id", id));
+    await audit(session.userId, "team_member.delete", "team_member", id);
+    revalidatePath("/admin/people");
+    revalidatePublic();
+  }, "Person removed");
 }

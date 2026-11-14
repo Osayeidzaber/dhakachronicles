@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { isLang, localized, otherLang, t } from "@/lib/i18n";
 import type { Lang } from "@/lib/db/types";
 import { getSiteChrome, isConfigured } from "@/lib/public-data";
-import { getCardById, getTagBySlug, listFeatured, listLatest, listMostRead, type ArticleCard as Card } from "@/lib/articles/queries";
+import { getCardById, getTagBySlug, listActiveAds, listFeatured, listLatest, listMostRead, listPartners, type ArticleCard as Card } from "@/lib/articles/queries";
+import { AdSlot } from "@/components/public/ad-slot";
+import { PartnerGrid } from "@/components/public/partner-grid";
 import { highlightedArticleId } from "@/lib/highlight";
 import { log } from "@/lib/logger";
 import { ArticleCard } from "@/components/public/article-card";
@@ -37,18 +39,27 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   const other = otherLang(lang);
 
   const empty = { items: [] as Card[], page: 1, pageSize: 0, total: 0, totalPages: 1 };
-  const [pinnedId, featured, latest, mostRead, otherLatest, { categories }] = await Promise.all([
+  const [pinnedId, featured, latest, mostRead, otherLatest, { categories }, ads, partners] = await Promise.all([
     safe(highlightedArticleId(lang), null),
     safe(listFeatured(lang, 6), []),
     safe(listLatest(lang, { pageSize: 30 }), empty),
     safe(listMostRead(lang, 3, 5), []),
     safe(listLatest(other, { pageSize: 4 }), empty),
     getSiteChrome(),
+    safe(listActiveAds("home"), []),
+    safe(listPartners(), []),
   ]);
-  const pinned = pinnedId ? await safe(getCardById(pinnedId), null) : null;
-  // Ad slot: stories tagged Sponsored (brand deals and detected collaborations), labelled as such.
-  const sponsoredTag = await safe(getTagBySlug("sponsored"), null);
-  const partner = sponsoredTag ? (await safe(listLatest(lang, { tagId: sponsoredTag.id, pageSize: 3 }), empty)).items : [];
+  // Second wave, all in parallel: the pinned story, Sponsored stories and every section's latest.
+  const sponsored = async () => {
+    // Ad slot: stories tagged Sponsored (brand deals and detected collaborations), labelled as such.
+    const tag = await safe(getTagBySlug("sponsored"), null);
+    return tag ? (await safe(listLatest(lang, { tagId: tag.id, pageSize: 3 }), empty)).items : [];
+  };
+  const [pinned, partner, sectionLists] = await Promise.all([
+    pinnedId ? safe(getCardById(pinnedId), null) : Promise.resolve(null),
+    sponsored(),
+    Promise.all(categories.slice(0, 6).map(async (c) => ({ c, list: (await safe(listLatest(lang, { categoryId: c.id, pageSize: 5 }), empty)).items }))),
+  ]);
 
   const used = new Set<string>();
   const take = (list: Card[], n: number) => {
@@ -70,9 +81,6 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   const mostReadList = mostRead.length ? mostRead : latest.items.slice(0, 5);
 
   // Sections with stories: the first one gets the big "rows + most read" block, the next three a compact column each.
-  const sectionLists = await Promise.all(
-    categories.slice(0, 6).map(async (c) => ({ c, list: (await safe(listLatest(lang, { categoryId: c.id, pageSize: 5 }), empty)).items })),
-  );
   const withStories = sectionLists.filter((s) => s.list.length);
   const mainSection = withStories[0];
   const moreSections = withStories.slice(1, 4);
@@ -95,6 +103,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           </div>
         )}
       </section>
+
+      <AdSlot ad={ads[0]} lang={lang} />
 
       {/* Latest */}
       {latestGrid.length > 0 && (
@@ -205,6 +215,25 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           </section>
         </Reveal>
       )}
+
+      {/* Brands we've worked with */}
+      {partners.length > 0 && (
+        <Reveal>
+          <section aria-labelledby="partners-h" className="flex flex-col gap-5">
+            <div className="flex items-baseline justify-between border-b border-white pb-2.5">
+              <h2 id="partners-h" className="text-[13px] font-semibold tracking-[0.14em] uppercase">
+                {lang === "bn" ? "যাঁদের সঙ্গে কাজ করেছি" : "Brands we've worked with"}
+              </h2>
+              <Link href={`/${lang}/advertise`} className="text-[13px] text-muted hover:text-white">
+                {lang === "bn" ? "বিস্তারিত →" : "See the work →"}
+              </Link>
+            </div>
+            <PartnerGrid partners={partners.slice(0, 12)} lang={lang} />
+          </section>
+        </Reveal>
+      )}
+
+      {ads[1] && <AdSlot ad={ads[1]} lang={lang} />}
 
       {/* More sections */}
       {moreSections.length > 0 && (

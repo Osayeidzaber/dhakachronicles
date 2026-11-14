@@ -24,6 +24,18 @@ export function seoDefaults(settings: Record<string, unknown>): { title_suffix: 
   return { title_suffix: v.title_suffix ?? "", description_en: v.description_en ?? "", description_bn: v.description_bn ?? "" };
 }
 
+/** Engagement featuring: on/off, whether the top post also becomes the homepage lead, and how many to feature. */
+export interface AutoFeatureSettings {
+  enabled: boolean;
+  lead: boolean;
+  count: number;
+}
+export function autoFeatureSettings(settings: Record<string, unknown>): AutoFeatureSettings {
+  const v = (settings.auto_feature ?? {}) as Partial<AutoFeatureSettings>;
+  const count = typeof v.count === "number" && v.count >= 1 && v.count <= 8 ? Math.round(v.count) : 4;
+  return { enabled: v.enabled !== false, lead: v.lead === true, count };
+}
+
 export function logoMediaId(settings: Record<string, unknown>): string | null {
   return typeof settings.logo_media_id === "string" ? settings.logo_media_id : null;
 }

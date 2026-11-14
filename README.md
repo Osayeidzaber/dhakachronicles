@@ -344,6 +344,7 @@ Every table has RLS turned on.
 - **Featured:**
   - Editors can feature or unfeature stories by hand, or pin one story as the **homepage highlight**.
   - The site also features the week's top Instagram posts by engagement (likes + 3 × comments). It only ever removes stories it featured itself, so editors' choices are never overridden.
+  - **Instagram → Most-liked posts on the homepage** (main admins) turns this on or off, sets how many (2–8), and can make the #1 post the homepage lead. The ranking chooses the lead only when no editor has pinned one: `homepage_highlight.auto` marks an automatic pin, and the setting is stored in `site_settings.auto_feature`.
 
 ---
 

@@ -206,3 +206,17 @@ describe("translation helpers", () => {
     expect(b.map((x) => x.length)).toEqual([1, 2]);
   });
 });
+
+describe("engagement featuring settings", () => {
+  it("defaults to on, no auto lead, four stories, and clamps bad values", async () => {
+    const { autoFeatureSettings } = await import("@/lib/settings");
+    expect(autoFeatureSettings({})).toEqual({ enabled: true, lead: false, count: 4 });
+    expect(autoFeatureSettings({ auto_feature: { enabled: false, lead: true, count: 99 } })).toEqual({ enabled: false, lead: true, count: 4 });
+  });
+
+  it("treats older pins as manual so the ranking never replaces them", async () => {
+    const { activeHighlight } = await import("@/lib/highlight");
+    const h = activeHighlight({ article_id: "6f9619ff-8b86-4011-b42d-00cf4fc964ff", until: null, set_by: null, set_at: null });
+    expect(h?.auto).toBe(false);
+  });
+});

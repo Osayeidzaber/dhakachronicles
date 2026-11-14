@@ -25,7 +25,7 @@ import {
 import { adSchema, AD_SIZES, authorSchema, brandDealSchema, teamMemberSchema, categorySchema, tagSchema, type TransitionInput } from "@/lib/articles/validation";
 import { deleteMedia, updateMediaMeta } from "@/lib/media/service";
 import { generateSeoSuggestions } from "@/lib/seo/ai";
-import { importSelected, runSync, syncOptionsSchema, processImport } from "@/lib/instagram/sync";
+import { autoFeature, importSelected, runSync, syncOptionsSchema, processImport } from "@/lib/instagram/sync";
 import { mapLimit } from "@/lib/concurrency";
 import { connectWithToken, disconnect as disconnectInstagram } from "@/lib/instagram/oauth";
 import type { Article, Media } from "@/lib/db/types";
@@ -515,4 +515,21 @@ export async function deleteAdAction(id: string): Promise<void> {
     revalidatePath("/admin/ads");
     revalidatePublic();
   }, "Ad deleted");
+}
+
+// ---------------------------------------------------------------- engagement featuring
+export async function saveAutoFeatureAction(formData: FormData): Promise<void> {
+  await formAttempt("/admin/instagram", async () => {
+    const session = await requireSession("instagram.manage");
+    const value = z
+      .object({ enabled: z.boolean(), lead: z.boolean(), count: z.coerce.number().int().min(1).max(8) })
+      .parse({ enabled: formData.get("enabled") === "on", lead: formData.get("lead") === "on", count: formData.get("count") ?? 4 });
+    const supabase = await createClient();
+    check(await supabase.from("site_settings").upsert({ setting_key: "auto_feature", setting_value: value, is_public: false, updated_by: session.userId }, { onConflict: "setting_key" }));
+    // Apply straight away instead of waiting for the next sync.
+    const res = await autoFeature(createAdminClient());
+    await audit(session.userId, "settings.auto_feature", "site_settings", null, { ...value, featured_now: res.featured.length });
+    revalidatePath("/admin/instagram");
+    revalidatePath("/admin");
+  }, "Saved and applied");
 }

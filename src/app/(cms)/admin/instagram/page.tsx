@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { isOwner } from "@/lib/auth/owners";
 import { HoldSubmit, SwitchField } from "@/components/admin/form-controls";
+import { DateField } from "@/components/admin/date-field";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { requirePageSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
@@ -10,7 +11,8 @@ import { Empty, Flash, PageHeader, fmt } from "@/components/admin/ui";
 import { instagramModeAction } from "../newsroom-actions";
 import { HighlightButton } from "@/components/admin/highlight-button";
 import { readHighlight } from "@/lib/highlight";
-import { autoSortNowAction, instagramApproveAction, instagramAutoImportAction, instagramDisconnectAction, instagramImportSelectedAction, instagramTokenConnectAction, instagramRetryInlineAction, instagramSyncAction } from "../actions";
+import { autoFeatureSettings } from "@/lib/settings";
+import { saveAutoFeatureAction, autoSortNowAction, instagramApproveAction, instagramAutoImportAction, instagramDisconnectAction, instagramImportSelectedAction, instagramTokenConnectAction, instagramRetryInlineAction, instagramSyncAction } from "../actions";
 import { RetryButton } from "@/components/admin/retry-button";
 import { InstagramPicker } from "@/components/admin/instagram-picker";
 import { browseFeed, type FeedItem } from "@/lib/instagram/sync";
@@ -38,7 +40,10 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
     supabase.from("instagram_imports").select("id", { count: "exact", head: true }).eq("status", "failed"),
   ]);
   const account = acc as (InstagramAccount & { import_mode?: string }) | null;
-  const pinned = (await readHighlight())?.article_id ?? null;
+  const highlight = await readHighlight();
+  const pinned = highlight?.article_id ?? null;
+  const { data: afRow } = await supabase.from("site_settings").select("setting_value").eq("setting_key", "auto_feature").maybeSingle();
+  const af = autoFeatureSettings({ auto_feature: afRow?.setting_value });
   const connected = account?.status === "connected" || account?.status === "token_expired" || account?.status === "error";
 
   const { data: cats } = await supabase.from("categories").select("id, name_en").order("sort_order").order("name_en");
@@ -146,11 +151,11 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                 </label>
                 <label>
                   From date
-                  <input name="since" type="date" className="input mt-1" />
+                  <DateField name="since" placeholder="Any date" presets={[{ label: "Today", daysAgo: 0 }, { label: "7 days ago", daysAgo: 7 }, { label: "30 days ago", daysAgo: 30 }]} />
                 </label>
                 <label>
                   To date
-                  <input name="until" type="date" className="input mt-1" />
+                  <DateField name="until" placeholder="Up to now" presets={[{ label: "Today", daysAgo: 0 }, { label: "Yesterday", daysAgo: 1 }]} />
                 </label>
               </div>
               {!account.initial_import_completed && <input type="hidden" name="initial" value="1" />}
@@ -186,6 +191,35 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
               </label>
             ))}
             <SubmitButton className="btn btn-primary justify-self-start" pendingLabel="Saving…">Save</SubmitButton>
+          </form>
+        </section>
+      )}
+
+      {manage && (
+        <section className="card mb-6">
+          <h2 className="text-[15px] font-medium">Most-liked posts on the homepage</h2>
+          <p className="mt-1 mb-4 text-[13px] text-muted">
+            Ranks the last 7 days of Instagram posts by likes + 3 × comments (Instagram doesn&apos;t share view counts for photos). Updated every 15 minutes and when you press Save. Stories an editor featured or pinned by hand are never changed.
+          </p>
+          <form action={saveAutoFeatureAction} className="flex flex-col gap-3 text-sm">
+            <SwitchField name="enabled" label="Feature the most-liked posts automatically" defaultChecked={af.enabled} />
+            <SwitchField name="lead" label="Make the most-liked post the big homepage lead story" defaultChecked={af.lead} />
+            <label className="flex items-center gap-3 text-[13px] text-muted">
+              How many to feature
+              <select name="count" defaultValue={String(af.count)} className="input h-10 w-24">
+                {[2, 3, 4, 5, 6, 8].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="text-[12px] text-subtle">
+              Lead now: {highlight ? (highlight.auto ? "chosen automatically (most-liked)" : "pinned by an editor; unpin it on the Overview to let the ranking choose") : "newest featured story"}.
+            </p>
+            <SubmitButton className="btn btn-primary self-start" pendingLabel="Saving…">
+              Save and apply
+            </SubmitButton>
           </form>
         </section>
       )}

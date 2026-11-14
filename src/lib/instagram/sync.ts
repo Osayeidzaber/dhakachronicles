@@ -26,6 +26,8 @@ import { audit } from "@/lib/audit";
 import { autoTags, classifySection } from "@/lib/content/classify";
 import { topByEngagement } from "@/lib/instagram/engagement";
 import { revalidateArticle, revalidatePublic } from "@/lib/articles/revalidate";
+import { activeHighlight, type Highlight } from "@/lib/highlight";
+import { autoFeatureSettings } from "@/lib/settings";
 import { articlePath } from "@/lib/seo/defaults";
 import { siteUrl } from "@/lib/env";
 
@@ -560,7 +562,10 @@ ${a.content_text ?? ""}`, a.category_id));
  * Feature the week's most engaging Instagram stories on the home page. Only stories this
  * ranking featured itself are ever removed; editors' own picks are left alone.
  */
-export async function autoFeature(admin: Admin, n = 4): Promise<{ featured: string[]; removed: number }> {
+export async function autoFeature(admin: Admin): Promise<{ featured: string[]; removed: number; lead: string | null }> {
+  const { data: settingRow } = await admin.from("site_settings").select("setting_value").eq("setting_key", "auto_feature").maybeSingle();
+  const cfg = autoFeatureSettings({ auto_feature: settingRow?.setting_value });
+  const n = cfg.enabled ? cfg.count : 0;
   const since = new Date(Date.now() - 8 * 864e5).toISOString();
   const { data } = await admin
     .from("instagram_imports")
@@ -569,7 +574,8 @@ export async function autoFeature(admin: Admin, n = 4): Promise<{ featured: stri
     .gte("media_timestamp", since);
   type Row = { article_id: string; like_count: number; comments_count: number; media_timestamp: string; auto_featured: boolean; article: { status: string } | null };
   const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.article?.status === "published");
-  const top = new Set(topByEngagement(rows.map((r) => ({ articleId: r.article_id, likes: r.like_count, comments: r.comments_count, postedAt: r.media_timestamp })), new Date(), n));
+  const ranked = n ? topByEngagement(rows.map((r) => ({ articleId: r.article_id, likes: r.like_count, comments: r.comments_count, postedAt: r.media_timestamp })), new Date(), n) : [];
+  const top = new Set(ranked);
 
   // Stories auto-featured earlier that dropped out of the top (look beyond the window too).
   const { data: previously } = await admin.from("instagram_imports").select("article_id").eq("auto_featured", true);
@@ -588,13 +594,30 @@ export async function autoFeature(admin: Admin, n = 4): Promise<{ featured: stri
       await admin.from("instagram_imports").update({ auto_featured: true }).in("article_id", add);
     }
   }
-  if (top.size || drop.length) {
+  // Homepage lead: the most-engaged story, unless an editor pinned one by hand.
+  const { data: hlRow } = await admin.from("site_settings").select("setting_value").eq("setting_key", "homepage_highlight").maybeSingle();
+  const current = activeHighlight(hlRow?.setting_value);
+  let lead: string | null = null;
+  let leadChanged = false;
+  if (!current || current.auto) {
+    const want = cfg.enabled && cfg.lead ? (ranked[0] ?? null) : null;
+    if (want && current?.article_id !== want) {
+      const value: Highlight = { article_id: want, until: null, set_by: null, set_at: new Date().toISOString(), auto: true };
+      await admin.from("site_settings").upsert({ setting_key: "homepage_highlight", setting_value: value, is_public: true }, { onConflict: "setting_key" });
+      leadChanged = true;
+    } else if (!want && current?.auto) {
+      await admin.from("site_settings").upsert({ setting_key: "homepage_highlight", setting_value: {}, is_public: true }, { onConflict: "setting_key" });
+      leadChanged = true;
+    }
+    lead = want;
+  }
+  if (top.size || drop.length || leadChanged) {
     try {
       revalidatePublic();
     } catch {
       /* outside a request */
     }
   }
-  return { featured: [...top], removed: drop.length };
+  return { featured: ranked, removed: drop.length, lead };
 }
 

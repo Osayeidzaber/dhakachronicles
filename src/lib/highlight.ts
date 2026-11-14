@@ -10,6 +10,8 @@ export const highlightSchema = z.object({
   until: z.iso.datetime({ offset: true }).nullable().default(null),
   set_by: z.uuid().nullable().default(null),
   set_at: z.iso.datetime({ offset: true }).nullable().default(null),
+  /** true when chosen by the engagement ranking; a manual pin always wins over it. */
+  auto: z.boolean().default(false),
 });
 export type Highlight = z.infer<typeof highlightSchema>;
 
@@ -48,7 +50,7 @@ export async function highlightedArticleId(lang: Lang): Promise<string | null> {
 }
 
 export async function setHighlight(userId: string, articleId: string, until: string | null) {
-  const value: Highlight = { article_id: articleId, until, set_by: userId, set_at: new Date().toISOString() };
+  const value: Highlight = { article_id: articleId, until, set_by: userId, set_at: new Date().toISOString(), auto: false };
   const { error } = await createAdminClient()
     .from("site_settings")
     .upsert({ setting_key: "homepage_highlight", setting_value: value, is_public: true, updated_by: userId }, { onConflict: "setting_key" });

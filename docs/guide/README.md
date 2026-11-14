@@ -377,7 +377,7 @@ Only the **main admins** can change anything here. Editors can look.
 
 Checks Instagram immediately. Optional limits:
 - **Max posts**, **Page size**, **Max pages**: how far back to look.
-- **From date / To date**: only posts in this window.
+- **From date / To date**: only posts in this window. Click a box for the calendar (weeks start on Saturday), or use the quick buttons (Today, 7 days ago, 30 days ago). The **×** clears a date.
 
 Posts already on the site are skipped automatically.
 
@@ -393,6 +393,10 @@ Posts already on the site are skipped automatically.
 ### Automatic sections and tags
 
 Every imported story is filed under the best-matching section and tagged from its caption. **Sort all stories now** does this for every story on the site, in case some were missed.
+
+### Most-liked posts on the homepage
+
+Switches for engagement featuring and the automatic lead story; see [Q](#q-featured-stories-and-the-homepage-highlight).
 
 ### Posts (tabs)
 
@@ -468,16 +472,24 @@ Instagram imports use the *@dhakachronicles on Instagram* byline instead.
 
 ## Q. Featured stories and the homepage highlight
 
-**Featured column** on the homepage:
-- **By hand:**
-  - the **☆** star in the article list, or
-  - **Featured** in the editor, or
-  - **Bulk action → Feature**.
-- **Automatically:** every sync, the week's top Instagram posts by **likes + 3 × comments** are featured. The site removes only the stories **it** featured, never ones an editor chose.
+**By hand:**
+- **Feature a story:** the **☆** star in the article list, **Featured** in the editor, or **Bulk action → Feature**.
+- **Pin the lead story:** on the **Overview**, press **Change** under "Highlighted on the homepage" and pick a story. **Unpin** returns to automatic.
 
-**Homepage highlight:** the single big lead story.
-- On the **Overview**, press **Change** under "Highlighted on the homepage" and pick a story, or use the highlight button on a story.
-- **Unpin** returns to automatic: the newest featured story, otherwise the newest story.
+**Automatically, by Instagram likes (Instagram → "Most-liked posts on the homepage", main admins):**
+
+| Switch | What it does |
+|---|---|
+| **Feature the most-liked posts automatically** | Every 15 minutes, the week's top Instagram posts by **likes + 3 × comments** go into the Featured column. On by default |
+| **Make the most-liked post the big homepage lead story** | The #1 post also becomes the big lead story; the next ones fill the Featured column. Off by default |
+| **How many to feature** | 2 to 8 (default 4) |
+
+Press **Save and apply** and the homepage updates straight away, without waiting 15 minutes.
+
+**Rules:**
+- A story an editor **featured by hand** is never un-featured by the ranking.
+- A story an editor **pinned** as the lead always wins: the ranking only chooses the lead when nothing is pinned. The card shows who chose the current lead. To let the ranking take over, press **Unpin** on the Overview.
+- Instagram doesn't share view counts for photo posts, so likes and comments are used. Comments count three times because they show stronger interest.
 
 ## R. Brand deals (your portfolio)
 

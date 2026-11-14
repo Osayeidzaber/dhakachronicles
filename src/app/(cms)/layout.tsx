@@ -1,3 +1,4 @@
+import { ConsoleSignature } from "@/components/console-signature";
 import type { Metadata } from "next";
 import "../globals.css";
 import { fontVars } from "../fonts";
@@ -14,7 +15,10 @@ export const metadata: Metadata = {
 export default function CmsRootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={fontVars}>
-      <body className="min-h-screen bg-black text-white">{children}</body>
+      <body className="min-h-screen bg-black text-white">
+        {children}
+        <ConsoleSignature />
+      </body>
     </html>
   );
 }

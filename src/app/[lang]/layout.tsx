@@ -11,6 +11,8 @@ import { getSiteChrome } from "@/lib/public-data";
 import { CONTACT_EMAIL, seoDefaults, siteName, socialLinks } from "@/lib/settings";
 import { organizationJsonLd, safeJsonLd } from "@/lib/seo/jsonld";
 import { SiteFooter, SiteHeader } from "@/components/public/site-header";
+import { ConsoleSignature } from "@/components/console-signature";
+import { OZ, ozOrganizationJsonLd } from "@/lib/oz";
 
 export const revalidate = 300;
 
@@ -30,10 +32,13 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     description: (lang === "bn" ? d.description_bn : d.description_en) || undefined,
     alternates: {
       canonical: `/${lang}`,
-      languages: { bn: "/bn", en: "/en", "x-default": "/bn" },
+      languages: { en: "/en", bn: "/bn", "x-default": "/en" },
       types: { "application/rss+xml": `/${lang}/rss.xml` },
     },
     openGraph: { siteName: name, locale: lang === "bn" ? "bn_BD" : "en_US", type: "website" },
+    // Website developer (not the news authors, who are credited per story).
+    creator: OZ.name,
+    other: { designer: OZ.name, "web-developer": `${OZ.name} (${OZ.url})` },
   };
 }
 
@@ -74,7 +79,24 @@ export default async function PublicLayout({ children, params }: { children: Rea
         <main id="main" className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-8 md:px-8 md:py-10">
           {children}
         </main>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: safeJsonLd({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "@id": `${siteUrl()}/#website`,
+              name,
+              url: siteUrl(),
+              inLanguage: ["en", "bn"],
+              publisher: { "@type": "NewsMediaOrganization", name, url: siteUrl() },
+              creator: ozOrganizationJsonLd(),
+              potentialAction: { "@type": "SearchAction", target: `${siteUrl()}/${lang}/search?q={search_term_string}`, "query-input": "required name=search_term_string" },
+            }),
+          }}
+        />
         <PresenceBeacon lang={lang} />
+        <ConsoleSignature />
         <SiteFooter lang={lang} siteName={name} social={social} categories={categories} />
       </body>
     </html>

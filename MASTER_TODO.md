@@ -73,7 +73,7 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [x] Image upload field (R2, AVIF/WebP) for logos, ads, team photos and author photos
 - [x] Phone pass: swipeable section bar, shorter lead image, admin top bar (+ new, bell, profile), sign out on profile, nav keeps current page in view
 - [x] Speed: homepage second-wave queries run in parallel; preconnect to the image CDN
-- [ ] Push migration `20261114000007_partners_ads_people.sql` to production
+- [x] Push migration `20261114000007_partners_ads_people.sql` to production
 
 ## Next / nice to have
 - [ ] End-to-end tests against a real Supabase project (Playwright) once credentials exist

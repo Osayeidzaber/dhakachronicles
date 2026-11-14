@@ -115,6 +115,8 @@ export function SiteFooter({ lang, siteName, social, categories }: { lang: Lang;
         <FooterCol
           title={t(lang, "more")}
           links={[
+            [lang === "bn" ? "আমাদের দল" : "Our team", `/${lang}/team`],
+            [lang === "bn" ? "বিজ্ঞাপন দিন" : "Advertise", `/${lang}/advertise`],
             [t(lang, "privacy"), `/${lang}/privacy`],
             ["RSS", `/${lang}/rss.xml`],
             [t(lang, "staff"), "/login"],

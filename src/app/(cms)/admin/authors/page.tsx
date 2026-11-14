@@ -54,7 +54,7 @@ export default async function AuthorsPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader title="Authors" kicker="Public bylines in both editions">
+      <PageHeader title="Authors" kicker="Bylines, and the public “Our team” page">
         <details className="group relative">
           <summary className="btn btn-primary cursor-pointer list-none [&::-webkit-details-marker]:hidden">New author</summary>
           <form action={saveAuthorAction.bind(null, null)} className="card absolute right-0 z-20 mt-2 w-[min(92vw,640px)] space-y-3 shadow-2xl">

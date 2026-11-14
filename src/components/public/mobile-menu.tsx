@@ -36,6 +36,8 @@ export function MobileMenu({ lang, categories }: { lang: Lang; categories: { slu
     { name: t(lang, "latest"), href: `/${lang}/latest` },
     ...categories.map((c) => ({ name: c.name, href: `/${lang}/category/${c.slug}` })),
     { name: t(lang, "search"), href: `/${lang}/search` },
+    { name: lang === "bn" ? "আমাদের দল" : "Our team", href: `/${lang}/team` },
+    { name: lang === "bn" ? "বিজ্ঞাপন দিন" : "Advertise", href: `/${lang}/advertise` },
   ];
 
   return (

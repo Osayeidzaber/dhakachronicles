@@ -11,6 +11,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const home: MetadataRoute.Sitemap = [
     { url: `${base}/bn`, changeFrequency: "hourly", priority: 1, alternates: { languages: { bn: `${base}/bn`, en: `${base}/en` } } },
     { url: `${base}/en`, changeFrequency: "hourly", priority: 1, alternates: { languages: { bn: `${base}/bn`, en: `${base}/en` } } },
+    ...["latest", "team", "advertise", "privacy"].flatMap((p) =>
+      (["en", "bn"] as const).map((l) => ({
+        url: `${base}/${l}/${p}`,
+        changeFrequency: (p === "latest" ? "hourly" : "monthly") as "hourly" | "monthly",
+        priority: p === "latest" ? 0.8 : 0.3,
+        alternates: { languages: { en: `${base}/en/${p}`, bn: `${base}/bn/${p}` } },
+      })),
+    ),
   ];
   if (!supabaseConfig()) return home;
   try {

@@ -231,3 +231,13 @@ export async function getPublicSettings(): Promise<Record<string, unknown>> {
   const { data } = await createPublicClient().from("site_settings").select("setting_key, setting_value").eq("is_public", true);
   return Object.fromEntries((data ?? []).map((r: { setting_key: string; setting_value: unknown }) => [r.setting_key, r.setting_value]));
 }
+
+/** Everyone on the public "Our team" page (managed in Admin -> Authors), A-Z. */
+export async function listAuthors(): Promise<(Author & { avatar: ArticleImage | null })[]> {
+  const { data, error } = await createPublicClient()
+    .from("authors")
+    .select("*, avatar:media(id, public_url, variants, width, height, alt_text_en, alt_text_bn)")
+    .order("name_en");
+  if (error) throw error;
+  return (data ?? []) as (Author & { avatar: ArticleImage | null })[];
+}

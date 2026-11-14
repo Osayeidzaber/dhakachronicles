@@ -247,3 +247,56 @@ ${rings.replace('class="rings"', 'class="rings" style="bottom:900px"')}
   execFileSync(browser, ["--headless=new", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${profile}`, "--allow-file-access-from-files", "--force-device-scale-factor=1", "--window-size=1080,1920", "--virtual-time-budget=3000", `--screenshot=${join(here, "story-single.png")}`, pathToFileURL(page).href], { stdio: "ignore" });
   console.log("story single");
 }
+
+// ---------------------------------------------------------------- case-study story (matches the Corso Velle story layout)
+{
+  const W = 1080, H = 1920;
+  const caseCss = `
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: ${W}px; height: ${H}px; background: #000; overflow: hidden; }
+body { color: #f4f4f2; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; position: relative; }
+.m { font-family: Consolas, "Courier New", monospace; letter-spacing: .2em; text-transform: uppercase; }
+.top { position: absolute; left: 44px; right: 44px; top: 140px; height: 90px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 36px; }
+.top .m { font-size: 24px; color: #bdbdbd; }
+.lockup { display: flex; align-items: flex-end; gap: 12px; }
+.lockup img { height: 48px; }
+.lockup span { font-size: 40px; letter-spacing: -.035em; line-height: .9; }
+.kick { position: absolute; left: 44px; top: 302px; font-size: 24px; color: #a9a9a9; }
+.title { position: absolute; left: 40px; top: 360px; line-height: .88; letter-spacing: -.055em; }
+.title .l { font-weight: 300; font-size: 132px; }
+.title .b { font-weight: 800; font-size: 132px; letter-spacing: -.06em; }
+.browser { position: absolute; left: 44px; top: 790px; width: 884px; border-radius: 16px; overflow: hidden; background: #111; border: 1px solid #2a2a2a; }
+.browser .bar { height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 18px; background: #161616; }
+.browser .bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a3a3a; }
+.browser .bar b { flex: 1; margin-left: 40px; height: 24px; border-radius: 6px; background: #222; font: 14px Consolas, monospace; letter-spacing: .12em; color: #8a8a8a; display: grid; place-items: center; font-weight: 400; }
+.browser img { display: block; width: 100%; height: 520px; object-fit: cover; object-position: top; }
+.browser .foot { height: 40px; background: #111; }
+.phone { position: absolute; left: 720px; top: 925px; width: 330px; transform: rotate(4deg); border-radius: 46px; background: #111; padding: 12px; border: 2px solid #2c2c2c; box-shadow: 0 40px 90px rgba(0,0,0,.75); z-index: 3; }
+.phone img { display: block; width: 100%; height: 640px; object-fit: cover; object-position: top; border-radius: 36px; }
+.wave { position: absolute; left: 0; top: 1300px; width: ${W}px; height: 420px; z-index: 2; }
+.tap { position: absolute; left: 44px; top: 1446px; font-size: 26px; color: #f4f4f2; z-index: 4; }
+.sticker { position: absolute; left: 44px; top: 1510px; width: 500px; height: 118px; border: 2px dashed #3a3a3a; border-radius: 22px; display: grid; place-items: center; font-size: 20px; color: #4a4a4a; z-index: 4; background: rgba(0,0,0,.55); }
+.bot { position: absolute; left: 44px; right: 44px; top: 1700px; display: flex; justify-content: space-between; border-top: 1px solid #222; padding-top: 40px; font-size: 24px; color: #bdbdbd; }
+`;
+  const caseWave = `<svg class="wave" viewBox="0 0 1080 420" preserveAspectRatio="none">
+  <defs><linearGradient id="cf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#101010"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
+  <path d="M0,170 C180,90 330,120 520,210 S860,330 1080,150 L1080,420 L0,420 Z" fill="url(#cf)"/>
+  <path d="M0,170 C180,90 330,120 520,210 S860,330 1080,150" fill="none" stroke="#e8e8e6" stroke-width="3"/>
+  <path d="M0,240 C200,170 360,200 540,280 S880,380 1080,230" fill="none" stroke="#555" stroke-width="2"/>
+</svg>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><style>${caseCss}</style></head><body>
+<div class="top"><span class="lockup"><img src="${mark}" alt=""><span>studio</span></span><span class="m">New work / 002</span></div>
+<div class="kick m">Case study — News website</div>
+<div class="title"><div class="l">WE MADE</div><div class="b">DHAKA</div><div class="b">CHRONICLES.</div></div>
+<div class="browser"><div class="bar"><i></i><i></i><i></i><b>dhakachronicles.com</b></div><img src="${img("docs/guide/img/home-desktop.png")}"><div class="foot"></div></div>
+<div class="phone"><img src="${img("docs/guide/img/mobile-article.jpg")}"></div>
+${caseWave}
+<div class="tap m">Tap the link ↓</div>
+<div class="sticker m">Link sticker here</div>
+<div class="bot m"><span>OZ Studio © 2026</span><span>@oz.studio._</span></div>
+</body></html>`;
+  const page = join(tmp, "story-case.html");
+  writeFileSync(page, html);
+  execFileSync(browser, ["--headless=new", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${profile}`, "--allow-file-access-from-files", "--force-device-scale-factor=1", `--window-size=${W},${H}`, "--virtual-time-budget=3000", `--screenshot=${join(here, "story-case.png")}`, pathToFileURL(page).href], { stdio: "ignore" });
+  console.log("story case");
+}

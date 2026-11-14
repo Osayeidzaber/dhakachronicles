@@ -5,7 +5,7 @@ import { Camera as Instagram, Plus, Star } from "lucide-react";
 import { requirePageSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
-import { describeActivity, formatBytes, getDashboardData, pctChange, type Range } from "@/lib/analytics";
+import { describeActivity, getDashboardData, pctChange, type Range } from "@/lib/analytics";
 import { readHighlight } from "@/lib/highlight";
 import { Flash, fmt, timeAgo } from "@/components/admin/ui";
 import { Avatar } from "@/components/admin/avatar";
@@ -21,7 +21,6 @@ const RANGES: { id: Range; label: string; compare: string }[] = [
   { id: "7d", label: "7 days", compare: "vs previous 7 days" },
   { id: "30d", label: "30 days", compare: "vs previous 30 days" },
 ];
-const STORAGE_LIMIT = 10 * 1024 ** 3; // Cloudflare R2 free tier
 
 export default async function Overview({ searchParams }: { searchParams: Promise<{ range?: string; error?: string; ok?: string }> }) {
   const sp = await searchParams;
@@ -50,7 +49,6 @@ export default async function Overview({ searchParams }: { searchParams: Promise
   const langTotal = d.language.bn + d.language.en;
   const bnPct = langTotal ? Math.round((d.language.bn / langTotal) * 100) : 0;
   const catMax = Math.max(1, ...d.byCategory.map((c) => c.views));
-  const lead = d.top[0];
   const unread = (notifications ?? []).filter((n) => !n.read_at).length;
 
   return (
@@ -144,7 +142,7 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           </section>
         )}
 
-        {/* Chart + most read */}
+        {/* Views + pipeline + Instagram */}
         <section className="grid gap-4 lg:grid-cols-3">
           <div className="card lg:col-span-2">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -160,27 +158,41 @@ export default async function Overview({ searchParams }: { searchParams: Promise
             </div>
             <ViewsChart points={d.series} />
           </div>
-          <div className="card flex flex-col gap-4">
-            <h2 className="text-[15px] font-medium">Most read</h2>
-            {lead ? (
-              <>
-                {lead.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- R2 image
-                  <img src={lead.imageUrl} alt="" className="aspect-video w-full rounded-xl object-cover" />
-                ) : (
-                  <div className="aspect-video rounded-xl bg-gradient-to-br from-[#1c1c1c] to-black" />
-                )}
-                <Link href={`/admin/articles/${lead.id}`} lang={lead.language} className="font-display text-2xl leading-tight hover:underline">
-                  {lead.title}
-                </Link>
-                <div className="grid grid-cols-3 gap-2 text-xs text-muted">
-                  <Stat n={lead.views.toLocaleString()} l="views" />
-                  <Stat n={String(lead.live)} l="reading now" />
-                  <Stat n={fmtPct(pctChange(lead.views, lead.previous))} l={compare.replace("vs ", "vs ")} />
+          <div className="flex flex-col gap-4">
+            <div className="card">
+            <h2 className="mb-3 text-[15px] font-medium">Pipeline</h2>
+            {[
+              ["Drafts", d.pipeline.draft ?? 0, "draft"],
+              ["In review", d.pipeline.pending_review ?? 0, "pending_review"],
+              ["Scheduled", d.pipeline.scheduled ?? 0, "scheduled"],
+              ["Published", d.pipeline.published ?? 0, "published"],
+            ].map(([l, n, s]) => (
+              <Link key={String(s)} href={`/admin/articles?status=${s}`} className="flex justify-between border-t border-white/5 py-3 text-sm text-neutral-700 hover:text-white">
+                <span>{l}</span>
+                <span className="font-medium text-white tabular-nums">{n}</span>
+              </Link>
+            ))}
+          </div>
+            {can(role, "instagram.view") && (
+              <Link href="/admin/instagram" className="card block transition hover:border-white/20">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-[15px] font-medium">
+                    <Instagram className="h-4 w-4" aria-hidden="true" /> Instagram
+                  </h2>
+                  <span className="flex items-center gap-1.5 text-xs text-muted">
+                    <span className={`h-1.5 w-1.5 rounded-full ${d.instagram.connected ? "bg-white" : "border border-muted"}`} />
+                    {d.instagram.connected ? `@${d.instagram.username}` : "Not connected"}
+                  </span>
                 </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted">No reads yet in this period.</p>
+                <div className="grid grid-cols-3 gap-2 text-xs text-muted">
+                  <Stat n={String(d.instagram.imported)} l="imported" />
+                  <Stat n={String(d.instagram.published)} l="published" />
+                  <Stat n={String(d.instagram.failed)} l="failed" />
+                </div>
+                <p className="mt-3 text-xs text-subtle">
+                  {d.instagram.mode === "publish" ? "Publishing automatically" : "Saving as drafts"} · last sync {d.instagram.lastSync ? timeAgo(d.instagram.lastSync) : "never"}
+                </p>
+              </Link>
             )}
           </div>
         </section>
@@ -233,8 +245,8 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               <p className="py-10 text-center text-sm text-muted">Stories will appear here once readers arrive.</p>
             )}
           </div>
-          <div className="flex flex-col gap-4">
-            <div className="card">
+          <div className="card flex flex-col gap-5">
+            <div>
               <h2 className="mb-4 text-[15px] font-medium">By section</h2>
               {d.byCategory.length ? (
                 d.byCategory.map((c) => (
@@ -252,8 +264,8 @@ export default async function Overview({ searchParams }: { searchParams: Promise
                 <p className="text-sm text-muted">No data yet.</p>
               )}
             </div>
-            <div className="card flex items-center gap-5">
-              <svg width="84" height="84" viewBox="0 0 36 36" role="img" aria-label={`Bangla ${bnPct} percent, English ${100 - bnPct} percent`}>
+            <div className="mt-auto flex items-center gap-5 border-t border-white/5 pt-5">
+              <svg width="72" height="72" viewBox="0 0 36 36" role="img" aria-label={`Bangla ${bnPct} percent, English ${100 - bnPct} percent`}>
                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="4" />
                 {langTotal > 0 && <circle cx="18" cy="18" r="15.9" fill="none" stroke="#fff" strokeWidth="4" strokeDasharray={`${bnPct} ${100 - bnPct}`} transform="rotate(-90 18 18)" />}
               </svg>
@@ -268,59 +280,8 @@ export default async function Overview({ searchParams }: { searchParams: Promise
           </div>
         </section>
 
-        {/* Pipeline, Instagram, storage, activity */}
-        <section className="grid gap-4 lg:grid-cols-3">
-          <div className="card">
-            <h2 className="mb-3 text-[15px] font-medium">Pipeline</h2>
-            {[
-              ["Drafts", d.pipeline.draft ?? 0, "draft"],
-              ["In review", d.pipeline.pending_review ?? 0, "pending_review"],
-              ["Scheduled", d.pipeline.scheduled ?? 0, "scheduled"],
-              ["Published", d.pipeline.published ?? 0, "published"],
-            ].map(([l, n, s]) => (
-              <Link key={String(s)} href={`/admin/articles?status=${s}`} className="flex justify-between border-t border-white/5 py-3 text-sm text-neutral-700 hover:text-white">
-                <span>{l}</span>
-                <span className="font-medium text-white tabular-nums">{n}</span>
-              </Link>
-            ))}
-          </div>
-          <div className="flex flex-col gap-4">
-            {can(role, "instagram.view") && (
-              <Link href="/admin/instagram" className="card block transition hover:border-white/20">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 text-[15px] font-medium">
-                    <Instagram className="h-4 w-4" aria-hidden="true" /> Instagram
-                  </h2>
-                  <span className="flex items-center gap-1.5 text-xs text-muted">
-                    <span className={`h-1.5 w-1.5 rounded-full ${d.instagram.connected ? "bg-white" : "border border-muted"}`} />
-                    {d.instagram.connected ? `@${d.instagram.username}` : "Not connected"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-xs text-muted">
-                  <Stat n={String(d.instagram.imported)} l="imported" />
-                  <Stat n={String(d.instagram.published)} l="published" />
-                  <Stat n={String(d.instagram.failed)} l="failed" />
-                </div>
-                <p className="mt-3 text-xs text-subtle">
-                  {d.instagram.mode === "publish" ? "Publishing automatically" : "Saving as drafts"} · last sync {d.instagram.lastSync ? timeAgo(d.instagram.lastSync) : "never"}
-                </p>
-              </Link>
-            )}
-            <div className="card">
-              <div className="flex justify-between text-[13px]">
-                <span className="text-muted">Storage</span>
-                <span className="tabular-nums">
-                  {formatBytes(d.storage.bytes)} <span className="text-subtle">/ 10 GB</span>
-                </span>
-              </div>
-              <div className="mt-3 h-1.5 rounded bg-white/10">
-                <div className="h-1.5 rounded bg-white" style={{ width: `${Math.min(100, (d.storage.bytes / STORAGE_LIMIT) * 100).toFixed(1)}%` }} />
-              </div>
-              <p className="mt-2 text-xs text-subtle">
-                {d.storage.files.toLocaleString()} files · {d.storage.instagramFiles} from Instagram
-              </p>
-            </div>
-          </div>
+        {/* Activity */}
+        <section>
           <div className="card">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-[15px] font-medium">{unread ? `Notifications · ${unread} new` : "Team activity"}</h2>
@@ -385,6 +346,3 @@ function Stat({ n, l }: { n: string; l: string }) {
   );
 }
 
-function fmtPct(p: number | null) {
-  return p === null ? "new" : `${p > 0 ? "↑" : p < 0 ? "↓" : ""} ${Math.abs(p)}%`;
-}

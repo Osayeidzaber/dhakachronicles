@@ -142,6 +142,8 @@ const ACTION_LABELS: Record<string, string> = {
   "instagram.auto_import": "Changed Instagram auto-import",
   "highlight.set": "Pinned the homepage highlight",
   "highlight.clear": "Cleared the homepage highlight",
+  "articles.auto_sort": "Sorted stories into sections and tags",
+  "team.password_reset": "Reset a team member’s password",
   "brand_deal.create": "Added a brand deal",
   "brand_deal.update": "Updated a brand deal",
   "brand_deal.delete": "Deleted a brand deal",

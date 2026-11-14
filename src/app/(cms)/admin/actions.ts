@@ -417,3 +417,19 @@ export async function resetMemberPasswordAction(userId: string, _prev: ResetPass
     return { error: toActionError(err).error };
   }
 }
+
+/** Main admins: file every unsorted story under a section with tags right now (the cron also does this). */
+export async function autoSortNowAction(): Promise<void> {
+  await formAttempt("/admin/instagram", async () => {
+    const session = await requireSession("instagram.manage");
+    const { autoSortBacklog } = await import("@/lib/instagram/sync");
+    let total = 0;
+    for (let i = 0; i < 5; i++) {
+      const n = await autoSortBacklog(createAdminClient(), 60);
+      total += n;
+      if (n < 60) break;
+    }
+    await audit(session.userId, "articles.auto_sort", "article", null, { sorted: total });
+    revalidatePublic();
+  }, "Stories sorted into sections with tags");
+}

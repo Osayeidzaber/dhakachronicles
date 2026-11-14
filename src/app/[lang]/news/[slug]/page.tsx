@@ -128,7 +128,14 @@ export default async function ArticlePage({ params }: { params: Params }) {
           <h1 className="font-display text-[clamp(2.3rem,5.2vw,4.2rem)] leading-[1.03] tracking-[-0.01em]">{a.title}</h1>
           {a.subtitle && <p className="text-[clamp(1.1rem,1.8vw,1.35rem)] leading-relaxed text-neutral-600">{a.subtitle}</p>}
           <div className="flex flex-wrap items-center justify-between gap-4 border-y border-white/[0.08] py-4">
-            {a.author ? (
+            {!a.author && a.source_type === "instagram" ? (
+              <a href={a.source_url ?? "https://www.instagram.com/dhakachronicles/"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-surface-3" aria-hidden="true">
+                  <InstagramGlyph />
+                </span>
+                <BylineMeta lang={lang} a={a} minutes={minutes} updated={!!updated} by="@dhakachronicles on Instagram" />
+              </a>
+            ) : a.author ? (
               <Link href={`/${lang}/author/${a.author.slug}`} className="flex items-center gap-3">
                 <Byline name={byline} />
                 <BylineMeta lang={lang} a={a} minutes={minutes} updated={!!updated} by={byline} />
@@ -266,5 +273,15 @@ function BylineMeta({ lang, a, minutes, updated, by }: { lang: "bn" | "en"; a: {
         {localDigits(minutes, lang)} {t(lang, "minRead")}
       </span>
     </span>
+  );
+}
+
+function InstagramGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
   );
 }

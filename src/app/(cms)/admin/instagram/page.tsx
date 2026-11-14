@@ -10,7 +10,7 @@ import { Empty, Flash, PageHeader, fmt } from "@/components/admin/ui";
 import { instagramModeAction } from "../newsroom-actions";
 import { HighlightButton } from "@/components/admin/highlight-button";
 import { readHighlight } from "@/lib/highlight";
-import { instagramApproveAction, instagramAutoImportAction, instagramDisconnectAction, instagramImportSelectedAction, instagramTokenConnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
+import { autoSortNowAction, instagramApproveAction, instagramAutoImportAction, instagramDisconnectAction, instagramImportSelectedAction, instagramTokenConnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
 import { InstagramPicker } from "@/components/admin/instagram-picker";
 import { browseFeed, type FeedItem } from "@/lib/instagram/sync";
 import type { InstagramAccount, InstagramImport, SyncRun } from "@/lib/db/types";
@@ -185,6 +185,18 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
               </label>
             ))}
             <SubmitButton className="btn btn-primary justify-self-start" pendingLabel="Saving…">Save</SubmitButton>
+          </form>
+        </section>
+      )}
+
+      {manage && (
+        <section className="card mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-[15px] font-medium">Automatic sections and tags</h2>
+            <p className="mt-1 text-[13px] text-muted">Every story is filed under a section and tagged from its caption on import, and every 15 minutes for anything left unsorted.</p>
+          </div>
+          <form action={autoSortNowAction}>
+            <SubmitButton className="btn" pendingLabel="Sorting…">Sort all stories now</SubmitButton>
           </form>
         </section>
       )}

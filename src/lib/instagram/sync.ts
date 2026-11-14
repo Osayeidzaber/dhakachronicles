@@ -23,6 +23,7 @@ import { detectLanguage, draftContent, draftSlug, draftTitle } from "@/lib/insta
 import type { InstagramAccount, Lang } from "@/lib/db/types";
 import { notifyAlert, notifyArticle } from "@/lib/discord";
 import { audit } from "@/lib/audit";
+import { autoTags, classifySection } from "@/lib/content/classify";
 import { revalidateArticle } from "@/lib/articles/revalidate";
 import { articlePath } from "@/lib/seo/defaults";
 import { siteUrl } from "@/lib/env";
@@ -211,6 +212,9 @@ export async function processImport(admin: Admin, importId: string, publish?: bo
     if (failures.length) {
       await admin.from("instagram_imports").update({ error_message: `Imported with skipped media: ${failures.join("; ")}` }).eq("id", importId);
     }
+    // Every story gets a section and tags automatically (a section picked by an editor wins).
+    await autoSort(admin, String(articleId), `${title}
+${caption}`, categoryId ?? null);
     await finishImport(admin, String(articleId), row.account_id as string | null, media.permalink ?? null, publish, categoryId, media.timestamp);
     await audit(null, publish ? "instagram.imported_published" : "instagram.imported", "article", String(articleId), {
       post: media.id,
@@ -319,6 +323,9 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
       if (!next) break;
       after = next;
     }
+
+    // Sort any stories still missing a section or tags (also catches posts imported before auto-sorting existed).
+    await autoSortBacklog(admin).catch((e) => log.warn("instagram.autosort_failed", { message: e instanceof Error ? e.message : "error" }));
 
     // Retry earlier failures that are due.
     const { data: due } = await admin
@@ -498,4 +505,44 @@ export async function importSelected(input: z.infer<typeof importSelectionSchema
     })
     .eq("id", runId);
   return { imported, skipped, failed };
+}
+
+/**
+ * Give an article its automatic section (unless one is chosen) and tags.
+ * Tags are created on first use; existing tags are reused by slug.
+ */
+export async function autoSort(admin: Admin, articleId: string, text: string, chosenCategoryId: string | null): Promise<{ section: string | null; tags: number }> {
+  let section: string | null = null;
+  if (!chosenCategoryId) {
+    const slug = classifySection(text);
+    const { data: cat } = await admin.from("categories").select("id").eq("slug", slug).maybeSingle();
+    if (cat?.id) {
+      await admin.from("articles").update({ category_id: cat.id }).eq("id", articleId).is("category_id", null);
+      section = slug;
+    }
+  }
+  const tags = autoTags(text);
+  if (tags.length) {
+    await admin.from("tags").upsert(tags.map((t) => ({ slug: t.slug, name_en: t.en, name_bn: t.bn })), { onConflict: "slug", ignoreDuplicates: true });
+    const { data: rows } = await admin.from("tags").select("id, slug").in("slug", tags.map((t) => t.slug));
+    if (rows?.length) {
+      await admin.from("article_tags").upsert(rows.map((r: { id: string }) => ({ article_id: articleId, tag_id: r.id })), { onConflict: "article_id,tag_id", ignoreDuplicates: true });
+    }
+  }
+  return { section, tags: tags.length };
+}
+
+/** Sort any story (Instagram or newsroom) that still has no section or no tags (runs with every sync and the cron). */
+export async function autoSortBacklog(admin: Admin, limit = 60): Promise<number> {
+  const { data } = await admin
+    .from("articles")
+    .select("id, title, content_text, category_id, article_tags(tag_id)")
+    .order("created_at", { ascending: false })
+    .limit(400);
+  const todo = ((data ?? []) as { id: string; title: string; content_text: string | null; category_id: string | null; article_tags: unknown[] }[])
+    .filter((a) => !a.category_id || !a.article_tags?.length)
+    .slice(0, limit);
+  await mapLimit(todo, 4, (a) => autoSort(admin, a.id, `${a.title}
+${a.content_text ?? ""}`, a.category_id));
+  return todo.length;
 }

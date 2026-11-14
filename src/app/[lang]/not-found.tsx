@@ -25,6 +25,12 @@ export default function NotFound() {
             প্রচ্ছদ
           </Link>
         </div>
+        <p className="mt-10 text-[11px] tracking-[0.2em] text-subtle uppercase">
+          Site by{" "}
+          <a href="https://www.zaber.tech/oz-studio" target="_blank" rel="noopener" className="transition hover:text-white">
+            OZ Studios
+          </a>
+        </p>
       </section>
     </div>
   );

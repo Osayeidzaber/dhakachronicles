@@ -1,5 +1,6 @@
 import type { Page, ArticleCard as Card } from "@/lib/articles/queries";
 import type { Lang } from "@/lib/db/types";
+import { notFound } from "next/navigation";
 import { t } from "@/lib/i18n";
 import { ArticleCard } from "./article-card";
 import { Pagination } from "./pagination";
@@ -26,6 +27,8 @@ export function ArticleListPage({
   href: (p: number) => string;
   layout?: "rows" | "feature";
 }) {
+  // A page number past the end is a missing page, not an empty list.
+  if (page.page > 1 && page.items.length === 0) notFound();
   const feature = layout === "feature" && page.page === 1 && page.items.length >= 3;
   const [lead, ...others] = page.items;
   const side = feature ? others.slice(0, 2) : [];

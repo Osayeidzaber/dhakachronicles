@@ -84,6 +84,10 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [x] A–Z newsroom guide with screenshots (`docs/guide/README.md`) and detailed README
 - [ ] Set AI_SEO_* env vars (needed for automatic translation and AI SEO)
 
+- [x] Audit (2026-11-14): provider-neutral error messages, own session cookie name, provider wording removed from UI, 400 for malformed JSON, admin error screen, tests (`tests/session-cookie.test.ts`)
+- [x] Real 404 status for unknown section, tag, author, ad-report and other URLs, and for page numbers past the end (loading skeleton now only on latest, search and article routes)
+- [ ] Audit follow-ups: Content-Security-Policy header; count only failed sign-ins toward the login limit; move the admin pages' direct table queries behind `src/lib/*` data modules; remove unused vendor components and packages; confirm auth emails are sent from our own domain
+
 ## Next / nice to have
 - [ ] End-to-end tests against a real Supabase project (Playwright) once credentials exist
 - [ ] Generated Supabase types (`supabase gen types`) to replace the hand-written `db/types.ts`

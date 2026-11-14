@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 
 /** Section link that marks itself as the current page (white + underline) when its URL matches. */
@@ -15,7 +15,13 @@ export function NavLink({ href, exact = false, children }: { href: string; exact
         active ? "text-white after:scale-x-100" : "text-neutral-600 after:scale-x-0 hover:text-white hover:after:scale-x-100"
       }`}
     >
-      {children}
+      <Pending>{children}</Pending>
     </Link>
   );
+}
+
+/** Section pages have no loading skeleton (so missing ones can answer 404); pulse the clicked link instead. */
+function Pending({ children }: { children: React.ReactNode }) {
+  const { pending } = useLinkStatus();
+  return <span className={pending ? "animate-pulse text-white" : undefined}>{children}</span>;
 }

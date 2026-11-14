@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Unknown section, tag, author, ad-report and other public URLs now answer HTTP 404 (were 200 with the not-found page); a page number past the last page is a 404 instead of an error.
+- Audit pass: database and sign-in errors are translated to our own wording before reaching the screen (`publicMessage` in `src/lib/errors.ts`); the session cookie is now `dc-session` instead of the provider's project-named cookie (old sessions carry over); provider names removed from the login notice, privacy page and settings; malformed JSON returns 400 instead of 500; admin error screen.
 - Brand deals pipeline for sponsorships (`/admin/brand-deals`), with RLS and DB tests.
 - Public site redesign: highlight, most read, article tools, mobile menu, presence beacon.
 - Claude Design canvas stored in `design/claude-design/`.

@@ -1,7 +1,13 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Shown while a public page loads, in the shape of the front page (lead poster + featured list). */
-export default function Loading() {
+/**
+ * Shown while a public page loads, in the shape of the front page (lead poster + featured list).
+ *
+ * Used by the `loading.tsx` of individual routes, not by `[lang]` as a whole: a loading file
+ * starts the response with status 200 before the page can say "not found", so section, tag,
+ * author and unknown URLs deliberately have none and answer with a real 404.
+ */
+export function PageSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite" className="flex flex-col gap-16">
       <span className="sr-only">Loading…</span>

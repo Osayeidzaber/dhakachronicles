@@ -57,6 +57,11 @@ function published<T extends { lte: (c: string, v: string) => T; eq: (c: string,
   return q.eq("status", "published").lte("published_at", new Date().toISOString());
 }
 
+/** Asking for a page beyond the last one is reported as an error by the data API; treat it as an empty page. */
+function pastLastPage(error: { code?: string }): boolean {
+  return error.code === "PGRST103";
+}
+
 function paginate<T>(items: T[], total: number, page: number, pageSize: number): Page<T> {
   return { items, page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
 }
@@ -78,7 +83,7 @@ export async function listLatest(lang: Lang, opts: { page?: number; pageSize?: n
   const { data, count, error } = await q
     .order("published_at", { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
-  if (error) throw error;
+  if (error && !pastLastPage(error)) throw error;
   return paginate((data ?? []) as unknown as ArticleCard[], count ?? 0, page, pageSize);
 }
 
@@ -174,7 +179,7 @@ export async function searchArticles(lang: Lang, query: string, page = 1, pageSi
     .textSearch("search_vector", q, { type: "websearch", config: "simple" })
     .order("published_at", { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
-  if (error) throw error;
+  if (error && !pastLastPage(error)) throw error;
   return paginate((data ?? []) as unknown as ArticleCard[], count ?? 0, page, pageSize);
 }
 

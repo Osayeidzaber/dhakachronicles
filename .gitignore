@@ -41,3 +41,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 docs/pdf/guide.html
+design/social/*/.build/

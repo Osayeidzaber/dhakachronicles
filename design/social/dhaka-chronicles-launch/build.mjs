@@ -1,0 +1,160 @@
+// OZ Studio Instagram carousel showcasing the Dhaka Chronicles website (6 slides, 1080×1350).
+// Usage: node design/social/dhaka-chronicles-launch/build.mjs  → slide-01.png … slide-06.png in this folder.
+import { writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import sharp from "sharp";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const root = resolve(here, "../../..");
+const img = (p) => pathToFileURL(join(root, p)).href;
+const tmp = join(here, ".build");
+mkdirSync(tmp, { recursive: true });
+
+// White, transparent OZ mark from the square logo.
+const markPath = join(tmp, "oz-mark.png");
+{
+  const g = await sharp(join(root, "design/brand/oz/oz-mark.jpg")).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const { width, height } = g.info;
+  const px = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < width * height; i++) {
+    px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = 255;
+    px[i * 4 + 3] = g.data[i] > 40 ? g.data[i] : 0;
+  }
+  await sharp(px, { raw: { width, height, channels: 4 } }).trim({ threshold: 1 }).png().toFile(markPath);
+}
+const mark = pathToFileURL(markPath).href;
+
+const css = `
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1350px; background: #000; overflow: hidden; }
+body { color: #f4f4f2; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; position: relative; }
+.mono { font-family: "Courier New", "Courier", monospace; letter-spacing: .22em; text-transform: uppercase; }
+.top, .bot { position: absolute; left: 46px; right: 46px; display: flex; justify-content: space-between; align-items: center; font-size: 19px; color: #9a9a9a; }
+.top { top: 72px; padding-bottom: 46px; border-bottom: 1px solid #262626; }
+.bot { bottom: 64px; padding-top: 40px; border-top: 1px solid #1c1c1c; }
+.lockup { display: flex; align-items: flex-end; gap: 12px; }
+.lockup img { height: 46px; }
+.lockup span { font-size: 38px; letter-spacing: -.03em; line-height: .9; color: #f4f4f2; text-transform: none; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.wave { position: absolute; left: 0; right: 0; bottom: 150px; width: 100%; height: 260px; }
+.content { position: absolute; left: 46px; right: 46px; top: 230px; bottom: 190px; display: flex; flex-direction: column; }
+.kicker { font-size: 22px; color: #a9a9a9; }
+.center { justify-content: center; }
+.huge-light { font-weight: 300; font-size: 128px; line-height: .9; letter-spacing: -.055em; }
+.huge-bold { font-weight: 800; font-size: 128px; line-height: .9; letter-spacing: -.06em; }
+.rule { border-top: 1px solid #2a2a2a; }
+.lead { font-size: 40px; letter-spacing: -.02em; line-height: 1.15; }
+.shot { border-radius: 18px; overflow: hidden; border: 1px solid #2a2a2a; background: #0a0a0a; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.shot .bar { height: 38px; display: flex; align-items: center; gap: 9px; padding: 0 16px; border-bottom: 1px solid #1f1f1f; background: #0d0d0d; }
+.shot .bar i { width: 11px; height: 11px; border-radius: 50%; background: #2c2c2c; display: block; }
+.shot .bar b { margin-left: 14px; font: 15px "Courier New", monospace; letter-spacing: .08em; color: #777; font-weight: 400; }
+.shot img { display: block; width: 100%; }
+.phone { border-radius: 44px; border: 2px solid #2a2a2a; overflow: hidden; background: #000; padding: 10px; }
+.phone img { display: block; width: 100%; border-radius: 34px; }
+.list { list-style: none; }
+.list li { display: grid; grid-template-columns: 90px 1fr; align-items: baseline; padding: 26px 0; border-top: 1px solid #222; font-size: 38px; letter-spacing: -.02em; }
+.list li:last-child { border-bottom: 1px solid #222; }
+.list li span { font: 20px "Courier New", monospace; letter-spacing: .2em; color: #777; }
+.rings { position: absolute; right: -120px; bottom: 260px; width: 520px; height: 520px; }
+`;
+
+const wave = `<svg class="wave" viewBox="0 0 1080 260" preserveAspectRatio="none">
+  <defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0c0c"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
+  <path d="M0,150 C220,90 420,230 650,180 S920,60 1080,110 L1080,260 L0,260 Z" fill="url(#fade)"/>
+  <path d="M0,130 C230,70 430,215 660,165 S930,45 1080,95" fill="none" stroke="#7a7a7a" stroke-width="2.5"/>
+  <path d="M0,175 C240,120 450,240 660,205 S940,110 1080,150" fill="none" stroke="#1d1d1d" stroke-width="2"/>
+</svg>`;
+const rings = `<svg class="rings" viewBox="0 0 520 520"><circle cx="260" cy="260" r="255" fill="none" stroke="#1a1a1a"/><circle cx="260" cy="260" r="200" fill="none" stroke="#1a1a1a"/></svg>`;
+
+const lockup = `<span class="lockup"><img src="${mark}" alt=""><span>studio</span></span>`;
+const frame = (n, topRight, inner, { showWave = true, showRings = false, topLeft = lockup } = {}) => `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body>
+${showRings ? rings : ""}${showWave ? wave : ""}
+<div class="top mono">${topLeft}<span>${topRight}</span></div>
+<div class="content ${showWave ? "" : "center"}">${inner}</div>
+<div class="bot mono"><span>OZ Studio © 2026</span><span>0${n} / 06 ${n < 6 ? "↗ Swipe" : ""}</span></div>
+</body></html>`;
+
+const slides = [
+  // 01 — cover
+  frame(
+    1,
+    "New work / 003",
+    `<div class="kicker mono" style="margin-top:40px">Now live · dhakachronicles.com</div>
+     <div style="margin-top:70px"><div class="huge-light">DHAKA</div><div class="huge-bold">CHRONICLES.</div></div>
+     <div class="rule" style="margin-top:70px"></div>
+     <p class="lead" style="margin-top:44px">A news website and newsroom,<br>built from scratch.</p>
+     <p class="kicker mono" style="margin-top:34px">Design + development by OZ Studio.</p>`,
+    { showRings: true },
+  ),
+  // 02 — the front page
+  frame(
+    2,
+    "The front page",
+    `<div class="kicker mono">01 — The site</div>
+     <p class="lead" style="margin-top:26px;font-size:46px">Every story, front and centre.</p>
+     <div class="shot" style="margin-top:46px"><div class="bar"><i></i><i></i><i></i><b>dhakachronicles.com</b></div><img src="${img("docs/guide/img/home-desktop.png")}"></div>
+     <p class="kicker mono" style="margin-top:40px;font-size:19px">Lead story · featured · latest · most read</p>`,
+    { showWave: false },
+  ),
+  // 03 — the story page
+  frame(
+    3,
+    "The story page",
+    `<div class="kicker mono">02 — Reading</div>
+     <p class="lead" style="margin-top:26px;font-size:46px">Built for reading.<br>Made for sharing.</p>
+     <div class="shot" style="margin-top:46px"><div class="bar"><i></i><i></i><i></i><b>/news/…</b></div><img src="${img("docs/guide/img/article.png")}"></div>
+     <p class="kicker mono" style="margin-top:40px;font-size:19px">Share to WhatsApp, Facebook, X · Google-ready</p>`,
+    { showWave: false },
+  ),
+  // 04 — phones
+  frame(
+    4,
+    "Mobile first",
+    `<div class="kicker mono">03 — On the phone</div>
+     <p class="lead" style="margin-top:26px;font-size:46px">Fast where it matters.</p>
+     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:26px;margin-top:56px;align-items:start">
+       <div class="phone"><img src="${img("docs/guide/img/mobile-home.jpg")}"></div>
+       <div class="phone" style="margin-top:60px"><img src="${img("docs/guide/img/mobile-menu.jpg")}"></div>
+       <div class="phone"><img src="${img("docs/guide/img/mobile-article.jpg")}"></div>
+     </div>`,
+    { showWave: false },
+  ),
+  // 05 — the newsroom
+  frame(
+    5,
+    "Behind the scenes",
+    `<div class="kicker mono">04 — The newsroom</div>
+     <p class="lead" style="margin-top:26px;font-size:46px">Instagram to front page,<br>in one click.</p>
+     <div class="shot" style="margin-top:40px"><div class="bar"><i></i><i></i><i></i><b>/admin</b></div><img src="${img("docs/guide/img/admin-overview.jpg")}"></div>
+     <ul class="list" style="margin-top:36px">
+       <li><span>01</span>Instagram import &amp; auto-publish</li>
+       <li><span>02</span>Live readers &amp; analytics</li>
+       <li><span>03</span>Brand deals, ads &amp; reports</li>
+     </ul>`,
+    { showWave: false },
+  ),
+  // 06 — CTA
+  frame(
+    6,
+    "Web studio / 003",
+    `<div class="kicker mono" style="margin-top:40px">The internet, with intention.</div>
+     <div style="margin-top:80px"><div class="huge-light">LIKE HOW</div><div class="huge-bold">THIS FEELS?</div></div>
+     <div class="rule" style="margin-top:70px"></div>
+     <p class="lead" style="margin-top:44px">We make websites. That's what we do.</p>
+     <p class="kicker mono" style="margin-top:34px">DM @oz.studio._ · zaber.tech/oz-studio</p>`,
+    { showRings: true },
+  ),
+];
+
+const browsers = ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome"];
+const browser = browsers.find((b) => existsSync(b));
+if (!browser) throw new Error("Install Google Chrome or Microsoft Edge.");
+const profile = join(tmp, "profile");
+slides.forEach((html, i) => {
+  const n = String(i + 1).padStart(2, "0");
+  const page = join(tmp, `slide-${n}.html`);
+  writeFileSync(page, html);
+  execFileSync(browser, ["--headless=new", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${profile}`, "--allow-file-access-from-files", "--force-device-scale-factor=1", "--window-size=1080,1350", "--virtual-time-budget=3000", `--screenshot=${join(here, `slide-${n}.png`)}`, pathToFileURL(page).href], { stdio: "ignore" });
+  console.log("slide", n);
+});

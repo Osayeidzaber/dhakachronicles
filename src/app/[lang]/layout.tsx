@@ -29,7 +29,14 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   return {
     metadataBase: new URL(siteUrl()),
     title: { default: name, template: `%s${d.title_suffix || ` | ${name}`}` },
-    description: (lang === "bn" ? d.description_bn : d.description_en) || undefined,
+    // A real description stops Google from scraping page text (which put the name in the snippet twice).
+    description:
+      (lang === "bn" ? d.description_bn : d.description_en) ||
+      (lang === "bn"
+        ? "ঢাকা ক্রনিকলস: বাংলাদেশের হৃদয় থেকে স্বাধীন ডিজিটাল সাংবাদিকতা। রাজনীতি, ব্যবসা, খেলা, সংস্কৃতি ও প্রযুক্তির খবর।"
+        : "Independent digital journalism from the heart of Bangladesh. News on politics, business, sports, culture and technology."),
+    applicationName: name,
+    appleWebApp: { title: name },
     alternates: {
       canonical: `/${lang}`,
       languages: altLanguages(),
@@ -87,7 +94,8 @@ export default async function PublicLayout({ children, params }: { children: Rea
               "@type": "WebSite",
               "@id": `${siteUrl()}/#website`,
               name,
-              url: siteUrl(),
+              alternateName: ["DhakaChronicles", "ঢাকা ক্রনিকলস"],
+              url: `${siteUrl()}/`,
               inLanguage: ["en", "bn"],
               publisher: { "@type": "NewsMediaOrganization", name, url: siteUrl() },
               creator: ozOrganizationJsonLd(),

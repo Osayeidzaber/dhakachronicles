@@ -14,7 +14,9 @@ const schema = z.object({
   SUPABASE_URL: optional,
   SUPABASE_PUBLISHABLE_KEY: optional,
   SUPABASE_SECRET_KEY: optional,
-  SITE_URL: z.string().default("http://localhost:3000"),
+  // Falls back to Vercel's production domain so canonical URLs and structured data never say localhost in production.
+  SITE_URL: z.string().optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: optional,
   CRON_SECRET: optional,
   TOKEN_ENCRYPTION_KEY: optional,
   R2_ACCOUNT_ID: optional,
@@ -44,7 +46,9 @@ export function env(): ServerEnv {
 }
 
 export function siteUrl(): string {
-  return env().SITE_URL.replace(/\/+$/, "");
+  const e = env();
+  const url = e.SITE_URL || (e.VERCEL_PROJECT_PRODUCTION_URL ? `https://${e.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+  return url.replace(/\/+$/, "");
 }
 
 export function supabaseConfig() {

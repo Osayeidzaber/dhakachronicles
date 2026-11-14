@@ -105,17 +105,18 @@ const today = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", 
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Dhaka Chronicles — Website & Newsroom Guide · OZ Studios</title>
 <style>
 @page {
-  size: A4; margin: 20mm 16mm 18mm;
-  @top-left { content: "DHAKA CHRONICLES · WEBSITE & NEWSROOM GUIDE"; font: 6.5pt "Courier New", monospace; letter-spacing: .18em; color: #8a8a8a; }
-  @top-right { content: "OZ STUDIO"; font: 6.5pt "Courier New", monospace; letter-spacing: .18em; color: #8a8a8a; }
-  @bottom-left { content: "OZ STUDIO © 2026 · DESIGN + DEVELOPMENT. ALL IN ONE PLACE."; font: 6.5pt "Courier New", monospace; letter-spacing: .18em; color: #8a8a8a; }
-  @bottom-right { content: counter(page, decimal-leading-zero); font: 6.5pt "Courier New", monospace; letter-spacing: .18em; color: #8a8a8a; }
+  size: A4; margin: 20mm 16mm 18mm; background: #000;
+  @top-left { content: "DHAKA CHRONICLES · WEBSITE & NEWSROOM GUIDE"; font: 6.5pt "Courier New", monospace; letter-spacing: .2em; color: #7a7a7a; }
+  @top-right { content: "OZ STUDIO"; font: 6.5pt "Courier New", monospace; letter-spacing: .2em; color: #7a7a7a; }
+  @bottom-left { content: "OZ STUDIO © 2026 · THE INTERNET, WITH INTENTION."; font: 6.5pt "Courier New", monospace; letter-spacing: .2em; color: #7a7a7a; }
+  @bottom-right { content: counter(page, decimal-leading-zero) " / 48"; font: 6.5pt "Courier New", monospace; letter-spacing: .2em; color: #7a7a7a; }
 }
 @page :first { margin: 0; @top-left { content: none } @top-right { content: none } @bottom-left { content: none } @bottom-right { content: none } }
 * { box-sizing: border-box; }
-html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; font: 10.5pt/1.6 "Helvetica Neue", Arial, sans-serif; color: #141414; }
-.mono, th, .kick { font-family: "Courier New", ui-monospace, monospace; letter-spacing: .18em; text-transform: uppercase; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #000; }
+body { margin: 0; font: 10.5pt/1.65 "Helvetica Neue", Arial, sans-serif; color: #c9c9c6; background: #000; }
+strong, h1, h2, h3, th { color: #f4f4f2; }
+.mono, th, .kick { font-family: "Courier New", ui-monospace, monospace; letter-spacing: .2em; text-transform: uppercase; }
 /* cover */
 .cover { height: 297mm; background: #000; color: #f4f4f2; padding: 18mm 16mm; display: flex; flex-direction: column; position: relative; overflow: hidden; break-after: page; }
 .cover .row { display: flex; justify-content: space-between; font-size: 8pt; color: #9a9a9a; border-bottom: .5pt solid #2a2a2a; padding-bottom: 6mm; }
@@ -130,29 +131,33 @@ body { margin: 0; font: 10.5pt/1.6 "Helvetica Neue", Arial, sans-serif; color: #
 .cover svg { position: absolute; left: 0; right: 0; bottom: 60mm; width: 100%; height: 50mm; }
 /* contents */
 .toc { break-after: page; }
-.toc h2 { font-size: 26pt; letter-spacing: -.02em; margin: 0 0 8mm; }
+.toc .kick { font-size: 7.5pt; color: #8a8a8a; border-bottom: .5pt solid #2a2a2a; padding-bottom: 4mm; margin-bottom: 10mm; }
+.toc h2 { font-size: 40pt; line-height: .95; letter-spacing: -.04em; margin: 0 0 10mm; font-weight: 300; }
+.toc h2 b { font-weight: 800; }
 .toc ol { columns: 2; column-gap: 12mm; padding: 0; list-style: none; margin: 0; }
-.toc li { padding: 2.2mm 0; border-bottom: .4pt solid #e6e6e6; break-inside: avoid; font-size: 10pt; }
-.toc li span { font-family: "Courier New", monospace; color: #888; margin-right: 3mm; }
+.toc li { padding: 2.4mm 0; border-bottom: .4pt solid #222; break-inside: avoid; font-size: 10pt; color: #e8e8e6; }
+.toc li span { font-family: "Courier New", monospace; color: #6f6f6f; margin-right: 4mm; }
 /* content */
-h1.part { break-before: page; background: #000; color: #fff; margin: 0 0 8mm; padding: 12mm 10mm; font-size: 26pt; letter-spacing: -.02em; border-radius: 3mm; }
-h2.chapter { break-before: page; font-size: 21pt; letter-spacing: -.02em; margin: 0 0 5mm; padding-top: 2mm; border-top: 2.5pt solid #000; }
+h1.part { break-before: page; margin: 0 0 10mm; padding: 0 0 8mm; font-size: 40pt; line-height: .95; letter-spacing: -.04em; font-weight: 300; border-bottom: .5pt solid #2a2a2a; }
+h1.part::before { content: "OZ STUDIO / GUIDE"; display: block; font: 7.5pt "Courier New", monospace; letter-spacing: .2em; color: #8a8a8a; margin-bottom: 14mm; }
+h2.chapter { break-before: page; font-size: 26pt; line-height: 1; letter-spacing: -.03em; margin: 0 0 6mm; padding-top: 4mm; border-top: .5pt solid #3a3a3a; font-weight: 700; }
 h1.part + h2.chapter { break-before: avoid; }
-h3 { font-size: 13pt; margin: 7mm 0 2mm; }
+h3 { font-size: 13pt; margin: 8mm 0 2mm; letter-spacing: -.01em; }
 p { margin: 0 0 3mm; }
 ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
 li { margin: 1mm 0; }
-img { max-width: 100%; display: block; margin: 4mm auto; border: .5pt solid #ddd; border-radius: 2mm; max-height: 150mm; object-fit: contain; break-inside: avoid; }
+li::marker { color: #6f6f6f; }
+img { max-width: 100%; display: block; margin: 5mm auto; border: .5pt solid #2a2a2a; border-radius: 2mm; max-height: 150mm; object-fit: contain; break-inside: avoid; }
 table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 9.2pt; break-inside: avoid; }
-th { text-align: left; font-size: 7pt; color: #666; border-bottom: 1pt solid #000; padding: 2mm; }
-td { border-bottom: .4pt solid #e3e3e3; padding: 2mm; vertical-align: top; }
+th { text-align: left; font-size: 6.8pt; color: #8a8a8a; border-bottom: .6pt solid #f4f4f2; padding: 2mm; }
+td { border-bottom: .4pt solid #222; padding: 2.2mm 2mm; vertical-align: top; }
 td img { margin: 0; max-height: 70mm; }
-code { font-family: "Courier New", monospace; background: #f1f1f1; padding: .3mm 1.2mm; border-radius: 1mm; font-size: 9pt; }
-blockquote { margin: 4mm 0; padding: 3mm 5mm; border-left: 2.5pt solid #000; background: #f6f6f4; }
+code { font-family: "Courier New", monospace; background: #141414; color: #f4f4f2; padding: .3mm 1.2mm; border-radius: 1mm; font-size: 9pt; }
+blockquote { margin: 5mm 0; padding: 4mm 5mm; border: .5pt solid #2a2a2a; border-left: 2pt solid #f4f4f2; background: #0b0b0b; border-radius: 0 2mm 2mm 0; }
 blockquote p:last-child { margin: 0; }
-a { color: #000; }
+a { color: #f4f4f2; text-decoration-color: #555; }
 /* back page */
-.back { break-before: page; height: 250mm; background: #000; color: #f4f4f2; border-radius: 3mm; padding: 16mm; display: flex; flex-direction: column; justify-content: space-between; }
+.back { break-before: page; height: 250mm; background: #000; color: #f4f4f2; padding: 4mm 0; display: flex; flex-direction: column; justify-content: space-between; }
 .back h2 { font-size: 40pt; line-height: .95; letter-spacing: -.04em; margin: 0; font-weight: 300; }
 .back h2 b { display: block; font-weight: 800; }
 .back img { border: 0; width: 55mm; margin: 0; filter: none; }
@@ -172,7 +177,8 @@ a { color: #000; }
 
 
 <section class="toc">
-  <h2>Contents</h2>
+  <div class="kick">OZ Studio / Contents</div>
+  <h2>What&rsquo;s <b>inside.</b></h2>
   <ol>${chapters.map((c) => `<li><span>${esc(c.split(".")[0])}</span>${inline(c.replace(/^[A-Z]\.\s*/, ""))}</li>`).join("")}</ol>
 </section>
 

@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       : error === "link_expired" || error === "invalid_link"
         ? "That invitation link has expired or was already used. Ask an administrator to send a new one."
         : error === "not_configured"
-        ? "Supabase is not configured yet. Add SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and SUPABASE_SECRET_KEY to the server environment."
+        ? "The newsroom is not set up yet. Please contact the site administrator."
         : undefined;
   return (
     <main className="flex min-h-screen flex-wrap bg-black text-white">

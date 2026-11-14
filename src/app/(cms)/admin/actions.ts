@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSession } from "@/lib/auth/session";
 import { canAssignRole } from "@/lib/auth/permissions";
-import { AppError, check, toActionError, type ActionResult } from "@/lib/errors";
+import { AppError, check, publicMessage, toActionError, type ActionResult } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { siteUrl } from "@/lib/env";
 import { revalidatePublic } from "@/lib/articles/revalidate";
@@ -394,7 +394,7 @@ export async function instagramApproveAction(formData: FormData): Promise<void> 
     revalidatePath("/admin/instagram");
     if (failed.length) {
       const first = (failed[0] as PromiseRejectedResult).reason;
-      throw new AppError(`${ids.length - failed.length} published, ${failed.length} failed: ${first instanceof Error ? first.message : "error"}`, "VALIDATION");
+      throw new AppError(`${ids.length - failed.length} published, ${failed.length} failed: ${publicMessage(first)}`, "VALIDATION");
     }
   }, "Published");
 }

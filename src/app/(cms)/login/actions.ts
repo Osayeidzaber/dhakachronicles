@@ -1,11 +1,13 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { toActionError } from "@/lib/errors";
 import { audit } from "@/lib/audit";
+import { legacySessionCookies } from "@/lib/supabase/session-cookie";
 
 const schema = z.object({
   email: z.email(),
@@ -44,5 +46,8 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // Also drop a session cookie left over from before the cookie was renamed.
+  const store = await cookies();
+  for (const c of legacySessionCookies(store.getAll())) store.delete(c.from);
   redirect("/login");
 }

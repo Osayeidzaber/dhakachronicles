@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/admin/avatar";
 import { AdminNav, type NavItem } from "@/components/admin/admin-nav";
 import { signOut } from "../login/actions";
+import { KeepScroll } from "@/components/admin/keep-scroll";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requirePageSession();
@@ -87,6 +88,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
       <main className="min-w-0 flex-1 px-4 py-6 md:px-9 md:py-8">{children}</main>
+      <KeepScroll />
     </div>
   );
 }

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /** Who is signed in (from the httpOnly session cookie), so public pages can greet staff. */
 export async function GET() {
-  if (!supabaseConfig()) return NextResponse.json({ staff: false });
+  if (!supabaseConfig()) return NextResponse.json({ staff: false }, { headers: { "Cache-Control": "private, no-store" } });
   try {
     const s = await getSession();
     const staff = !!s?.profile.role && !!s?.profile.is_active;

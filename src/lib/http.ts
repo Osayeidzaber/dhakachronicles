@@ -16,7 +16,8 @@ export function jsonHandler<A extends unknown[]>(fn: (...args: A) => Promise<unk
       if (err instanceof ZodError) {
         return NextResponse.json({ ok: false, error: err.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") }, { status: 400 });
       }
-      const status = httpStatus(err);
+      // A body that isn't JSON is the caller's mistake, not a server fault.
+      const status = err instanceof SyntaxError ? 400 : httpStatus(err);
       if (status >= 500) log.error("api.error", { err });
       return NextResponse.json(toActionError(err), { status });
     }

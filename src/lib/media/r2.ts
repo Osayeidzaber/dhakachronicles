@@ -14,7 +14,7 @@ let client: S3Client | null = null;
 
 export function r2() {
   const cfg = r2Config();
-  if (!cfg) throw new AppError("Cloudflare R2 is not configured (see .env.example).", "NOT_CONFIGURED");
+  if (!cfg) throw new AppError("Media storage is not set up yet.", "NOT_CONFIGURED");
   client ??= new S3Client({
     region: "auto",
     endpoint: `https://${cfg.accountId}.r2.cloudflarestorage.com`,
@@ -25,7 +25,7 @@ export function r2() {
 
 export function publicUrl(key: string): string {
   const cfg = r2Config();
-  if (!cfg) throw new AppError("Cloudflare R2 is not configured.", "NOT_CONFIGURED");
+  if (!cfg) throw new AppError("Media storage is not set up yet.", "NOT_CONFIGURED");
   return `${cfg.publicBaseUrl}/${key.split("/").map(encodeURIComponent).join("/")}`;
 }
 

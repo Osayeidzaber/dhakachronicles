@@ -27,7 +27,7 @@ const content: Record<Lang, { title: string; updated: string; sections: { h: str
       {
         h: "Staff accounts",
         p: [
-          "Editorial staff sign in with an email address and password managed by Supabase Auth. A secure, httpOnly cookie keeps them signed in. These accounts are created by our administrators only.",
+          "Editorial staff sign in with an email address and password, handled by our authentication provider. A secure, httpOnly cookie keeps them signed in. These accounts are created by our administrators only.",
           "We keep an audit log of editorial actions (for example, publishing an article) to protect the integrity of our journalism.",
         ],
       },
@@ -70,7 +70,7 @@ const content: Record<Lang, { title: string; updated: string; sections: { h: str
       {
         h: "কর্মীদের অ্যাকাউন্ট",
         p: [
-          "সম্পাদকীয় কর্মীরা Supabase Auth-এর মাধ্যমে ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করেন। একটি নিরাপদ httpOnly কুকি তাঁদের লগইন অবস্থায় রাখে। এই অ্যাকাউন্টগুলো শুধু আমাদের প্রশাসকেরা তৈরি করেন।",
+          "সম্পাদকীয় কর্মীরা আমাদের অথেনটিকেশন সেবাদাতার মাধ্যমে ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করেন। একটি নিরাপদ httpOnly কুকি তাঁদের লগইন অবস্থায় রাখে। এই অ্যাকাউন্টগুলো শুধু আমাদের প্রশাসকেরা তৈরি করেন।",
           "সাংবাদিকতার সততা রক্ষায় আমরা সম্পাদকীয় কাজের (যেমন প্রতিবেদন প্রকাশ) একটি অডিট লগ রাখি।",
         ],
       },

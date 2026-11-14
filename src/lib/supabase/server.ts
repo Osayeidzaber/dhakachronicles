@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabaseConfig } from "@/lib/env";
 import { AppError } from "@/lib/errors";
+import { NOT_SET_UP, SESSION_COOKIE, withLegacySession } from "@/lib/supabase/session-cookie";
 
 /**
  * Per-request Supabase client acting as the signed-in user (RLS enforced).
@@ -13,10 +14,11 @@ export async function createClient() {
   // Read cookies first: this marks the route as dynamic even when not yet configured.
   const cookieStore = await cookies();
   const cfg = supabaseConfig();
-  if (!cfg) throw new AppError("Supabase is not configured (see .env.example).", "NOT_CONFIGURED");
+  if (!cfg) throw new AppError(NOT_SET_UP, "NOT_CONFIGURED");
   return createServerClient(cfg.url, cfg.publishableKey, {
+    cookieOptions: { name: SESSION_COOKIE },
     cookies: {
-      getAll: () => cookieStore.getAll(),
+      getAll: () => withLegacySession(cookieStore.getAll()),
       setAll: (list) => {
         try {
           for (const { name, value, options } of list) {
@@ -38,8 +40,9 @@ export async function createClient() {
 /** Anonymous, cookie-less client for public reads (cache-friendly, RLS = public). */
 export function createPublicClient() {
   const cfg = supabaseConfig();
-  if (!cfg) throw new AppError("Supabase is not configured (see .env.example).", "NOT_CONFIGURED");
+  if (!cfg) throw new AppError(NOT_SET_UP, "NOT_CONFIGURED");
   return createServerClient(cfg.url, cfg.publishableKey, {
+    cookieOptions: { name: SESSION_COOKIE },
     cookies: { getAll: () => [], setAll: () => {} },
   });
 }

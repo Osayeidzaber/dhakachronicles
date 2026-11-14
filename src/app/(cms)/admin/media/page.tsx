@@ -38,7 +38,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
       <StorageCard />
       {!r2Config() && (
         <p className="mb-4 rounded-2xl border border-amber-500/30 p-4 text-sm text-amber-200">
-          Cloudflare R2 is not configured. Set the R2_* variables (see SETUP docs) to enable uploads.
+          Media storage is not set up yet, so uploads are turned off. Ask the site administrator to finish the setup.
         </p>
       )}
       <Uploader />

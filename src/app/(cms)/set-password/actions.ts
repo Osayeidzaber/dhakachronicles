@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { audit } from "@/lib/audit";
-import { toActionError } from "@/lib/errors";
+import { publicMessage, toActionError } from "@/lib/errors";
 
 const setPasswordSchema = z
   .object({
@@ -27,7 +27,7 @@ export async function setPassword(_prev: SetPasswordState, formData: FormData): 
     const user = userData.user;
     if (!user) return { error: "Your invitation link has expired. Ask an administrator to send a new one." };
     const { error } = await supabase.auth.updateUser({ password: parsed.data.password, data: { full_name: parsed.data.full_name } });
-    if (error) return { error: error.message };
+    if (error) return { error: publicMessage(error) };
     await supabase.from("profiles").update({ full_name: parsed.data.full_name }).eq("id", user.id);
     const firstTime = !user.user_metadata?.password_set;
     if (firstTime) await supabase.auth.updateUser({ data: { password_set: true } });

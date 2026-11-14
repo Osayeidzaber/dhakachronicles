@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ARTICLE_STATUSES, type ArticleStatus, type Lang } from "@/lib/db/types";
 import { Empty, Flash, PageHeader, Pager, StatusBadge, fmt } from "@/components/admin/ui";
 import { bulkArticlesAction } from "../actions";
+import { publicMessage } from "@/lib/errors";
 
 export const metadata = { title: "Articles" };
 const PAGE_SIZE = 25;
@@ -70,7 +71,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
           New article
         </Link>
       </PageHeader>
-      <Flash ok={sp.ok} error={sp.error ?? error?.message} />
+      <Flash ok={sp.ok} error={sp.error ?? (error ? publicMessage(error) : undefined)} />
 
       <form className="mb-4 flex flex-wrap gap-2" role="search">
         <input name="q" defaultValue={sp.q} placeholder="Search titles…" className="input max-w-xs" />

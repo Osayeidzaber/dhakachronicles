@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSession } from "@/lib/auth/session";
-import { AppError, check, toActionError, type ActionResult } from "@/lib/errors";
+import { AppError, check, publicMessage, toActionError, type ActionResult } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { revalidatePublic } from "@/lib/articles/revalidate";
 import { clearHighlight, searchForHighlight, setHighlight, type PickResult } from "@/lib/highlight";
@@ -133,7 +133,7 @@ export async function createMemberAction(formData: FormData): Promise<void> {
       app_metadata: { role: input.role },
       user_metadata: { full_name: input.full_name },
     });
-    if (error) throw new AppError(error.message, "VALIDATION");
+    if (error) throw new AppError(publicMessage(error), "VALIDATION");
     check(await admin.from("profiles").upsert({ id: data.user.id, full_name: input.full_name, role: input.role }));
     await audit(session.userId, "team.create", "user", data.user.id, { email: input.email, role: input.role });
     await audit(data.user.id, "team.joined", "user", data.user.id, { role: input.role });
@@ -176,7 +176,7 @@ export async function changePasswordAction(formData: FormData): Promise<void> {
     const session = await requireSession();
     const input = passwordSchema.parse(Object.fromEntries(formData));
     const { error } = await (await createClient()).auth.updateUser({ password: input.password });
-    if (error) throw new AppError(error.message, "VALIDATION");
+    if (error) throw new AppError(publicMessage(error), "VALIDATION");
     await audit(session.userId, "profile.password", "user", session.userId);
   }, "Password changed");
 }

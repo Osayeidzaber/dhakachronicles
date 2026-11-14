@@ -2,7 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { requireSession } from "@/lib/auth/session";
 import { can, canEditArticle } from "@/lib/auth/permissions";
-import { AppError, check } from "@/lib/errors";
+import { AppError, check, publicMessage } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { docTexts, docToText, replaceDocTexts } from "@/lib/content/tiptap";
 import { translateTexts } from "@/lib/translate";
@@ -284,7 +284,7 @@ export async function bulkArticles(ids: string[], action: BulkAction): Promise<{
       else await transitionArticle(id, { action });
       done++;
     } catch (err) {
-      failed.push(`${id}: ${err instanceof Error ? err.message : "error"}`);
+      failed.push(publicMessage(err));
     }
   }
   return { done, failed };

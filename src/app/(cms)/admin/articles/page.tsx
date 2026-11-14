@@ -1,4 +1,6 @@
 import { HighlightButton } from "@/components/admin/highlight-button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { readHighlight } from "@/lib/highlight";
 import Link from "next/link";
 import { requirePageSession } from "@/lib/auth/session";
@@ -115,43 +117,43 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
             </select>
             <button className="btn">Apply to selected</button>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-border bg-surface">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th className="w-8"><span className="sr-only">Select</span></th>
-                  <th>Title</th>
-                  <th>Lang</th>
-                  <th>Status</th>
-                  <th>Category</th>
-                  <th>Writer</th>
-                  <th>Updated</th>
-                  {canPublish && <th className="w-12"><span className="sr-only">Highlight</span></th>}
-                </tr>
-              </thead>
-              <tbody>
+          <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8"><span className="sr-only">Select</span></TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Lang</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Writer</TableHead>
+                  <TableHead>Updated</TableHead>
+                  {canPublish && <TableHead className="w-12"><span className="sr-only">Highlight</span></TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {rows.map((a) => (
-                  <tr key={a.id}>
-                    <td>
+                  <TableRow key={a.id}>
+                    <TableCell>
                       <input type="checkbox" name="ids" value={a.id} aria-label={`Select ${a.title}`} />
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       <Link href={`/admin/articles/${a.id}`} className="font-medium hover:underline" lang={a.language}>
                         {a.title}
                       </Link>
-                      {a.source_type === "instagram" && <span className="badge ml-2 border border-white/20 text-neutral-700">Instagram</span>}
+                      {a.source_type === "instagram" && <Badge variant="outline" className="ml-2 align-middle">Instagram</Badge>}
                       {a.status === "scheduled" && <div className="text-xs text-muted">Scheduled {fmt(a.scheduled_at)}</div>}
-                    </td>
-                    <td className="uppercase">{a.language}</td>
-                    <td><StatusBadge status={a.status} /></td>
-                    <td>{a.category?.name_en ?? "—"}</td>
-                    <td>{a.creator?.full_name || "—"}</td>
-                    <td className="whitespace-nowrap">{fmt(a.updated_at)}</td>
-                    {canPublish && <td>{a.status === "published" && <HighlightButton articleId={a.id} active={pinned === a.id} compact />}</td>}
-                  </tr>
+                    </TableCell>
+                    <TableCell className="uppercase">{a.language}</TableCell>
+                    <TableCell><StatusBadge status={a.status} /></TableCell>
+                    <TableCell>{a.category?.name_en ?? "—"}</TableCell>
+                    <TableCell>{a.creator?.full_name || "—"}</TableCell>
+                    <TableCell className="whitespace-nowrap">{fmt(a.updated_at)}</TableCell>
+                    {canPublish && <TableCell>{a.status === "published" && <HighlightButton articleId={a.id} active={pinned === a.id} compact />}</TableCell>}
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </form>
       )}

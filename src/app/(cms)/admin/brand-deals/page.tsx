@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { HoldSubmit } from "@/components/admin/form-controls";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { requirePageSession } from "@/lib/auth/session";
@@ -163,11 +164,11 @@ export default async function BrandDealsPage({ searchParams }: { searchParams: P
                       </td>
                       <td className="max-w-xs truncate px-4 py-3.5 text-neutral-600">{d.deliverables ?? "—"}</td>
                       <td className="px-4 py-3.5">
-                        <span className="badge">{STAGE_LABEL[d.stage]}</span>
+                        <Badge variant={d.stage === "published" ? "success" : d.stage === "cancelled" ? "destructive" : d.stage === "lead" ? "outline" : "secondary"}>{STAGE_LABEL[d.stage]}</Badge>
                       </td>
                       <td className="px-4 py-3.5 text-neutral-600">{money(d.fee_amount, d.currency)}</td>
                       <td className="px-4 py-3.5 text-muted">{day(d.due_date)}</td>
-                      <td className="px-4 py-3.5 text-muted">{d.paid ? "Yes" : d.invoice_sent ? "Invoiced" : "—"}</td>
+                      <td className="px-4 py-3.5">{d.paid ? <Badge variant="success">Paid</Badge> : d.invoice_sent ? <Badge variant="warning">Invoiced</Badge> : <span className="text-muted">—</span>}</td>
                     </tr>
                   ))}
                 </tbody>

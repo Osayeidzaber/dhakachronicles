@@ -216,3 +216,34 @@ stories.forEach((html, i) => {
   execFileSync(browser, ["--headless=new", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${profile}`, "--allow-file-access-from-files", "--force-device-scale-factor=1", "--window-size=1080,1920", "--virtual-time-budget=3000", `--screenshot=${join(here, `story-${n}.png`)}`, pathToFileURL(page).href], { stdio: "ignore" });
   console.log("story", n);
 });
+
+// ---------------------------------------------------------------- single story frame (everything in one)
+{
+  const html = `<!doctype html><html><head><meta charset="utf-8"><style>${storyCss}
+.single { position: absolute; left: 60px; right: 60px; top: 380px; bottom: 380px; display: flex; flex-direction: column; }
+</style></head><body>
+${rings.replace('class="rings"', 'class="rings" style="bottom:900px"')}
+<div class="s-top mono">${lockup}<span>New work / 003</span></div>
+<div class="single">
+  <div class="kicker mono">Now live · dhakachronicles.com</div>
+  <div style="margin-top:34px;white-space:nowrap"><div class="huge-light" style="font-size:112px">DHAKA</div><div class="huge-bold" style="font-size:112px">CHRONICLES.</div></div>
+  <div style="display:flex;gap:40px;align-items:flex-end;margin-top:46px">
+    <div class="phone" style="width:430px;flex:none"><img src="${img("docs/guide/img/mobile-home.jpg")}" style="height:560px;object-fit:cover;object-position:top"></div>
+    <div style="display:flex;flex-direction:column;gap:26px;padding-bottom:10px">
+      <p class="lead" style="font-size:40px">A news website and newsroom, built from scratch.</p>
+      <p class="kicker mono" style="font-size:19px;line-height:1.7">Design +<br>development<br>by OZ Studio.</p>
+    </div>
+  </div>
+  <div class="rule" style="margin-top:46px"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:36px">
+    <p class="lead" style="font-size:34px">Like how this feels?</p>
+    <span class="pill mono" style="font-size:20px;padding:18px 28px">DM @oz.studio._ ↗</span>
+  </div>
+</div>
+<div class="s-bot mono"><span>OZ Studio © 2026</span><span>The internet, with intention.</span></div>
+</body></html>`;
+  const page = join(tmp, "story-single.html");
+  writeFileSync(page, html);
+  execFileSync(browser, ["--headless=new", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${profile}`, "--allow-file-access-from-files", "--force-device-scale-factor=1", "--window-size=1080,1920", "--virtual-time-budget=3000", `--screenshot=${join(here, "story-single.png")}`, pathToFileURL(page).href], { stdio: "ignore" });
+  console.log("story single");
+}

@@ -1,3 +1,4 @@
+import { BANGLA_ENABLED } from "@/lib/i18n";
 import { describe, expect, it } from "vitest";
 import { buildArticleMetadata } from "@/lib/seo/metadata";
 import { resolveSeo } from "@/lib/seo/defaults";
@@ -33,11 +34,17 @@ describe("SEO defaults and metadata", () => {
 
   it("emits hreflang alternates for translations and Open Graph data", () => {
     const md = buildArticleMetadata({ ...article, ogImageUrl: "https://media.example/x.jpg" }, SITE, "Dhaka Chronicles");
-    expect(md.alternates?.languages).toMatchObject({
-      en: `${SITE}/en/news/heavy-rain-floods-dhaka`,
-      bn: `${SITE}/bn/news/${encodeURIComponent("ঢাকায়-বৃষ্টি")}`,
-      "x-default": `${SITE}/bn/news/${encodeURIComponent("ঢাকায়-বৃষ্টি")}`,
-    });
+    if (BANGLA_ENABLED) {
+      // English is the default language for search engines.
+      expect(md.alternates?.languages).toMatchObject({
+        en: `${SITE}/en/news/heavy-rain-floods-dhaka`,
+        bn: `${SITE}/bn/news/${encodeURIComponent("ঢাকায়-বৃষ্টি")}`,
+        "x-default": `${SITE}/en/news/heavy-rain-floods-dhaka`,
+      });
+    } else {
+      // Bangla edition switched off: no links to it.
+      expect(md.alternates?.languages).toBeUndefined();
+    }
     expect(md.openGraph).toMatchObject({ type: "article", publishedTime: article.published_at });
   });
 

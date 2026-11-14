@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { isLang, localized, t } from "@/lib/i18n";
+import { altLanguages, isLang, localized, t } from "@/lib/i18n";
 import { siteUrl } from "@/lib/env";
 import { isConfigured } from "@/lib/public-data";
 import { getCategoryBySlug, listLatest } from "@/lib/articles/queries";
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return {
     title: localized(c, "name", lang),
     description: localized(c, "description", lang) || undefined,
-    alternates: { canonical: `/${lang}/category/${slug}`, languages: { bn: `/bn/category/${slug}`, en: `/en/category/${slug}` } },
+    alternates: { canonical: `/${lang}/category/${slug}`, languages: altLanguages(`/category/${slug}`) },
   };
 }
 

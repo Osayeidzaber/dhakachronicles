@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { formatDate, isLang, localDigits, localized, readMinutes, t } from "@/lib/i18n";
+import { PUBLIC_LOCALES, formatDate, isLang, localDigits, localized, readMinutes, t } from "@/lib/i18n";
 import { siteUrl } from "@/lib/env";
 import { getSiteChrome, isConfigured } from "@/lib/public-data";
 import { getPublishedArticle, listActiveAds, listMostRead, listRelated } from "@/lib/articles/queries";
@@ -70,7 +70,7 @@ export default async function ArticlePage({ params }: { params: Params }) {
   const base = siteUrl();
   const url = `${base}${articlePath(a.language, a.slug)}`;
   const seo = resolveSeo(a, base);
-  const translation = a.translations.find((tr) => tr.language !== a.language);
+  const translation = a.translations.find((tr) => tr.language !== a.language && PUBLIC_LOCALES.includes(tr.language));
   const authorName = a.author ? localized(a.author, "name", lang) : null;
   const categoryName = a.category ? localized(a.category, "name", lang) : null;
   const heroAlt = a.featured_image_alt || (a.featured_image ? localized(a.featured_image, "alt_text", lang) : "") || a.title;

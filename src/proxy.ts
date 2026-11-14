@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { BANGLA_ENABLED } from "@/lib/i18n";
 import { SESSION_COOKIE, SESSION_MAX_AGE, hasCurrentSession, legacySessionCookies, withLegacySession } from "@/lib/supabase/session-cookie";
 
 /**
@@ -18,8 +19,15 @@ export async function proxy(request: NextRequest) {
   }
   if (path === "/") {
     const url = request.nextUrl.clone();
-    url.pathname = `/${process.env.DEFAULT_LANGUAGE === "bn" ? "bn" : "en"}`;
+    url.pathname = `/${BANGLA_ENABLED && process.env.DEFAULT_LANGUAGE === "bn" ? "bn" : "en"}`;
     return NextResponse.redirect(url);
+  }
+  if (!BANGLA_ENABLED && (path === "/bn" || path.startsWith("/bn/"))) {
+    // Bangla edition is off: send readers to the English equivalent (story slugs differ, so stories go to the front page).
+    const rest = path.slice(3);
+    const url = request.nextUrl.clone();
+    url.pathname = rest.startsWith("/news/") || rest.endsWith(".xml") ? "/en" : `/en${rest}`;
+    return NextResponse.redirect(url, 307);
   }
 
   const url = process.env.SUPABASE_URL;
@@ -68,5 +76,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/privacy", "/admin/:path*", "/login", "/welcome", "/set-password", "/auth/:path*", "/api/media/:path*", "/api/instagram/:path*"],
+  matcher: ["/", "/bn", "/bn/:path*", "/privacy", "/admin/:path*", "/login", "/welcome", "/set-password", "/auth/:path*", "/api/media/:path*", "/api/instagram/:path*"],
 };

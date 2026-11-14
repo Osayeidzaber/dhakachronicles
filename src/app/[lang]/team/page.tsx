@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isLang } from "@/lib/i18n";
+import { altLanguages, isLang } from "@/lib/i18n";
 import { isConfigured } from "@/lib/public-data";
 import { listTeamMembers } from "@/lib/articles/queries";
 import { ResponsiveImage } from "@/components/public/responsive-image";
@@ -11,7 +11,7 @@ export const revalidate = 300;
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params;
   if (!isLang(lang)) return {};
-  return { title: lang === "bn" ? "আমাদের দল" : "Our team", alternates: { canonical: `/${lang}/team`, languages: { en: "/en/team", bn: "/bn/team" } } };
+  return { title: lang === "bn" ? "আমাদের দল" : "Our team", alternates: { canonical: `/${lang}/team`, languages: altLanguages("/team") } };
 }
 
 /** Public newsroom page. People are edited by hand in Admin → Team page. */

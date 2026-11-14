@@ -5,7 +5,7 @@ import "../globals.css";
 import { fontVars } from "../fonts";
 import { PresenceBeacon } from "@/components/public/presence-beacon";
 import { listBreaking, type ArticleCard } from "@/lib/articles/queries";
-import { LOCALES, isLang, t } from "@/lib/i18n";
+import { PUBLIC_LOCALES, altLanguages, isLang, t } from "@/lib/i18n";
 import { env, siteUrl } from "@/lib/env";
 import { getSiteChrome } from "@/lib/public-data";
 import { CONTACT_EMAIL, seoDefaults, siteName, socialLinks } from "@/lib/settings";
@@ -17,7 +17,7 @@ import { OZ, ozOrganizationJsonLd } from "@/lib/oz";
 export const revalidate = 300;
 
 export function generateStaticParams() {
-  return LOCALES.map((lang) => ({ lang }));
+  return PUBLIC_LOCALES.map((lang) => ({ lang }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     description: (lang === "bn" ? d.description_bn : d.description_en) || undefined,
     alternates: {
       canonical: `/${lang}`,
-      languages: { en: "/en", bn: "/bn", "x-default": "/en" },
+      languages: altLanguages(),
       types: { "application/rss+xml": `/${lang}/rss.xml` },
     },
     openGraph: { siteName: name, locale: lang === "bn" ? "bn_BD" : "en_US", type: "website" },

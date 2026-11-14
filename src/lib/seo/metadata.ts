@@ -1,3 +1,4 @@
+import { PUBLIC_LOCALES } from "@/lib/i18n";
 import type { Metadata } from "next";
 import type { Lang } from "@/lib/db/types";
 import { articlePath, resolveSeo, type SeoSource } from "@/lib/seo/defaults";
@@ -20,9 +21,9 @@ export interface ArticleMetaInput extends SeoSource {
 export function buildArticleMetadata(a: ArticleMetaInput, siteUrl: string, siteName: string): Metadata {
   const seo = resolveSeo(a, siteUrl);
   const languages: Record<string, string> = {};
-  for (const tr of a.translations) languages[tr.language] = `${siteUrl}${articlePath(tr.language, tr.slug)}`;
+  for (const tr of a.translations) if (PUBLIC_LOCALES.includes(tr.language)) languages[tr.language] = `${siteUrl}${articlePath(tr.language, tr.slug)}`;
   languages[a.language] = `${siteUrl}${articlePath(a.language, a.slug)}`;
-  if (Object.keys(languages).length > 1) languages["x-default"] = languages.bn ?? languages[a.language];
+  if (Object.keys(languages).length > 1) languages["x-default"] = languages.en ?? languages[a.language];
 
   const images = a.ogImageUrl
     ? [{ url: a.ogImageUrl, width: a.ogImageWidth ?? undefined, height: a.ogImageHeight ?? undefined, alt: a.featured_image_alt ?? seo.ogTitle }]

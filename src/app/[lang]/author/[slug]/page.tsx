@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { isLang, localized, t } from "@/lib/i18n";
+import { altLanguages, isLang, localized, t } from "@/lib/i18n";
 import { isConfigured } from "@/lib/public-data";
 import { getAuthorBySlug, listLatest } from "@/lib/articles/queries";
 import { ArticleListPage, pageParam } from "@/components/public/article-list-page";
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return {
     title: localized(a, "name", lang),
     description: localized(a, "bio", lang) || undefined,
-    alternates: { canonical: `/${lang}/author/${slug}`, languages: { bn: `/bn/author/${slug}`, en: `/en/author/${slug}` } },
+    alternates: { canonical: `/${lang}/author/${slug}`, languages: altLanguages(`/author/${slug}`) },
   };
 }
 

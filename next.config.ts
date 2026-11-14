@@ -28,6 +28,13 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Short link to the credits page (also ?view=oz, like corsovelle.com/?view=oz).
+  async redirects() {
+    return [
+      { source: "/oz", destination: "/en/oz", permanent: false },
+      { source: "/", has: [{ type: "query", key: "view", value: "oz" }], destination: "/en/oz", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

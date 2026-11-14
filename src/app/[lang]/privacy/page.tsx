@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { isLang } from "@/lib/i18n";
+import { altLanguages, isLang } from "@/lib/i18n";
 import type { Lang } from "@/lib/db/types";
 
 export const revalidate = 86400;
@@ -105,7 +105,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
   if (!isLang(lang)) return {};
   return {
     title: content[lang].title,
-    alternates: { canonical: `/${lang}/privacy`, languages: { bn: "/bn/privacy", en: "/en/privacy" } },
+    alternates: { canonical: `/${lang}/privacy`, languages: altLanguages("/privacy") },
   };
 }
 

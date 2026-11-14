@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import type { ArticleCard, } from "@/lib/articles/queries";
 import type { Category, Lang } from "@/lib/db/types";
-import { localized, t } from "@/lib/i18n";
+import { BANGLA_ENABLED, localized, t } from "@/lib/i18n";
 import { articlePath } from "@/lib/seo/defaults";
 import { LanguageSwitcher } from "./language-switcher";
 import { MobileMenu } from "./mobile-menu";
@@ -23,7 +23,7 @@ export function SiteHeader({ lang, siteName, categories, breaking = [] }: { lang
         <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3 px-4 py-2.5 md:px-8">
           <span>{today(lang)} · {lang === "bn" ? "ঢাকা" : "Dhaka"}</span>
           <div className="flex items-center gap-4">
-            <LanguageSwitcher lang={lang} label={t(lang, "otherEdition")} />
+            {BANGLA_ENABLED && <LanguageSwitcher lang={lang} label={t(lang, "otherEdition")} />}
             <StaffLink label={t(lang, "staff")} />
           </div>
         </div>
@@ -113,7 +113,7 @@ export function SiteFooter({ lang, siteName, social, categories }: { lang: Lang;
           links={[
             [t(lang, "latest"), `/${lang}/latest`],
             [t(lang, "search"), `/${lang}/search`],
-            [t(lang, "otherEdition"), `/${lang === "bn" ? "en" : "bn"}`],
+            ...(BANGLA_ENABLED ? [[t(lang, "otherEdition"), `/${lang === "bn" ? "en" : "bn"}`] as [string, string]] : []),
           ]}
         />
         <FooterCol

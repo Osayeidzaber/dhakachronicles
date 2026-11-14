@@ -367,3 +367,18 @@ body {
     animation: none;
   }
 }
+
+/* OZ credits page ticker */
+@keyframes oz-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.oz-marquee {
+  animation: oz-marquee 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .oz-marquee {
+    animation: none;
+  }
+}

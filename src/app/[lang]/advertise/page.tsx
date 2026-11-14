@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { isLang } from "@/lib/i18n";
+import { altLanguages, isLang } from "@/lib/i18n";
 import { isConfigured } from "@/lib/public-data";
 import { listPartners } from "@/lib/articles/queries";
 import { PartnerGrid } from "@/components/public/partner-grid";
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
       lang === "bn"
         ? "ঢাকা ক্রনিকলসে বিজ্ঞাপন দিন: ওয়েবসাইট ব্যানার, ইনস্টাগ্রাম পোস্ট, রিল ও স্পনসরড প্রতিবেদন।"
         : "Advertise on Dhaka Chronicles: website banners, Instagram posts, reels and sponsored articles.",
-    alternates: { canonical: `/${lang}/advertise`, languages: { en: "/en/advertise", bn: "/bn/advertise" } },
+    alternates: { canonical: `/${lang}/advertise`, languages: altLanguages("/advertise") },
   };
 }
 

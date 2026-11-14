@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isLang, localized, otherLang, t } from "@/lib/i18n";
+import { BANGLA_ENABLED, isLang, localized, otherLang, t } from "@/lib/i18n";
 import type { Lang } from "@/lib/db/types";
 import { getSiteChrome, isConfigured } from "@/lib/public-data";
 import { getCardById, getTagBySlug, listActiveAds, listFeatured, listLatest, listMostRead, listPartners, type ArticleCard as Card } from "@/lib/articles/queries";
@@ -262,7 +262,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
       )}
 
       {/* The other edition */}
-      {otherLatest.items.length > 0 && (
+      {BANGLA_ENABLED && otherLatest.items.length > 0 && (
         <Reveal>
           <section lang={other} className="border-t border-white/[0.08] pt-8">
             <div className="flex items-baseline justify-between">

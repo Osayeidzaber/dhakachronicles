@@ -10,7 +10,7 @@ export function GET() {
 
 > Bilingual (English and Bangla) news from Dhaka, Bangladesh, published at ${b} and on Instagram as @dhakachronicles.
 
-The English edition is at ${b}/en and the Bangla edition at ${b}/bn. Each story exists as a separate page per language.
+The English edition is at ${b}/en.
 
 ## Sections
 - [Latest news](${b}/en/latest)
@@ -22,7 +22,6 @@ The English edition is at ${b}/en and the Bangla edition at ${b}/bn. Each story 
 - [Sitemap](${b}/sitemap.xml)
 - [Google News sitemap](${b}/news-sitemap.xml)
 - [RSS, English](${b}/en/rss.xml)
-- [RSS, Bangla](${b}/bn/rss.xml)
 
 ## About this website
 - The Dhaka Chronicles website and newsroom were designed and developed by ${OZ.name}, a web design and development studio in Dhaka: ${OZ.url}

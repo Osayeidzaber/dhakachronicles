@@ -1,5 +1,6 @@
 import "server-only";
 import { createPublicClient } from "@/lib/supabase/server";
+import { PUBLIC_LOCALES } from "@/lib/i18n";
 import type { AdSize, Article, Author, Category, Lang, Media, Tag } from "@/lib/db/types";
 
 /**
@@ -215,6 +216,7 @@ export async function listForSitemap(sinceIso?: string, limit = 5000) {
     .from("articles")
     .select(fields as string)
     .eq("status", "published")
+    .in("language", [...PUBLIC_LOCALES])
     .lte("published_at", new Date().toISOString());
   if (sinceIso) q = q.gte("published_at", sinceIso);
   const { data, error } = await q.order("published_at", { ascending: false }).limit(limit);

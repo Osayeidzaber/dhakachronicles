@@ -9,6 +9,21 @@ export function isLang(value: string): value is Lang {
 
 export const otherLang = (lang: Lang): Lang => (lang === "bn" ? "en" : "bn");
 
+/**
+ * The Bangla edition is switched off for now: /bn addresses redirect to English (src/proxy.ts),
+ * links to it are hidden, and it is left out of hreflang tags and sitemaps. Set to true to bring it back.
+ * The newsroom can still write and store Bangla stories.
+ */
+export const BANGLA_ENABLED = false;
+
+/** Languages readers can visit. */
+export const PUBLIC_LOCALES: readonly Lang[] = BANGLA_ENABLED ? LOCALES : ["en"];
+
+/** hreflang map for a public path that exists in every language, e.g. altLanguages("/team"). */
+export function altLanguages(path = ""): Record<string, string> {
+  return Object.fromEntries([...PUBLIC_LOCALES.map((l) => [l, `/${l}${path}`]), ["x-default", `/en${path}`]]);
+}
+
 /** Pick a language-specific column: localized(cat, "name", "bn") -> cat.name_bn (falls back to the other language). */
 export function localized(row: object, field: string, lang: Lang): string {
   const rec = row as Record<string, unknown>;
@@ -119,7 +134,7 @@ const dict = {
     copied: "Copied",
     readOther: "বাংলায় পড়ুন",
     otherEdition: "বাংলা সংস্করণ",
-    tagline: "Journalism from Dhaka, in Bangla and English",
+    tagline: "Journalism from Dhaka",
     photo: "Photo",
     justNow: "just now",
     minAgo: "min ago",

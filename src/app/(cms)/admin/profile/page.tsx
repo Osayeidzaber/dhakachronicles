@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PasswordInput } from "@/components/admin/password-input";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { requirePageSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -77,11 +78,11 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <h2 className="text-[15px] font-medium">Change password</h2>
             <label className="block text-[13px] text-neutral-600">
               New password
-              <input name="password" type="password" required minLength={10} autoComplete="new-password" className="input mt-1.5" />
+              <PasswordInput name="password" required minLength={10} autoComplete="new-password" className="input mt-1.5" />
             </label>
             <label className="block text-[13px] text-neutral-600">
               Repeat it
-              <input name="confirm" type="password" required minLength={10} autoComplete="new-password" className="input mt-1.5" />
+              <PasswordInput name="confirm" required minLength={10} autoComplete="new-password" className="input mt-1.5" />
             </label>
             <button className="btn self-start">Update password</button>
           </form>

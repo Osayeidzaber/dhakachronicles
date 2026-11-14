@@ -14,9 +14,10 @@ export function LoginArt() {
 
 export function LoginHeadline() {
   return (
-    <h2 className="font-display mt-4 max-w-xl text-[clamp(2.8rem,5.5vw,4.6rem)] leading-[1.02]">
-      <ShinyText text="Delivering timely, accurate," color="#8a8a8a" shineColor="#ffffff" speed={3.2} className="block" />
-      <ShinyText text="and engaging news." color="#8a8a8a" shineColor="#ffffff" speed={3.2} delay={0.4} className="block" />
+    <h2 className="font-display mt-4 max-w-xl text-[clamp(2.8rem,5.5vw,4.6rem)] leading-[1.12]">
+      {/* pb keeps descenders (g, y) inside the clipped shine. */}
+      <ShinyText text="Delivering timely, accurate," color="#8a8a8a" shineColor="#ffffff" speed={3.2} className="block pb-[0.08em]" />
+      <ShinyText text="and engaging news." color="#8a8a8a" shineColor="#ffffff" speed={3.2} delay={0.4} className="block pb-[0.08em]" />
     </h2>
   );
 }

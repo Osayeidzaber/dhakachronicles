@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { canManageMember, isOwner } from "@/lib/auth/owners";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSession } from "@/lib/auth/session";
-import { can, canAssignRole } from "@/lib/auth/permissions";
+import { canAssignRole } from "@/lib/auth/permissions";
 import { AppError, check, toActionError, type ActionResult } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { siteUrl } from "@/lib/env";
@@ -215,6 +216,10 @@ export async function updateMemberAction(userId: string, formData: FormData): Pr
     const input = roleSchema.parse(Object.fromEntries(formData));
     const role = input.role === "none" ? null : input.role;
     const admin = createAdminClient();
+    const { data: target } = await admin.auth.admin.getUserById(userId);
+    if (!canManageMember({ id: session.userId, email: session.email, isAdmin: session.profile.role === "admin" }, { id: userId, email: target.user?.email ?? null })) {
+      throw new AppError("The main admins' accounts can't be changed.", "FORBIDDEN");
+    }
     const upd = await admin.auth.admin.updateUserById(userId, { app_metadata: { role } });
     if (upd.error) throw upd.error;
     check(await admin.from("profiles").update({ role, is_active: input.is_active === "on" }).eq("id", userId));
@@ -360,7 +365,7 @@ export async function instagramImportSelectedAction(formData: FormData): Promise
   const publish = formData.get("intent") === "publish";
   await formAttempt("/admin/instagram?tab=browse", async () => {
     const session = await requireSession(publish ? "article.publish" : "instagram.manage");
-    if (publish && !can(session.profile.role, "instagram.manage")) throw new AppError("You can't import from Instagram.", "FORBIDDEN");
+    if (publish && !isOwner(session.email)) throw new AppError("Only the main admins can import from Instagram.", "FORBIDDEN");
     const category = String(formData.get("category_id") ?? "");
     const res = await importSelected({ ids: formData.getAll("ids").map(String), publish, categoryId: category || null });
     await audit(session.userId, "instagram.import_selected", "instagram_account", null, { ...res, publish });
@@ -382,4 +387,33 @@ export async function instagramApproveAction(formData: FormData): Promise<void> 
       throw new AppError(`${ids.length - failed.length} published, ${failed.length} failed: ${first instanceof Error ? first.message : "error"}`, "VALIDATION");
     }
   }, "Published");
+}
+
+// ---------------------------------------------------------------- owners: reset a staff password
+export type ResetPasswordState = { ok?: boolean; password?: string; email?: string; error?: string };
+
+/**
+ * Main admins only: give a staff member a new temporary password. It is returned once to the
+ * screen (never put in a URL or log) so it can be shared privately; they change it after signing in.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- useActionState passes the previous state first
+export async function resetMemberPasswordAction(userId: string, _prev: ResetPasswordState): Promise<ResetPasswordState> {
+  try {
+    const session = await requireSession("team.manage");
+    if (!isOwner(session.email)) throw new AppError("Only the main admins can reset passwords.", "FORBIDDEN");
+    const admin = createAdminClient();
+    const { data: target } = await admin.auth.admin.getUserById(z.uuid().parse(userId));
+    const email = target.user?.email ?? null;
+    if (!canManageMember({ id: session.userId, email: session.email, isAdmin: true }, { id: userId, email })) {
+      throw new AppError("The main admins' passwords can't be reset here.", "FORBIDDEN");
+    }
+    const { randomBytes } = await import("node:crypto");
+    const password = randomBytes(15).toString("base64url");
+    const upd = await admin.auth.admin.updateUserById(userId, { password });
+    if (upd.error) throw upd.error;
+    await audit(session.userId, "team.password_reset", "user", userId, {});
+    return { ok: true, password, email: email ?? undefined };
+  } catch (err) {
+    return { error: toActionError(err).error };
+  }
 }

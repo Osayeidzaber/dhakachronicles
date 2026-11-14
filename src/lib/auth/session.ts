@@ -1,4 +1,5 @@
 import "server-only";
+import { isOwner } from "@/lib/auth/owners";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -29,8 +30,14 @@ export async function requirePageSession(permission?: Permission): Promise<Staff
   const session = await getSession();
   if (!session) redirect("/login");
   if (!session.profile.role || !session.profile.is_active) redirect("/login?error=no_access");
-  if (permission && !can(session.profile.role, permission)) redirect("/admin?error=forbidden");
+  if (permission && !hasPermission(session, permission)) redirect("/admin?error=forbidden");
   return session;
+}
+
+/** Role permissions, plus owner-only ones (Instagram is managed only by the main admins). */
+export function hasPermission(session: StaffSession, permission: Permission): boolean {
+  if (permission === "instagram.manage") return isOwner(session.email);
+  return can(session.profile.role, permission);
 }
 
 /** For server actions and route handlers: throw instead of redirecting. */
@@ -38,8 +45,8 @@ export async function requireSession(permission?: Permission): Promise<StaffSess
   const session = await getSession();
   if (!session) throw new AppError("You must be signed in.", "UNAUTHORIZED");
   if (!session.profile.role || !session.profile.is_active) throw new AppError("Your account has no CMS access.", "FORBIDDEN");
-  if (permission && !can(session.profile.role, permission)) {
-    throw new AppError("You do not have permission to do that.", "FORBIDDEN");
+  if (permission && !hasPermission(session, permission)) {
+    throw new AppError(permission === "instagram.manage" ? "Only the main admins can change Instagram settings." : "You do not have permission to do that.", "FORBIDDEN");
   }
   return session;
 }

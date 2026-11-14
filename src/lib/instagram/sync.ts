@@ -103,7 +103,7 @@ async function download(url: string, maxBytes = MAX_IMAGE_BYTES, timeoutMs = 30_
  * After the draft exists: publish it when the account is in "publish" mode,
  * then tell Discord either way.
  */
-async function finishImport(admin: Admin, articleId: string, accountId: string | null, permalink: string | null, publish?: boolean, categoryId?: string | null) {
+async function finishImport(admin: Admin, articleId: string, accountId: string | null, permalink: string | null, publish?: boolean, categoryId?: string | null, postedAt?: string | null) {
   let mode = publish === undefined ? "draft" : publish ? "publish" : "draft";
   if (publish === undefined && accountId) {
     const { data } = await admin.from("instagram_accounts").select("import_mode").eq("id", accountId).maybeSingle();
@@ -111,7 +111,7 @@ async function finishImport(admin: Admin, articleId: string, accountId: string |
   }
   const { data: art } = await admin
     .from("articles")
-    .update({ ...(mode === "publish" ? { status: "published" } : {}), ...(categoryId ? { category_id: categoryId } : {}) })
+    .update({ ...(mode === "publish" ? { status: "published", published_at: postedAt ?? undefined } : {}), ...(categoryId ? { category_id: categoryId } : {}) })
     .eq("id", articleId)
     .select("id, language, slug, title, excerpt, content_text, status, category:categories(name_en, name_bn), featured_image:media!articles_featured_image_id_fkey(public_url)")
     .single();
@@ -211,7 +211,7 @@ export async function processImport(admin: Admin, importId: string, publish?: bo
     if (failures.length) {
       await admin.from("instagram_imports").update({ error_message: `Imported with skipped media: ${failures.join("; ")}` }).eq("id", importId);
     }
-    await finishImport(admin, String(articleId), row.account_id as string | null, media.permalink ?? null, publish, categoryId);
+    await finishImport(admin, String(articleId), row.account_id as string | null, media.permalink ?? null, publish, categoryId, media.timestamp);
     await audit(null, publish ? "instagram.imported_published" : "instagram.imported", "article", String(articleId), {
       post: media.id,
       type: media.media_type,

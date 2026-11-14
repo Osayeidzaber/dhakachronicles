@@ -5,7 +5,10 @@ import { can } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { Flash, PageHeader, fmt, timeAgo } from "@/components/admin/ui";
 import { Avatar } from "@/components/admin/avatar";
-import { inviteUserAction, updateMemberAction } from "../actions";
+import { ResetPasswordButton } from "@/components/admin/reset-password-button";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { canManageMember, isOwner } from "@/lib/auth/owners";
+import { inviteUserAction, resetMemberPasswordAction, updateMemberAction } from "../actions";
 import { createMemberAction } from "../newsroom-actions";
 import type { Profile } from "@/lib/db/types";
 
@@ -27,6 +30,13 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     supabase.from("articles").select("created_by, status").limit(10000),
   ]);
   const members = (data ?? []) as Profile[];
+  // Emails come from Auth (not stored on profiles); needed to recognise the main admins.
+  const emails = new Map<string, string>();
+  if (isAdmin) {
+    const { data: users } = await createAdminClient().auth.admin.listUsers({ perPage: 1000 });
+    for (const u of users?.users ?? []) if (u.email) emails.set(u.id, u.email);
+  }
+  const meOwner = isOwner(session.email);
   const stats = new Map<string, { total: number; published: number }>();
   for (const a of (authored ?? []) as { created_by: string | null; status: string }[]) {
     if (!a.created_by) continue;
@@ -76,7 +86,9 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {members.map((m) => {
           const s = stats.get(m.id) ?? { total: 0, published: 0 };
-          const editable = isAdmin && m.id !== session.userId;
+          const email = emails.get(m.id) ?? null;
+          const owner = isOwner(email);
+          const editable = isAdmin && canManageMember({ id: session.userId, email: session.email, isAdmin }, { id: m.id, email });
           return (
             <article key={m.id} className="card flex flex-col gap-4 transition hover:border-white/15">
               <div className="flex items-center gap-3.5">
@@ -86,11 +98,14 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                     {m.full_name || "Unnamed"}
                     {m.id === session.userId && <span className="ml-1.5 text-xs text-muted">(you)</span>}
                   </p>
-                  <p className="text-xs text-muted">Joined {fmt(m.created_at).split(",")[0]}</p>
+                  <p className="truncate text-xs text-muted">{email ?? `Joined ${fmt(m.created_at).split(",")[0]}`}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-[13px]">
-                <span className={`badge capitalize ${m.role ? ROLE_STYLE[m.role] : "border border-red-500/30 text-red-200"}`}>{m.role ?? "no access"}</span>
+                <span className="flex items-center gap-1.5">
+                  <span className={`badge capitalize ${m.role ? ROLE_STYLE[m.role] : "border border-red-500/30 text-red-200"}`}>{m.role ?? "no access"}</span>
+                  {owner && <span className="badge border border-white/30 text-white">Main admin</span>}
+                </span>
                 <span className="text-muted tabular-nums">
                   {s.published} published · {s.total} total
                 </span>
@@ -101,7 +116,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
               </div>
               {editable && (
                 <details className="group">
-                  <summary className="cursor-pointer text-xs text-muted hover:text-white">Change role or access</summary>
+                  <summary className="cursor-pointer text-xs text-muted hover:text-white">{meOwner ? "Change role, access or password" : "Change role or access"}</summary>
                   <form action={updateMemberAction.bind(null, m.id)} className="mt-3 flex flex-wrap items-center gap-2">
                     <select name="role" defaultValue={m.role ?? "none"} className="input h-9 w-auto">
                       <option value="none">No access</option>
@@ -112,8 +127,14 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                     <SwitchField name="is_active" label="Active" defaultChecked={m.is_active} />
                     <SubmitButton className="btn h-9 text-xs">Update</SubmitButton>
                   </form>
+                  {meOwner && (
+                    <div className="mt-3 border-t border-white/5 pt-3">
+                      <ResetPasswordButton action={resetMemberPasswordAction.bind(null, m.id)} />
+                    </div>
+                  )}
                 </details>
               )}
+              {owner && m.id !== session.userId && <p className="text-xs text-muted">Main admin accounts can’t be changed by anyone.</p>}
             </article>
           );
         })}

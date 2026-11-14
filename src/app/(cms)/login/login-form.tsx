@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { PasswordInput } from "@/components/admin/password-input";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { GlowButton } from "@/components/ui/vendor/louis/glow-button";
 import { signIn, type LoginState } from "./actions";
@@ -23,7 +24,7 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
       </label>
       <label className="block text-[13px] text-neutral-600">
         Password
-        <input name="password" type="password" required autoComplete="current-password" className="input mt-2 h-12 text-[15px]" />
+        <PasswordInput name="password" required autoComplete="current-password" className="input mt-2 h-12 text-[15px]" />
       </label>
       <GlowButton type="submit" disabled={pending} trigger="always" colors={["#9a9a9a", "#ffffff"]} className="mt-2 w-full text-[15px]">
         {pending ? (

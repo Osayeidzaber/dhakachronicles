@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isOwner } from "@/lib/auth/owners";
 import { HoldSubmit, SwitchField } from "@/components/admin/form-controls";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { requirePageSession } from "@/lib/auth/session";
@@ -19,7 +20,7 @@ export const metadata = { title: "Instagram" };
 export default async function InstagramPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string; connected?: string; tab?: string; after?: string }> }) {
   const sp = await searchParams;
   const session = await requirePageSession("instagram.view");
-  const manage = can(session.profile.role, "instagram.manage");
+  const manage = isOwner(session.email); // only the main admins change Instagram settings
   const supabase = await createClient();
   const cfg = instagramConfig();
   const tab = sp.tab === "failed" || sp.tab === "drafts" || sp.tab === "browse" ? sp.tab : "all";

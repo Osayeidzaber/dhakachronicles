@@ -236,10 +236,6 @@ body {
   line-height: 1.8;
   color: #e5e5e5;
 }
-.prose-article[data-article-body] {
-  font-size: var(--article-size, 1.1875rem);
-  transition: font-size 0.2s ease;
-}
 .prose-article > * + * {
   margin-top: 1.2em;
 }

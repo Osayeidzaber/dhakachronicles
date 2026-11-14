@@ -49,8 +49,15 @@ export function ShareBar({ url, title, labels }: { url: string; title: string; l
   ];
   const iconBtn = "grid h-10 w-10 place-items-center rounded-full border border-white/20 transition hover:border-white/60";
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+      <p className="order-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+        {links.map(([name, href]) => (
+          <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="transition hover:text-white">
+            {name}
+          </a>
+        ))}
+      </p>
+      <div className="order-2 flex gap-2">
         <WarmTooltip content={copied ? labels.copied : labels.copy}>
         <button
           type="button"
@@ -83,56 +90,7 @@ export function ShareBar({ url, title, labels }: { url: string; title: string; l
         </button>
         </WarmTooltip>
       </div>
-      <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
-        {links.map(([name, href]) => (
-          <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="hover:text-white">
-            {name}
-          </a>
-        ))}
-      </p>
     </div>
   );
 }
 
-const SIZES = [16, 18, 20, 22, 24];
-
-/** A− / A+ reading size for the article body (remembered on this device). */
-export function TextSize({ labels }: { labels: { smaller: string; larger: string } }) {
-  // Server and first client render use the default; the saved size is applied right after hydration.
-  const [i, setI] = useState(1);
-  const loaded = useRef(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      try {
-        const raw = localStorage.getItem("dc-text-size");
-        const saved = Number(raw);
-        if (raw !== null && saved >= 0 && saved < SIZES.length) setI(saved);
-      } catch {
-        /* storage blocked */
-      }
-      loaded.current = true;
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
-  useEffect(() => {
-    // A CSS variable on <html> survives re-renders of the article body (see .prose-article[data-article-body]).
-    document.documentElement.style.setProperty("--article-size", `${SIZES[i]}px`);
-    if (!loaded.current) return; // don't overwrite the saved size with the default on first render
-    try {
-      localStorage.setItem("dc-text-size", String(i));
-    } catch {
-      /* storage blocked */
-    }
-  }, [i]);
-  const btn = "grid h-10 min-w-10 place-items-center rounded-full border border-white/20 px-3 text-sm transition hover:border-white/60 disabled:opacity-40";
-  return (
-    <div className="flex gap-1" role="group" aria-label="Text size">
-      <button type="button" className={btn} onClick={() => setI((v) => Math.max(0, v - 1))} disabled={i === 0} aria-label={labels.smaller}>
-        A−
-      </button>
-      <button type="button" className={btn} onClick={() => setI((v) => Math.min(SIZES.length - 1, v + 1))} disabled={i === SIZES.length - 1} aria-label={labels.larger}>
-        A+
-      </button>
-    </div>
-  );
-}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { PasswordInput } from "@/components/admin/password-input";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { GlowButton } from "@/components/ui/vendor/louis/glow-button";
 import { setPassword, type SetPasswordState } from "./actions";
@@ -32,9 +33,8 @@ export function SetPasswordForm({ defaultName }: { defaultName: string }) {
       </label>
       <label className="block text-[13px] text-neutral-600">
         New password
-        <input
+        <PasswordInput
           name="password"
-          type="password"
           required
           minLength={10}
           autoComplete="new-password"
@@ -56,7 +56,7 @@ export function SetPasswordForm({ defaultName }: { defaultName: string }) {
       </ul>
       <label className="block text-[13px] text-neutral-600">
         Confirm password
-        <input name="confirm" type="password" required minLength={10} autoComplete="new-password" className="input mt-2 h-12 text-[15px]" />
+        <PasswordInput name="confirm" required minLength={10} autoComplete="new-password" className="input mt-2 h-12 text-[15px]" />
       </label>
       <GlowButton type="submit" disabled={pending} trigger="always" colors={["#9a9a9a", "#ffffff"]} className="mt-2 w-full text-[15px]">
         {pending ? (

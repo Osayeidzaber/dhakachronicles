@@ -93,3 +93,27 @@ describe("editorial workflow", () => {
     expect(() => planTransition("archived", { action: "publish" }, "admin", ME, now)).toThrow();
   });
 });
+
+describe("main admins (owners)", () => {
+  it("recognises the two owners case-insensitively", async () => {
+    const { isOwner } = await import("@/lib/auth/owners");
+    expect(isOwner("Admin@Zaber.tech")).toBe(true);
+    expect(isOwner("admin@dhakachronicles.com")).toBe(true);
+    expect(isOwner("editor@dhakachronicles.com")).toBe(false);
+    expect(isOwner(null)).toBe(false);
+  });
+
+  it("protects owners from everyone, including each other", async () => {
+    const { canManageMember } = await import("@/lib/auth/owners");
+    const ownerA = { id: "a", email: "admin@zaber.tech", isAdmin: true };
+    const ownerB = { id: "b", email: "admin@dhakachronicles.com" };
+    const admin = { id: "c", email: "chief@dhakachronicles.com", isAdmin: true };
+    const writer = { id: "d", email: "writer@dhakachronicles.com" };
+    expect(canManageMember(ownerA, ownerB)).toBe(false);
+    expect(canManageMember(admin, ownerB)).toBe(false);
+    expect(canManageMember(ownerA, writer)).toBe(true);
+    expect(canManageMember(admin, writer)).toBe(true);
+    expect(canManageMember({ ...writer, isAdmin: false }, { id: "e", email: "x@y.z" })).toBe(false);
+    expect(canManageMember(ownerA, { id: "a", email: "admin@zaber.tech" })).toBe(false);
+  });
+});

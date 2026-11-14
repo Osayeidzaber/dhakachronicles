@@ -95,6 +95,11 @@ export async function transitionArticle(id: string, raw: TransitionInput | unkno
     throw new AppError("You cannot change this article.", "FORBIDDEN");
   }
   const plan = planTransition(existing.status, input, session.profile.role, session.userId);
+  // Instagram stories keep the time the post was made on Instagram, not the time an editor approved it.
+  if (plan.patch.published_at) {
+    const { data: src } = await (await createClient()).from("instagram_imports").select("media_timestamp").eq("article_id", id).maybeSingle();
+    if (src?.media_timestamp && new Date(src.media_timestamp).getTime() <= Date.now()) plan.patch.published_at = src.media_timestamp;
+  }
 
   if (plan.status === "published" || plan.status === "scheduled") {
     if (!existing.title.trim() || !existing.content_text.trim()) {

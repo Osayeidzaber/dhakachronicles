@@ -15,7 +15,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbS
 import { ResponsiveImage } from "@/components/public/responsive-image";
 import { ArticleCard } from "@/components/public/article-card";
 import { ViewBeacon } from "@/components/public/view-beacon";
-import { ReadingProgress, ShareBar, TextSize } from "@/components/public/article-tools";
+import { ReadingProgress, ShareBar } from "@/components/public/article-tools";
 
 export const revalidate = 300;
 
@@ -139,25 +139,12 @@ export default async function ArticlePage({ params }: { params: Params }) {
                 <BylineMeta lang={lang} a={a} minutes={minutes} updated={!!updated} by={byline} />
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-3">
-              <TextSize labels={lang === "bn" ? { smaller: "লেখা ছোট করুন", larger: "লেখা বড় করুন" } : { smaller: "Smaller text", larger: "Larger text" }} />
+            <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
               <ShareBar url={url} title={a.title} labels={{ share: t(lang, "share"), copy: t(lang, "copyLink"), copied: t(lang, "copied") }} />
-              {translation ? (
+              {translation && (
                 <Link href={articlePath(translation.language, translation.slug)} hrefLang={translation.language} lang={translation.language} className="btn h-11">
                   {translation.language === "bn" ? "পড়ুন বাংলায়" : "Read in English"}
                 </Link>
-              ) : (
-                // No human translation yet: open an automatic translation of this page (Google Translate).
-                <a
-                  href={`https://translate.google.com/translate?sl=${a.language}&tl=${a.language === "en" ? "bn" : "en"}&u=${encodeURIComponent(url)}`}
-                  target="_blank"
-                  rel="noopener noreferrer nofollow"
-                  lang={a.language === "en" ? "bn" : "en"}
-                  className="btn h-11"
-                  title={a.language === "en" ? "Automatic translation by Google Translate" : "Automatic translation by Google Translate"}
-                >
-                  {a.language === "en" ? "পড়ুন বাংলায় (অনুবাদ)" : "Read in English (translated)"} ↗
-                </a>
               )}
             </div>
           </div>

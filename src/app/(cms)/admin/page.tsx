@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubmitButton } from "@/components/admin/submit-button";
 import SpotlightCard from "@/components/ui/vendor/reactbits/SpotlightCard";
 import { Camera as Instagram, Plus, Star } from "lucide-react";
 import { requirePageSession } from "@/lib/auth/session";
@@ -103,44 +104,43 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
         {/* Highlight */}
         {can(role, "article.publish") && (
-          <section aria-label="Homepage highlight" className="card grid gap-6 border-white/15 lg:grid-cols-12">
-            <div className="flex flex-col gap-4 lg:col-span-5">
-              <div className="flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-[15px] font-medium">
-                  <Star className="h-4 w-4" aria-hidden="true" /> Highlighted on the homepage
-                </h2>
-                {highlight?.until && <span className="text-xs text-muted">Until {fmt(highlight.until)}</span>}
+          <section aria-label="Homepage highlight" className="card flex flex-col gap-4 border-white/15">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-[15px] font-medium">
+                <Star className="h-4 w-4" aria-hidden="true" /> Highlighted on the homepage
+              </h2>
+              {highlight?.until && <span className="text-xs text-muted">Until {fmt(highlight.until)}</span>}
+            </div>
+            {hlArticle ? (
+              <div className="flex flex-wrap items-center gap-4">
+                {hlArticle.featured_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- R2 image
+                  <img src={hlArticle.featured_image.public_url} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover object-top" />
+                ) : (
+                  <div className="h-16 w-16 shrink-0 rounded-xl bg-surface-3" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="kicker">{[hlArticle.category?.name_en, hlArticle.language === "bn" ? "বাংলা" : "English"].filter(Boolean).join(" · ")}</p>
+                  <Link href={`/admin/articles/${hlArticle.id}`} lang={hlArticle.language} className="mt-0.5 line-clamp-1 block text-[15px] font-medium hover:underline">
+                    {hlArticle.title}
+                  </Link>
+                </div>
+                <form action={clearHighlightAction}>
+                  <SubmitButton className="btn h-9 text-xs" pendingLabel="Unpinning…">Unpin</SubmitButton>
+                </form>
               </div>
-              {hlArticle ? (
-                <>
-                  <div className="grid grid-cols-[140px_1fr] items-center gap-4">
-                    {hlArticle.featured_image ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- R2 image
-                      <img src={hlArticle.featured_image.public_url} alt="" className="aspect-[4/3] w-full rounded-xl object-cover" />
-                    ) : (
-                      <div className="aspect-[4/3] rounded-xl bg-surface-3" />
-                    )}
-                    <div className="min-w-0">
-                      <p className="kicker">{[hlArticle.category?.name_en, hlArticle.language === "bn" ? "বাংলা" : "English"].filter(Boolean).join(" · ")}</p>
-                      <Link href={`/admin/articles/${hlArticle.id}`} lang={hlArticle.language} className="font-display mt-1 line-clamp-3 block text-2xl leading-tight hover:underline">
-                        {hlArticle.title}
-                      </Link>
-                      <p className="mt-2 text-xs text-muted">Lead story in both languages when a translation exists.</p>
-                    </div>
-                  </div>
-                  <form action={clearHighlightAction}>
-                    <button className="btn h-9 text-xs">Unpin</button>
-                  </form>
-                </>
-              ) : (
-                <p className="rounded-xl border border-dashed border-line p-6 text-sm text-muted">
-                  Nothing is pinned. The homepage leads with the newest featured story. Pick one on the right to pin it.
-                </p>
-              )}
-            </div>
-            <div className="border-white/5 lg:col-span-7 lg:border-l lg:pl-6">
-              <HighlightPicker currentId={highlight?.article_id ?? null} />
-            </div>
+            ) : (
+              <p className="text-sm text-muted">Nothing is pinned. The homepage leads with the newest featured story.</p>
+            )}
+            <details className="group" open={!hlArticle}>
+              <summary className="btn h-9 w-fit cursor-pointer list-none text-xs [&::-webkit-details-marker]:hidden">
+                <span className="group-open:hidden">{hlArticle ? "Change" : "Pick a story"}</span>
+                <span className="hidden group-open:inline">Close</span>
+              </summary>
+              <div className="mt-4 border-t border-white/5 pt-4">
+                <HighlightPicker currentId={highlight?.article_id ?? null} />
+              </div>
+            </details>
           </section>
         )}
 

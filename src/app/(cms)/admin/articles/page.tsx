@@ -32,7 +32,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
 
   let q = supabase
     .from("articles")
-    .select("id, title, language, slug, status, updated_at, published_at, scheduled_at, translation_group_id, source_type, category:categories(name_en), creator:profiles!articles_created_by_fkey(full_name)", { count: "exact" });
+    .select("id, title, language, slug, status, is_featured, updated_at, published_at, scheduled_at, translation_group_id, source_type, category:categories(name_en), creator:profiles!articles_created_by_fkey(full_name)", { count: "exact" });
   if (sp.q?.trim()) q = q.ilike("title", `%${sp.q.trim().replace(/[%_]/g, "")}%`);
   if (sp.lang === "bn" || sp.lang === "en") q = q.eq("language", sp.lang as Lang);
   if (sp.status && (ARTICLE_STATUSES as readonly string[]).includes(sp.status)) q = q.eq("status", sp.status as ArticleStatus);
@@ -47,6 +47,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
     language: Lang;
     slug: string;
     status: ArticleStatus;
+    is_featured: boolean;
     updated_at: string;
     published_at: string | null;
     scheduled_at: string | null;
@@ -111,6 +112,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                 Bulk action…
               </option>
               {canPublish && <option value="publish">Publish</option>}
+              {canPublish && <option value="feature">Feature on home page</option>}
+              {canPublish && <option value="unfeature">Remove from Featured</option>}
               {canPublish && <option value="return_to_draft">Move to draft</option>}
               {canPublish && <option value="archive">Archive</option>}
               {can(session.profile.role, "article.delete") && <option value="delete">Delete permanently</option>}
@@ -142,6 +145,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                         {a.title}
                       </Link>
                       {a.source_type === "instagram" && <Badge variant="outline" className="ml-2 align-middle">Instagram</Badge>}
+                      {a.is_featured && <Badge className="ml-2 align-middle">★ Featured</Badge>}
                       {a.status === "scheduled" && <div className="text-xs text-muted">Scheduled {fmt(a.scheduled_at)}</div>}
                     </TableCell>
                     <TableCell className="uppercase">{a.language}</TableCell>

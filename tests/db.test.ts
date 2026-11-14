@@ -243,3 +243,13 @@ describe("media and instagram functions", () => {
     expect(bad.rows).toHaveLength(0);
   });
 });
+
+describe("instagram engagement", () => {
+  it("stores non-negative like and comment counts with an auto-feature flag", async () => {
+    const { rows } = await db.query<{ column_name: string }>(
+      "select column_name from information_schema.columns where table_name = 'instagram_imports' and column_name in ('like_count','comments_count','auto_featured') order by column_name",
+    );
+    expect(rows.map((r) => r.column_name)).toEqual(["auto_featured", "comments_count", "like_count"]);
+    await expect(db.exec(`insert into instagram_imports (instagram_media_id, media_type, media_timestamp, like_count) values ('neg-1', 'IMAGE', now(), -1)`)).rejects.toThrow();
+  });
+});

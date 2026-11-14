@@ -125,6 +125,11 @@ export default async function ArticlePage({ params }: { params: Params }) {
         </div>
 
         <header className="reveal flex max-w-[880px] flex-col gap-5" style={{ animationDelay: "60ms" }}>
+          {a.tags.some((tg) => tg.slug === "sponsored") && (
+            <p className="w-fit rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-amber-200 uppercase">
+              {lang === "bn" ? "স্পনসরড কনটেন্ট" : "Sponsored content"}
+            </p>
+          )}
           <h1 className="font-display text-[clamp(2.3rem,5.2vw,4.2rem)] leading-[1.03] tracking-[-0.01em]">{a.title}</h1>
           {a.subtitle && <p className="text-[clamp(1.1rem,1.8vw,1.35rem)] leading-relaxed text-neutral-600">{a.subtitle}</p>}
           <div className="flex flex-wrap items-center justify-between gap-4 border-y border-white/[0.08] py-4">

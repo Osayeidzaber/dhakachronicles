@@ -85,7 +85,7 @@ export async function restoreRevisionAction(articleId: string, revisionId: strin
 }
 
 const bulkSchema = z.object({
-  action: z.enum(["archive", "publish", "return_to_draft", "delete"]),
+  action: z.enum(["archive", "publish", "return_to_draft", "delete", "feature", "unfeature"]),
   ids: z.array(z.uuid()).min(1, "Select at least one article"),
 });
 
@@ -343,6 +343,14 @@ export async function saveBrandDealAction(id: string | null, formData: FormData)
     const supabase = await createClient();
     if (id) check(await supabase.from("brand_deals").update(input).eq("id", id));
     else check(await supabase.from("brand_deals").insert(input));
+    // Paid content must always be labelled: the linked story gets the Sponsored tag.
+    if (input.article_id) {
+      const admin = createAdminClient();
+      await admin.from("tags").upsert({ slug: "sponsored", name_en: "Sponsored", name_bn: "স্পনসরড" }, { onConflict: "slug", ignoreDuplicates: true });
+      const { data: tag } = await admin.from("tags").select("id").eq("slug", "sponsored").single();
+      if (tag) await admin.from("article_tags").upsert({ article_id: input.article_id, tag_id: tag.id }, { onConflict: "article_id,tag_id", ignoreDuplicates: true });
+      revalidatePublic();
+    }
     await audit(session.userId, `brand_deal.${id ? "update" : "create"}`, "brand_deal", id, { brand: input.brand_name, stage: input.stage });
     revalidatePath("/admin/brand-deals");
   });
@@ -377,7 +385,7 @@ export async function instagramImportSelectedAction(formData: FormData): Promise
 
 /** Approve one or more imported drafts: publish them now. */
 export async function instagramApproveAction(formData: FormData): Promise<void> {
-  await formAttempt("/admin/instagram", async () => {
+  await formAttempt("/admin/instagram?tab=drafts", async () => {
     const ids = z.array(z.uuid()).min(1, "Pick at least one draft.").max(50).parse(formData.getAll("article_ids").map(String));
     const results = await mapLimit(ids, 4, (id) => transitionArticle(id, { action: "publish" }));
     const failed = results.filter((r) => r.status === "rejected");
@@ -432,4 +440,21 @@ export async function autoSortNowAction(): Promise<void> {
     await audit(session.userId, "articles.auto_sort", "article", null, { sorted: total });
     revalidatePublic();
   }, "Stories sorted into sections with tags");
+}
+
+export type RetryState = { ok?: boolean; error?: string };
+
+/** Retry one failed Instagram import and report the result in place (no page navigation). */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- useActionState passes the previous state first
+export async function instagramRetryInlineAction(importId: string, _prev: RetryState): Promise<RetryState> {
+  try {
+    const session = await requireSession("instagram.manage");
+    const res = await processImport(createAdminClient(), z.uuid().parse(importId));
+    await audit(session.userId, "instagram.retry", "instagram_import", importId, { result: res });
+    if (res !== "imported") return { error: "Failed again. See the error message." };
+    revalidatePath("/admin/instagram");
+    return { ok: true };
+  } catch (err) {
+    return { error: toActionError(err).error };
+  }
 }

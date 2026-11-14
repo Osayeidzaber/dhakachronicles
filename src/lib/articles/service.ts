@@ -254,7 +254,7 @@ export async function restoreRevision(articleId: string, revisionId: string): Pr
   return article;
 }
 
-export type BulkAction = "archive" | "publish" | "return_to_draft" | "delete";
+export type BulkAction = "archive" | "publish" | "return_to_draft" | "delete" | "feature" | "unfeature";
 
 export async function bulkArticles(ids: string[], action: BulkAction): Promise<{ done: number; failed: string[] }> {
   const failed: string[] = [];
@@ -262,6 +262,7 @@ export async function bulkArticles(ids: string[], action: BulkAction): Promise<{
   for (const id of ids.slice(0, 100)) {
     try {
       if (action === "delete") await deleteArticle(id);
+      else if (action === "feature" || action === "unfeature") await setFeatured(id, action === "feature");
       else await transitionArticle(id, { action });
       done++;
     } catch (err) {
@@ -269,4 +270,14 @@ export async function bulkArticles(ids: string[], action: BulkAction): Promise<{
     }
   }
   return { done, failed };
+}
+
+/** Editors: put a story in (or take it out of) the home page Featured column. */
+export async function setFeatured(id: string, featured: boolean): Promise<void> {
+  const session = await requireSession("article.publish");
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("articles").update({ is_featured: featured }).eq("id", id).select("id, language, slug").single();
+  if (error) throw error;
+  await audit(session.userId, featured ? "article.feature" : "article.unfeature", "article", id);
+  revalidateArticle(data as { language: Lang; slug: string });
 }

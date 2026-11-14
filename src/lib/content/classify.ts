@@ -148,9 +148,24 @@ function asciiSlug(name: string): string {
   return `tag-${h.toString(36)}`;
 }
 
-/** Tags from the caption: its own #hashtags plus known entities. Max 6, no duplicates. */
+/** Paid or partner content: brand collaborations must always be labelled. */
+const SPONSORED_SIGNALS = [
+  "in collaboration with", "in partnership with", "paid partnership", "sponsored by", "presented by", "powered by",
+  "brought to you by", "#ad", "#ads", "#sponsored", "#collab", "#collaboration", "#partner", "#paidpartnership",
+  "সহযোগিতায়", "পৃষ্ঠপোষকতায়", "স্পনসরড",
+];
+
+export const SPONSORED_TAG: AutoTag = { slug: "sponsored", en: "Sponsored", bn: "স্পনসরড" };
+
+export function isSponsored(caption: string): boolean {
+  const hay = caption.toLowerCase();
+  return SPONSORED_SIGNALS.some((sig) => (sig.startsWith("#") ? new RegExp(`${sig}(?![\\p{L}\\p{N}_])`, "u").test(hay) : hay.includes(sig)));
+}
+
+/** Tags from the caption: Sponsored (if a collaboration), its own #hashtags, plus known entities. Max 6, no duplicates. */
 export function autoTags(caption: string, max = 6): AutoTag[] {
   const out = new Map<string, AutoTag>();
+  if (isSponsored(caption)) out.set(SPONSORED_TAG.slug, SPONSORED_TAG);
   const hay = normalise(caption);
   for (const e of ENTITIES) {
     if (e.match.some((m) => countHits(hay, m) > 0)) {
@@ -163,7 +178,7 @@ export function autoTags(caption: string, max = 6): AutoTag[] {
     const raw = m[1].replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2");
     const name = /^[a-z0-9 ]+$/i.test(raw) ? raw.replace(/\b\w/g, (c) => c.toUpperCase()) : raw;
     const slug = asciiSlug(name);
-    if (["dhakachronicles", "dhaka-chronicles", "news", "breaking", "bangladeshnews"].includes(slug)) continue;
+    if (["dhakachronicles", "dhaka-chronicles", "news", "breaking", "bangladeshnews", "ad", "ads", "sponsored", "collab", "collaboration", "partner", "paidpartnership"].includes(slug)) continue;
     if (!out.has(slug)) out.set(slug, { slug, en: name, bn: name });
   }
   return [...out.values()].slice(0, max);

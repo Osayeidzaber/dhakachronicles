@@ -10,7 +10,8 @@ import { Empty, Flash, PageHeader, fmt } from "@/components/admin/ui";
 import { instagramModeAction } from "../newsroom-actions";
 import { HighlightButton } from "@/components/admin/highlight-button";
 import { readHighlight } from "@/lib/highlight";
-import { autoSortNowAction, instagramApproveAction, instagramAutoImportAction, instagramDisconnectAction, instagramImportSelectedAction, instagramTokenConnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
+import { autoSortNowAction, instagramApproveAction, instagramAutoImportAction, instagramDisconnectAction, instagramImportSelectedAction, instagramTokenConnectAction, instagramRetryInlineAction, instagramSyncAction } from "../actions";
+import { RetryButton } from "@/components/admin/retry-button";
 import { InstagramPicker } from "@/components/admin/instagram-picker";
 import { browseFeed, type FeedItem } from "@/lib/instagram/sync";
 import type { InstagramAccount, InstagramImport, SyncRun } from "@/lib/db/types";
@@ -301,9 +302,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                     </td>
                     <td>
                       {manage && i.status === "failed" && (
-                        <form action={instagramRetryAction.bind(null, i.id)}>
-                          <button className="btn">Retry</button>
-                        </form>
+                        <RetryButton action={instagramRetryInlineAction.bind(null, i.id)} />
                       )}
                     </td>
                   </tr>

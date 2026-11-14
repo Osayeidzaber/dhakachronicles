@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { isLang, localized, otherLang, t } from "@/lib/i18n";
 import type { Lang } from "@/lib/db/types";
 import { getSiteChrome, isConfigured } from "@/lib/public-data";
-import { getCardById, listFeatured, listLatest, listMostRead, type ArticleCard as Card } from "@/lib/articles/queries";
+import { getCardById, getTagBySlug, listFeatured, listLatest, listMostRead, type ArticleCard as Card } from "@/lib/articles/queries";
 import { highlightedArticleId } from "@/lib/highlight";
 import { log } from "@/lib/logger";
 import { ArticleCard } from "@/components/public/article-card";
@@ -46,6 +46,9 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
     getSiteChrome(),
   ]);
   const pinned = pinnedId ? await safe(getCardById(pinnedId), null) : null;
+  // Ad slot: stories tagged Sponsored (brand deals and detected collaborations), labelled as such.
+  const sponsoredTag = await safe(getTagBySlug("sponsored"), null);
+  const partner = sponsoredTag ? (await safe(listLatest(lang, { tagId: sponsoredTag.id, pageSize: 3 }), empty)).items : [];
 
   const used = new Set<string>();
   const take = (list: Card[], n: number) => {
@@ -183,6 +186,25 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           </div>
         </section>
       </Reveal>
+
+      {/* Partner content (ad slot) */}
+      {partner.length > 0 && (
+        <Reveal>
+          <section aria-label={lang === "bn" ? "স্পনসরড কনটেন্ট" : "Partner content"} className="rounded-2xl border border-amber-400/20 bg-amber-500/[0.03] p-6 md:p-8">
+            <div className="mb-6 flex flex-wrap items-baseline justify-between gap-3">
+              <h2 className="text-[11px] font-semibold tracking-[0.14em] text-amber-200 uppercase">{lang === "bn" ? "স্পনসরড কনটেন্ট" : "Partner content · Sponsored"}</h2>
+              <Link href={`/${lang}/advertise`} className="text-[13px] text-muted hover:text-white">
+                {lang === "bn" ? "বিজ্ঞাপন দিন →" : "Advertise with us →"}
+              </Link>
+            </div>
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {partner.map((a) => (
+                <ArticleCard key={a.id} a={a} />
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      )}
 
       {/* More sections */}
       {moreSections.length > 0 && (

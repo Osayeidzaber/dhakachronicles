@@ -106,6 +106,8 @@ export const igMediaSchema = z.object({
   thumbnail_url: z.string().optional(),
   permalink: z.string().optional(),
   timestamp: z.string(),
+  like_count: z.number().int().nonnegative().optional(),
+  comments_count: z.number().int().nonnegative().optional(),
   children: z.object({ data: z.array(childSchema) }).optional(),
 });
 export type IgMedia = z.infer<typeof igMediaSchema>;
@@ -116,7 +118,7 @@ const mediaPage = z.object({
 });
 
 export const MEDIA_FIELDS =
-  "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,children{id,media_type,media_url,thumbnail_url}";
+  "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,children{id,media_type,media_url,thumbnail_url}";
 
 /** Fetch one page of the account's media (newest first). */
 export async function listMedia(

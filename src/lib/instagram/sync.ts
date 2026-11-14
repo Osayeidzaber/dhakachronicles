@@ -24,7 +24,8 @@ import type { InstagramAccount, Lang } from "@/lib/db/types";
 import { notifyAlert, notifyArticle } from "@/lib/discord";
 import { audit } from "@/lib/audit";
 import { autoTags, classifySection } from "@/lib/content/classify";
-import { revalidateArticle } from "@/lib/articles/revalidate";
+import { topByEngagement } from "@/lib/instagram/engagement";
+import { revalidateArticle, revalidatePublic } from "@/lib/articles/revalidate";
 import { articlePath } from "@/lib/seo/defaults";
 import { siteUrl } from "@/lib/env";
 
@@ -306,6 +307,10 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
         .in("instagram_media_id", batch.map((m) => m.id));
       const { fresh, duplicates } = partitionNew(batch, (known ?? []).map((k: { instagram_media_id: string }) => k.instagram_media_id));
       result.skipped += duplicates.length;
+      // Refresh likes/comments on posts we already have (used for auto-featuring).
+      await mapLimit(duplicates, 5, async (m) => {
+        await admin.from("instagram_imports").update({ like_count: m.like_count ?? 0, comments_count: m.comments_count ?? 0 }).eq("instagram_media_id", m.id);
+      });
 
       // Register all new posts in one round trip, then import a few at a time.
       const { data: inserted } = fresh.length
@@ -323,6 +328,8 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
       if (!next) break;
       after = next;
     }
+
+    await autoFeature(admin).catch((e) => log.warn("instagram.autofeature_failed", { message: e instanceof Error ? e.message : "error" }));
 
     // Sort any stories still missing a section or tags (also catches posts imported before auto-sorting existed).
     await autoSortBacklog(admin).catch((e) => log.warn("instagram.autosort_failed", { message: e instanceof Error ? e.message : "error" }));
@@ -405,6 +412,8 @@ function rowFor(m: IgMedia, accountId: string, runId: string) {
     permalink: m.permalink ?? null,
     media_timestamp: m.timestamp,
     raw_metadata: m,
+    like_count: m.like_count ?? 0,
+    comments_count: m.comments_count ?? 0,
     status: "pending",
     sync_run_id: runId,
   };
@@ -546,3 +555,46 @@ export async function autoSortBacklog(admin: Admin, limit = 60): Promise<number>
 ${a.content_text ?? ""}`, a.category_id));
   return todo.length;
 }
+
+/**
+ * Feature the week's most engaging Instagram stories on the home page. Only stories this
+ * ranking featured itself are ever removed; editors' own picks are left alone.
+ */
+export async function autoFeature(admin: Admin, n = 4): Promise<{ featured: string[]; removed: number }> {
+  const since = new Date(Date.now() - 8 * 864e5).toISOString();
+  const { data } = await admin
+    .from("instagram_imports")
+    .select("article_id, like_count, comments_count, media_timestamp, auto_featured, article:articles(status)")
+    .not("article_id", "is", null)
+    .gte("media_timestamp", since);
+  type Row = { article_id: string; like_count: number; comments_count: number; media_timestamp: string; auto_featured: boolean; article: { status: string } | null };
+  const rows = ((data ?? []) as unknown as Row[]).filter((r) => r.article?.status === "published");
+  const top = new Set(topByEngagement(rows.map((r) => ({ articleId: r.article_id, likes: r.like_count, comments: r.comments_count, postedAt: r.media_timestamp })), new Date(), n));
+
+  // Stories auto-featured earlier that dropped out of the top (look beyond the window too).
+  const { data: previously } = await admin.from("instagram_imports").select("article_id").eq("auto_featured", true);
+  const drop = ((previously ?? []) as { article_id: string | null }[]).map((r) => r.article_id).filter((id): id is string => !!id && !top.has(id));
+  if (drop.length) {
+    await admin.from("articles").update({ is_featured: false }).in("id", drop);
+    await admin.from("instagram_imports").update({ auto_featured: false }).in("article_id", drop);
+  }
+  if (top.size) {
+    // Don't take over stories an editor already featured by hand.
+    const { data: already } = await admin.from("articles").select("id").in("id", [...top]).eq("is_featured", true);
+    const manual = new Set(((already ?? []) as { id: string }[]).map((a) => a.id));
+    const add = [...top].filter((id) => !manual.has(id) || rows.find((r) => r.article_id === id)?.auto_featured);
+    if (add.length) {
+      await admin.from("articles").update({ is_featured: true }).in("id", add);
+      await admin.from("instagram_imports").update({ auto_featured: true }).in("article_id", add);
+    }
+  }
+  if (top.size || drop.length) {
+    try {
+      revalidatePublic();
+    } catch {
+      /* outside a request */
+    }
+  }
+  return { featured: [...top], removed: drop.length };
+}
+

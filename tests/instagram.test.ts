@@ -165,3 +165,19 @@ describe("headline suggestions", () => {
     expect(draftTitle("ঢাকায় বৃষ্টি। আরও খবর আসছে", "2026-11-14")).toBe("ঢাকায় বৃষ্টি। আরও খবর আসছে");
   });
 });
+
+describe("auto-featuring by engagement", () => {
+  it("ranks the week's posts by likes + 3x comments and ignores old ones", async () => {
+    const { topByEngagement } = await import("@/lib/instagram/engagement");
+    const now = new Date("2026-11-14T12:00:00Z");
+    const rows = [
+      { articleId: "a", likes: 100, comments: 0, postedAt: "2026-11-13T10:00:00Z" },
+      { articleId: "b", likes: 40, comments: 30, postedAt: "2026-11-12T10:00:00Z" }, // 130
+      { articleId: "c", likes: 900, comments: 50, postedAt: "2026-11-01T10:00:00Z" }, // too old
+      { articleId: "d", likes: 0, comments: 0, postedAt: "2026-11-14T10:00:00Z" }, // no engagement
+      { articleId: "e", likes: 10, comments: 1, postedAt: "2026-11-14T09:00:00Z" },
+    ];
+    expect(topByEngagement(rows, now, 2)).toEqual(["b", "a"]);
+    expect(topByEngagement(rows, now)).toEqual(["b", "a", "e"]);
+  });
+});

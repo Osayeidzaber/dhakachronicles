@@ -40,3 +40,14 @@ describe("automatic tags", () => {
     for (const t of tags) expect(t.slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
   });
 });
+
+describe("sponsored detection", () => {
+  it("tags brand collaborations as Sponsored", async () => {
+    const { autoTags, isSponsored } = await import("@/lib/content/classify");
+    expect(isSponsored("Our new menu, in collaboration with Pizza Hut Bangladesh")).toBe(true);
+    expect(isSponsored("Big launch tonight #ad")).toBe(true);
+    expect(isSponsored("Grand opening #adventure")).toBe(false);
+    expect(isSponsored("Parliament opens budget session")).toBe(false);
+    expect(autoTags("Paid partnership with Brand X #collab")[0]?.slug).toBe("sponsored");
+  });
+});

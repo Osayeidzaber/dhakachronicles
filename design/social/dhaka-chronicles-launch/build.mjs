@@ -158,3 +158,61 @@ slides.forEach((html, i) => {
   execFileSync(browser, ["--headless=new", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${profile}`, "--allow-file-access-from-files", "--force-device-scale-factor=1", "--window-size=1080,1350", "--virtual-time-budget=3000", `--screenshot=${join(here, `slide-${n}.png`)}`, pathToFileURL(page).href], { stdio: "ignore" });
   console.log("slide", n);
 });
+
+// ---------------------------------------------------------------- Instagram story (3 frames, 1080×1920)
+// Key content stays between y≈260 and y≈1600 (Instagram's profile bar and reply box cover the edges).
+const storyCss = css
+  .replace("html, body { width: 1080px; height: 1350px;", "html, body { width: 1080px; height: 1920px;")
+  .concat(`
+.s-top { position: absolute; left: 60px; right: 60px; top: 250px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 40px; border-bottom: 1px solid #262626; font-size: 20px; color: #9a9a9a; }
+.s-bot { position: absolute; left: 60px; right: 60px; bottom: 300px; display: flex; justify-content: space-between; padding-top: 34px; border-top: 1px solid #1c1c1c; font-size: 20px; color: #9a9a9a; }
+.s-body { position: absolute; left: 60px; right: 60px; top: 420px; bottom: 420px; display: flex; flex-direction: column; justify-content: center; }
+.wave.s { bottom: 380px; }
+.pill { display: inline-flex; align-items: center; gap: 14px; border: 1px solid #f4f4f2; border-radius: 999px; padding: 22px 34px; font-size: 22px; color: #f4f4f2; }
+`);
+const story = (n, topRight, inner, { showWave = false, showRings = false } = {}) => `<!doctype html><html><head><meta charset="utf-8"><style>${storyCss}</style></head><body>
+${showRings ? rings.replace('class="rings"', 'class="rings" style="bottom:620px"') : ""}${showWave ? wave.replace('class="wave"', 'class="wave s"') : ""}
+<div class="s-top mono">${lockup}<span>${topRight}</span></div>
+<div class="s-body">${inner}</div>
+<div class="s-bot mono"><span>OZ Studio © 2026</span><span>0${n} / 03</span></div>
+</body></html>`;
+
+const stories = [
+  story(
+    1,
+    "New work / 003",
+    `<div class="kicker mono">Now live</div>
+     <div style="margin-top:60px"><div class="huge-light" style="font-size:150px">DHAKA</div><div class="huge-bold" style="font-size:138px">CHRONICLES.</div></div>
+     <div class="rule" style="margin-top:60px"></div>
+     <p class="lead" style="margin-top:44px;font-size:46px">A news website and newsroom,<br>built from scratch.</p>
+     <p class="kicker mono" style="margin-top:34px">Design + development by OZ Studio.</p>`,
+    { showWave: true, showRings: true },
+  ),
+  story(
+    2,
+    "Mobile first",
+    `<div class="kicker mono">The site</div>
+     <p class="lead" style="margin-top:22px;font-size:52px">Every story,<br>front and centre.</p>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin:48px auto 0;width:820px;align-items:start">
+       <div class="phone"><img src="${img("docs/guide/img/mobile-home.jpg")}" style="height:640px;object-fit:cover;object-position:top"></div>
+       <div class="phone" style="margin-top:70px"><img src="${img("docs/guide/img/mobile-article.jpg")}" style="height:640px;object-fit:cover;object-position:top"></div>
+     </div>`,
+  ),
+  story(
+    3,
+    "Web studio / 003",
+    `<div class="kicker mono">The internet, with intention.</div>
+     <div style="margin-top:70px;white-space:nowrap"><div class="huge-light" style="font-size:132px">LIKE HOW</div><div class="huge-bold" style="font-size:132px">THIS FEELS?</div></div>
+     <div class="rule" style="margin-top:60px"></div>
+     <p class="lead" style="margin-top:44px;font-size:46px">We make websites.<br>That's what we do.</p>
+     <div style="margin-top:56px"><span class="pill mono">DM @oz.studio._ ↗</span></div>`,
+    { showRings: true },
+  ),
+];
+stories.forEach((html, i) => {
+  const n = String(i + 1).padStart(2, "0");
+  const page = join(tmp, `story-${n}.html`);
+  writeFileSync(page, html);
+  execFileSync(browser, ["--headless=new", "--disable-gpu", "--hide-scrollbars", `--user-data-dir=${profile}`, "--allow-file-access-from-files", "--force-device-scale-factor=1", "--window-size=1080,1920", "--virtual-time-budget=3000", `--screenshot=${join(here, `story-${n}.png`)}`, pathToFileURL(page).href], { stdio: "ignore" });
+  console.log("story", n);
+});

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { DateTimePicker } from "@/components/admin/date-time-picker";
 import { useRouter } from "next/navigation";
 import { RichTextEditor } from "./rich-text-editor";
 import { MediaPicker } from "@/components/admin/media-picker";
@@ -301,7 +302,7 @@ export function ArticleEditor(props: EditorProps) {
           )}
           {articleId && props.canPublish && status !== "published" && status !== "archived" && (
             <div className="flex gap-2">
-              <input type="datetime-local" className="input" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} aria-label="Schedule time (your local time)" />
+              <DateTimePicker value={scheduleAt} onChange={setScheduleAt} disabled={pending} />
               <button type="button" className="btn" disabled={pending} onClick={() => workflow("schedule")}>Schedule</button>
             </div>
           )}

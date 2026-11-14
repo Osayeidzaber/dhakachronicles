@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseConfig } from "@/lib/env";
 import { LoginArt } from "../login/login-art";
 import { SetPasswordForm } from "./set-password-form";
+import { OnboardingSteps } from "./onboarding-steps";
 
 export const metadata: Metadata = { title: "Set your password", robots: { index: false } };
 
@@ -39,7 +40,12 @@ export default async function SetPasswordPage({ searchParams }: { searchParams: 
       <section className="flex min-w-0 flex-[1_1_440px] items-center justify-center px-6 py-12">
         <div className="reveal w-full max-w-sm">
           <h1 className="text-3xl font-medium tracking-tight">{invited ? "Set up your account" : "Set your password"}</h1>
-          <p className="mt-2 mb-8 text-sm text-muted">{data.user.email}</p>
+          <p className="mt-2 mb-6 text-sm text-muted">{data.user.email}</p>
+          {invited && (
+            <div className="mb-8">
+              <OnboardingSteps />
+            </div>
+          )}
           <SetPasswordForm defaultName={name} />
         </div>
       </section>

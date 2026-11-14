@@ -227,8 +227,8 @@ export default function Stepper({
   nextButtonProps = {},
   completedContent,
   theme = 'dark',
-  accentColor,
-  frame = true,
+  accentColor = '#ffffff', // Dhaka Chronicles: white accent
+  frame = false,
   radius = 24,
   width = 440,
   className = '',

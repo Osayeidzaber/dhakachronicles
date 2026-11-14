@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Link2, Share2 } from "lucide-react";
+import WarmTooltip from "@/components/ui/vendor/reactbits/WarmTooltip";
 
 /** Thin white bar at the top that fills as you read. */
 export function ReadingProgress() {
@@ -50,10 +51,10 @@ export function ShareBar({ url, title, labels }: { url: string; title: string; l
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-2">
+        <WarmTooltip content={copied ? labels.copied : labels.copy}>
         <button
           type="button"
           aria-label={copied ? labels.copied : labels.copy}
-          title={copied ? labels.copied : labels.copy}
           className={iconBtn}
           onClick={async () => {
             try {
@@ -67,10 +68,11 @@ export function ShareBar({ url, title, labels }: { url: string; title: string; l
         >
           {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Link2 className="h-4 w-4" aria-hidden="true" />}
         </button>
+        </WarmTooltip>
+        <WarmTooltip content={labels.share}>
         <button
           type="button"
           aria-label={labels.share}
-          title={labels.share}
           className={iconBtn}
           onClick={() => {
             if ("share" in navigator) navigator.share({ title, url }).catch(() => undefined);
@@ -79,6 +81,7 @@ export function ShareBar({ url, title, labels }: { url: string; title: string; l
         >
           <Share2 className="h-4 w-4" aria-hidden="true" />
         </button>
+        </WarmTooltip>
       </div>
       <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
         {links.map(([name, href]) => (

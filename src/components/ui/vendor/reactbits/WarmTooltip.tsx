@@ -160,12 +160,16 @@ const anchorOf = (rect: DOMRect, side: WarmTooltipSide, gap: number): [number, n
   return [rect.right + gap, rect.top + rect.height / 2];
 };
 
+// Viewport size; safe during server rendering (no window), where the tooltip is never shown.
+const viewW = () => (typeof window === 'undefined' ? 1280 : window.innerWidth);
+const viewH = () => (typeof window === 'undefined' ? 800 : window.innerHeight);
+
 const layoutOf = (x: number, y: number, width: number, height: number, side: WarmTooltipSide) => {
   if (horizontal(side)) {
-    const X = clamp(x - width / 2, MARGIN, Math.max(MARGIN, window.innerWidth - MARGIN - width));
+    const X = clamp(x - width / 2, MARGIN, Math.max(MARGIN, viewW() - MARGIN - width));
     return { X, Y: side === 'top' ? y - height : y };
   }
-  const Y = clamp(y - height / 2, MARGIN, Math.max(MARGIN, window.innerHeight - MARGIN - height));
+  const Y = clamp(y - height / 2, MARGIN, Math.max(MARGIN, viewH() - MARGIN - height));
   return { X: side === 'left' ? x - width : x, Y };
 };
 
@@ -678,15 +682,16 @@ const WarmTooltip: React.FC<WarmTooltipProps> = ({
   side = 'top',
   delay,
   warmWindow,
-  surfaceColor = '#f5f5f5',
-  inkColor = '#18181b',
+  // Dhaka Chronicles: white chip, black ink (inverts against the black site).
+  surfaceColor = '#ffffff',
+  inkColor = '#000000',
   size = 'md',
   radius = 8,
   gap = 8,
   arrow = true,
   popDuration = 160,
   popScale = 0.94,
-  popBlur = 4,
+  popBlur = 0,
   showFuse = false,
   longPress = 500,
   disabled = false,

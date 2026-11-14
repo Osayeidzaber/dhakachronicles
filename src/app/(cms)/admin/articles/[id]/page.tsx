@@ -8,6 +8,8 @@ import { aiSeoAvailable } from "@/lib/seo/ai";
 import { ArticleEditor } from "@/components/admin/editor/article-editor";
 import { Flash, PageHeader, StatusBadge, fmt } from "@/components/admin/ui";
 import { loadEditorOptions } from "../load";
+import { translationAvailable } from "@/lib/translate";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { createTranslationAction, deleteArticleAction, restoreRevisionAction } from "../../actions";
 import type { Article, ArticleStatus, Lang, Media } from "@/lib/db/types";
 
@@ -81,9 +83,20 @@ export default async function EditArticlePage({
             ))}
           </ul>
           {!hasBothLanguages && can(session.profile.role, "article.create") && (
-            <form action={createTranslationAction.bind(null, id)} className="mt-2">
-              <button className="btn">Create {other === "bn" ? "Bangla" : "English"} version</button>
-            </form>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {translationAvailable() && (
+                <form action={createTranslationAction.bind(null, id, true)}>
+                  <SubmitButton className="btn btn-primary" pendingLabel="Translating… (up to a minute)">
+                    Translate to {other === "bn" ? "Bangla" : "English"} automatically
+                  </SubmitButton>
+                </form>
+              )}
+              <form action={createTranslationAction.bind(null, id, false)}>
+                <SubmitButton className="btn" pendingLabel="Creating…">
+                  Write {other === "bn" ? "Bangla" : "English"} version by hand
+                </SubmitButton>
+              </form>
+            </div>
           )}
           <p className="mt-2 text-xs text-neutral-500">Each language is published independently.</p>
         </section>

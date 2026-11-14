@@ -153,15 +153,7 @@ export const brandDealSchema = z
     website_url: httpsUrl,
     public_blurb: nullableText(300),
     proof_url: httpsUrl,
-    ad_enabled: checkbox,
-    ad_media_id: uuidOrNull,
-    ad_link_url: httpsUrl,
-    ad_placement: z.enum(["home", "article", "both"]).default("home"),
-    ad_starts: optionalDate,
-    ad_ends: optionalDate,
   })
-  .refine((d) => !d.ad_enabled || (d.ad_media_id && d.ad_link_url), { message: "An ad needs an image and a link.", path: ["ad_enabled"] })
-  .refine((d) => !d.ad_starts || !d.ad_ends || d.ad_starts <= d.ad_ends, { message: "The ad end date is before its start date.", path: ["ad_ends"] })
   .refine((d) => !d.paid || d.invoice_sent, { message: "Mark the invoice as sent before marking it paid.", path: ["paid"] });
 
 export type BrandDealInput = z.infer<typeof brandDealSchema>;
@@ -186,3 +178,41 @@ export const teamMemberSchema = z.object({
   visible: checkbox,
 });
 export type TeamMemberInput = z.infer<typeof teamMemberSchema>;
+
+export const AD_SIZES = ["wide", "mobile", "square"] as const;
+export const adSchema = z
+  .object({
+    name: z.string().trim().min(1, "Give the ad a name").max(160),
+    advertiser: z.string().trim().min(1, "Add the advertiser").max(160),
+    brand_deal_id: uuidOrNull,
+    link_url: z.url({ protocol: /^https$/, message: "The link must start with https://" }),
+    placement: z.enum(["home", "article", "both"]).default("home"),
+    starts_on: optionalDate,
+    ends_on: optionalDate,
+    active: checkbox,
+    creative_wide: uuidOrNull,
+    creative_mobile: uuidOrNull,
+    creative_square: uuidOrNull,
+  })
+  .refine((d) => d.creative_wide || d.creative_mobile || d.creative_square, { message: "Upload at least one image.", path: ["creative_wide"] })
+  .refine((d) => !d.starts_on || !d.ends_on || d.starts_on <= d.ends_on, { message: "The end date is before the start date.", path: ["ends_on"] });
+export type AdInput = z.infer<typeof adSchema>;
+
+export const adEnquirySchema = z.object({
+  name: z.string().trim().min(1, "Add your name").max(200),
+  company: z.string().trim().min(1, "Add your company or brand").max(200),
+  email: z.email("Add a valid email"),
+  phone: z.string().trim().max(40).optional().default(""),
+  format: z.string().trim().max(200).optional().default(""),
+  budget: z.string().trim().max(100).optional().default(""),
+  message: z.string().trim().max(2000).optional().default(""),
+  website: z.string().max(0).optional(), // honeypot: real people leave it empty
+});
+
+export const errorReportSchema = z.object({
+  articleId: z.uuid(),
+  kind: z.enum(["fact", "typo", "translation", "image", "other"]),
+  message: z.string().trim().min(5, "Tell us a little more").max(1500),
+  email: z.union([z.email(), z.literal("")]).optional(),
+  website: z.string().max(0).optional(),
+});

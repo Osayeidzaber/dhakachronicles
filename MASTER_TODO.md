@@ -75,6 +75,13 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [x] Speed: homepage second-wave queries run in parallel; preconnect to the image CDN
 - [x] Push migration `20261114000007_partners_ads_people.sql` to production
 
+- [x] Ads as their own section: desktop/phone/square images, placement, dates, pause; views + clicks; private advertiser report link (`/en/ad-report/<token>`)
+- [x] Brand deals = portfolio (proof of work on the site); Advertise page: formats, banner sizes, how it works, enquiry form → lead + Discord
+- [x] "Report an error" on every story → Discord alerts
+- [x] Automatic EN↔BN translation into a draft (AI endpoint), editor reviews before publishing
+- [x] Client guide: `docs/CLIENT_GUIDE.md`
+- [ ] Push migration `20261114000008_ads_and_enquiries.sql` to production
+
 ## Next / nice to have
 - [ ] End-to-end tests against a real Supabase project (Playwright) once credentials exist
 - [ ] Generated Supabase types (`supabase gen types`) to replace the hand-written `db/types.ts`

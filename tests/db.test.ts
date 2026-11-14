@@ -264,18 +264,7 @@ describe("partners, ads and public team", () => {
       expect(r).not.toHaveProperty("fee_amount");
       expect(r).not.toHaveProperty("contact_email");
     }
-    // An ad needs an image and a link, and an expired ad is not served.
-    await expect(db.exec(`insert into brand_deals (brand_name, ad_enabled) values ('No creative', true)`)).rejects.toThrow();
-    await expect(db.exec(`insert into brand_deals (brand_name, ad_starts, ad_ends) values ('Bad window', '2026-12-02', '2026-12-01')`)).rejects.toThrow();
     await expect(db.exec(`insert into brand_deals (brand_name, website_url) values ('Plain http', 'http://x.com')`)).rejects.toThrow();
-    const m = await db.query<{ id: string }>(
-      `insert into media (r2_key, public_url, original_filename, mime_type, file_size, folder, status) values ('ads/x.webp', 'https://m/x.webp', 'x.webp', 'image/webp', 10, 'branding', 'ready') returning id`,
-    );
-    const mid = m.rows[0].id;
-    await db.exec(`insert into brand_deals (brand_name, ad_enabled, ad_media_id, ad_link_url, ad_placement) values ('Live ad', true, '${mid}', 'https://brand.example', 'both')`);
-    await db.exec(`insert into brand_deals (brand_name, ad_enabled, ad_media_id, ad_link_url, ad_ends) values ('Old ad', true, '${mid}', 'https://brand.example', '2020-01-01')`);
-    const ads = await as("anon", null, () => db.query<{ brand_name: string }>("select * from active_ads('article')"));
-    expect(ads.rows.map((r) => r.brand_name)).toEqual(["Live ad"]);
   });
 
   it("lets anyone read visible team members but only admins edit them", async () => {
@@ -285,5 +274,48 @@ describe("partners, ads and public team", () => {
     await expect(as("authenticated", EDITOR, () => db.exec(`insert into team_members (name_en) values ('Nope')`))).rejects.toThrow();
     await as("authenticated", ADMIN, () => db.exec(`insert into team_members (name_en) values ('By admin')`));
     await expect(db.exec(`insert into team_members (name_en, instagram) values ('Bad handle', 'no spaces allowed')`)).rejects.toThrow();
+  });
+});
+
+describe("ads, stats and enquiries", () => {
+  it("serves live ads with creatives, counts events and reports only by token", async () => {
+    const m = await db.query<{ id: string }>(
+      `insert into media (r2_key, public_url, original_filename, mime_type, file_size, folder, status) values ('ads/y.webp', 'https://m/y.webp', 'y.webp', 'image/webp', 10, 'branding', 'ready') returning id`,
+    );
+    const mid = m.rows[0].id;
+    await expect(db.exec(`insert into ads (name, advertiser, link_url) values ('X', 'Y', 'http://insecure.example')`)).rejects.toThrow();
+    const live = await db.query<{ id: string; report_token: string }>(`insert into ads (name, advertiser, link_url, placement) values ('Eid', 'Brand A', 'https://a.example', 'both') returning id, report_token`);
+    const old = await db.query<{ id: string }>(`insert into ads (name, advertiser, link_url, ends_on) values ('Old', 'Brand B', 'https://b.example', '2020-01-01') returning id`);
+    const { id, report_token } = live.rows[0];
+    expect(report_token).toHaveLength(64);
+    await db.exec(`insert into ad_creatives (ad_id, size, media_id) values ('${id}', 'wide', '${mid}'), ('${id}', 'mobile', '${mid}'), ('${old.rows[0].id}', 'wide', '${mid}')`);
+    await expect(db.exec(`insert into ad_creatives (ad_id, size, media_id) values ('${id}', 'huge', '${mid}')`)).rejects.toThrow();
+
+    const served = await as("anon", null, () => db.query<{ id: string; creatives: unknown[] }>("select * from live_ads('article')"));
+    expect(served.rows.map((r) => r.id)).toEqual([id]);
+    expect(served.rows[0].creatives).toHaveLength(2);
+    await expect(as("anon", null, () => db.query("select * from ads"))).rejects.toThrow();
+
+    await as("anon", null, () => db.query(`select record_ad_event('${id}', 'impression')`));
+    await as("anon", null, () => db.query(`select record_ad_event('${id}', 'impression')`));
+    await as("anon", null, () => db.query(`select record_ad_event('${id}', 'click')`));
+    await as("anon", null, () => db.query(`select record_ad_event('${old.rows[0].id}', 'click')`));
+    const rep = await as("anon", null, () => db.query<{ advertiser: string; stats: { impressions: number; clicks: number }[] }>(`select * from ad_report('${report_token}')`));
+    expect(rep.rows[0].advertiser).toBe("Brand A");
+    expect(rep.rows[0].stats[0]).toMatchObject({ impressions: 2, clicks: 1 });
+    const none = await as("anon", null, () => db.query(`select * from ad_report('short')`));
+    expect(none.rows).toHaveLength(0);
+    const oldStats = await db.query(`select * from ad_stats where ad_id = '${old.rows[0].id}'`);
+    expect(oldStats.rows).toHaveLength(0);
+  });
+
+  it("turns an advertiser enquiry into a brand-deal lead", async () => {
+    const r = await as("anon", null, () =>
+      db.query<{ id: string }>(`select submit_ad_enquiry('Rafi', 'Acme Foods', 'rafi@acme.example', '017', 'Reel', '50k', 'Eid campaign') as id`),
+    );
+    const lead = await db.query<{ stage: string; notes: string }>(`select stage, notes from brand_deals where id = '${r.rows[0].id}'`);
+    expect(lead.rows[0].stage).toBe("lead");
+    expect(lead.rows[0].notes).toContain("Eid campaign");
+    await expect(as("anon", null, () => db.query(`select submit_ad_enquiry('x', '', 'bad', null, null, null, null)`))).rejects.toThrow();
   });
 });

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BadgeDollarSign, Contact, FileText, FolderTree, Hash, Image as ImageIcon, Camera as Instagram, LayoutDashboard, PenLine, Settings, UserRound, Users } from "lucide-react";
+import { BadgeDollarSign, Contact, Megaphone, FileText, FolderTree, Hash, Image as ImageIcon, Camera as Instagram, LayoutDashboard, PenLine, Settings, UserRound, Users } from "lucide-react";
 
 const ICONS = {
   overview: LayoutDashboard,
@@ -16,6 +16,7 @@ const ICONS = {
   brand: BadgeDollarSign,
   team: Users,
   people: Contact,
+  ads: Megaphone,
   profile: UserRound,
   settings: Settings,
 } as const;

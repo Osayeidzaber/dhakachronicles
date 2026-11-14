@@ -7,6 +7,7 @@ import { siteUrl } from "@/lib/env";
 import { getSiteChrome, isConfigured } from "@/lib/public-data";
 import { getPublishedArticle, listActiveAds, listMostRead, listRelated } from "@/lib/articles/queries";
 import { AdSlot } from "@/components/public/ad-slot";
+import { ReportError } from "@/components/public/report-error";
 import { siteName } from "@/lib/settings";
 import { buildArticleMetadata } from "@/lib/seo/metadata";
 import { articlePath, resolveSeo } from "@/lib/seo/defaults";
@@ -221,7 +222,11 @@ export default async function ArticlePage({ params }: { params: Params }) {
                 </a>
               )}
 
-              <AdSlot ad={ads[0]} lang={lang} className="mt-10" />
+              <div>
+                <ReportError articleId={a.id} lang={lang} />
+              </div>
+
+              <AdSlot ad={ads[0]} lang={lang} shape="square" className="mt-10" />
             </div>
           </div>
 

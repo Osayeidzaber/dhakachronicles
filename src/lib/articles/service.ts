@@ -4,7 +4,8 @@ import { requireSession } from "@/lib/auth/session";
 import { can, canEditArticle } from "@/lib/auth/permissions";
 import { AppError, check } from "@/lib/errors";
 import { audit } from "@/lib/audit";
-import { docToText } from "@/lib/content/tiptap";
+import { docTexts, docToText, replaceDocTexts } from "@/lib/content/tiptap";
+import { translateTexts } from "@/lib/translate";
 import { slugify } from "@/lib/content/slug";
 import { otherLang } from "@/lib/i18n";
 import { revalidateArticle } from "@/lib/articles/revalidate";
@@ -15,7 +16,7 @@ import {
   type ArticleInput,
   type TransitionInput,
 } from "@/lib/articles/validation";
-import type { Article, Lang } from "@/lib/db/types";
+import type { Article, Lang, TiptapDoc } from "@/lib/db/types";
 
 const EDITORIAL_ONLY = ["is_breaking", "is_featured"] as const;
 
@@ -171,7 +172,11 @@ export async function transitionArticle(id: string, raw: TransitionInput | unkno
 }
 
 /** Create the other-language version of a story as a new draft in the same translation group. */
-export async function createTranslation(id: string): Promise<Article> {
+/**
+ * Start the other-language version. With `auto`, title, subtitle, excerpt and body are machine-translated
+ * as a starting point; it is always saved as a draft for an editor to check.
+ */
+export async function createTranslation(id: string, opts: { auto?: boolean } = {}): Promise<Article> {
   const source = await getForWrite(id);
   const target = otherLang(source.language);
   const supabase = await createClient();
@@ -192,14 +197,27 @@ export async function createTranslation(id: string): Promise<Article> {
   }
 
   const { data: tags } = await supabase.from("article_tags").select("tag_id").eq("article_id", id);
+  let title = source.title;
+  let subtitle = source.subtitle;
+  let excerpt: string | null = null;
+  let content: TiptapDoc = { type: "doc", content: [] };
+  if (opts.auto) {
+    const body = docTexts(source.content);
+    const head = [source.title, source.subtitle ?? "", source.excerpt ?? ""];
+    const out = await translateTexts([...head, ...body].map((t) => t || " "), source.language, target);
+    title = out[0].trim() || source.title;
+    subtitle = source.subtitle ? out[1].trim() : null;
+    excerpt = source.excerpt ? out[2].trim() : null;
+    content = replaceDocTexts(source.content, out.slice(3));
+  }
   return createArticle(
     {
       language: target,
-      title: source.title,
-      subtitle: source.subtitle,
+      title,
+      subtitle,
       slug,
-      excerpt: null,
-      content: { type: "doc", content: [] },
+      excerpt,
+      content,
       featured_image_id: source.featured_image_id,
       featured_image_alt: null,
       category_id: source.category_id,

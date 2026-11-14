@@ -181,3 +181,28 @@ describe("auto-featuring by engagement", () => {
     expect(topByEngagement(rows, now)).toEqual(["b", "a", "e"]);
   });
 });
+
+describe("translation helpers", () => {
+  it("swaps every text run and keeps marks and structure", async () => {
+    const { docTexts, replaceDocTexts } = await import("@/lib/content/tiptap");
+    const doc: import("@/lib/db/types").TiptapDoc = {
+      type: "doc",
+      content: [
+        { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Rain" }] },
+        { type: "paragraph", content: [{ type: "text", text: "Heavy " }, { type: "text", text: "rain", marks: [{ type: "bold" }] }, { type: "text", text: " " }] },
+        { type: "image", attrs: { mediaId: "m1" } },
+      ],
+    };
+    expect(docTexts(doc)).toEqual(["Rain", "Heavy ", "rain"]);
+    const out = replaceDocTexts(doc, ["বৃষ্টি", "ভারী ", "বৃষ্টি"]);
+    expect(out.content?.[1].content?.[1]).toEqual({ type: "text", text: "বৃষ্টি", marks: [{ type: "bold" }] });
+    expect(out.content?.[1].content?.[2].text).toBe(" ");
+    expect(out.content?.[2]).toEqual(doc.content?.[2]);
+  });
+
+  it("batches long input without splitting strings", async () => {
+    const { batchTexts } = await import("@/lib/translate");
+    const b = batchTexts(["a".repeat(3000), "b".repeat(3000), "c"], 5000);
+    expect(b.map((x) => x.length)).toEqual([1, 2]);
+  });
+});

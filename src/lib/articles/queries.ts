@@ -1,6 +1,6 @@
 import "server-only";
 import { createPublicClient } from "@/lib/supabase/server";
-import type { Article, Author, Category, Lang, Media, Tag } from "@/lib/db/types";
+import type { AdSize, Article, Author, Category, Lang, Media, Tag } from "@/lib/db/types";
 
 /**
  * Public read API. This is the boundary the public frontend depends on:
@@ -272,21 +272,40 @@ export async function listPartners(): Promise<Partner[]> {
 
 export interface SiteAd {
   id: string;
-  brand_name: string;
-  ad_link_url: string;
-  image: ArticleImage;
+  advertiser: string;
+  link_url: string;
+  creatives: Partial<Record<AdSize, ArticleImage>>;
 }
 
-/** Ads running today for a placement (Dhaka date window), newest first. */
+/** Ads running today for a placement, each with its images by size. */
 export async function listActiveAds(placement: "home" | "article"): Promise<SiteAd[]> {
-  const { data, error } = await createPublicClient().rpc("active_ads", { p_placement: placement });
+  const { data, error } = await createPublicClient().rpc("live_ads", { p_placement: placement });
   if (error) throw error;
-  const rows = (data ?? []) as { id: string; brand_name: string; ad_link_url: string; ad_media_id: string }[];
-  const imgs = await imagesById(rows.map((r) => r.ad_media_id));
-  return rows.flatMap((r) => {
-    const image = imgs.get(r.ad_media_id);
-    return image ? [{ id: r.id, brand_name: r.brand_name, ad_link_url: r.ad_link_url, image }] : [];
-  });
+  const rows = (data ?? []) as { id: string; advertiser: string; link_url: string; creatives: { size: AdSize; media_id: string }[] }[];
+  const imgs = await imagesById(rows.flatMap((r) => r.creatives.map((c) => c.media_id)));
+  return rows.map((r) => ({
+    id: r.id,
+    advertiser: r.advertiser,
+    link_url: r.link_url,
+    creatives: Object.fromEntries(r.creatives.flatMap((c) => (imgs.has(c.media_id) ? [[c.size, imgs.get(c.media_id)!]] : []))),
+  }));
+}
+
+export interface AdReport {
+  name: string;
+  advertiser: string;
+  placement: string;
+  starts_on: string | null;
+  ends_on: string | null;
+  live: boolean;
+  stats: { day: string; impressions: number; clicks: number }[];
+}
+
+/** The advertiser's read-only report, found by its private token. */
+export async function getAdReport(token: string): Promise<AdReport | null> {
+  const { data, error } = await createPublicClient().rpc("ad_report", { p_token: token });
+  if (error) throw error;
+  return ((data ?? []) as AdReport[])[0] ?? null;
 }
 
 export type PublicTeamMember = import("@/lib/db/types").TeamMember & { photo: ArticleImage | null; author: { slug: string } | null };

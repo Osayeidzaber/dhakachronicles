@@ -22,7 +22,7 @@ import {
   updateArticle,
   type BulkAction,
 } from "@/lib/articles/service";
-import { authorSchema, brandDealSchema, teamMemberSchema, categorySchema, tagSchema, type TransitionInput } from "@/lib/articles/validation";
+import { adSchema, AD_SIZES, authorSchema, brandDealSchema, teamMemberSchema, categorySchema, tagSchema, type TransitionInput } from "@/lib/articles/validation";
 import { deleteMedia, updateMediaMeta } from "@/lib/media/service";
 import { generateSeoSuggestions } from "@/lib/seo/ai";
 import { importSelected, runSync, syncOptionsSchema, processImport } from "@/lib/instagram/sync";
@@ -69,9 +69,9 @@ export async function transitionArticleAction(id: string, input: TransitionInput
   });
 }
 
-export async function createTranslationAction(id: string): Promise<void> {
-  const res = await attempt(() => createTranslation(id));
-  if (res.ok) redirect(`/admin/articles/${res.data.id}`);
+export async function createTranslationAction(id: string, auto = false): Promise<void> {
+  const res = await attempt(() => createTranslation(id, { auto }));
+  if (res.ok) redirect(`/admin/articles/${res.data.id}?ok=${encodeURIComponent(auto ? "Translated draft created. Please check it before publishing." : "Translation draft created")}`);
   redirect(`/admin/articles/${id}?error=${encodeURIComponent(res.error)}`);
 }
 
@@ -351,7 +351,7 @@ export async function saveBrandDealAction(id: string | null, formData: FormData)
       if (tag) await admin.from("article_tags").upsert({ article_id: input.article_id, tag_id: tag.id }, { onConflict: "article_id,tag_id", ignoreDuplicates: true });
       revalidatePublic();
     }
-    await audit(session.userId, `brand_deal.${id ? "update" : "create"}`, "brand_deal", id, { brand: input.brand_name, stage: input.stage, on_site: input.show_on_site, ad: input.ad_enabled });
+    await audit(session.userId, `brand_deal.${id ? "update" : "create"}`, "brand_deal", id, { brand: input.brand_name, stage: input.stage, on_site: input.show_on_site });
     revalidatePath("/admin/brand-deals");
     // Partner logos and ads appear on public pages.
     revalidatePublic();
@@ -484,4 +484,35 @@ export async function deleteTeamMemberAction(id: string): Promise<void> {
     revalidatePath("/admin/people");
     revalidatePublic();
   }, "Person removed");
+}
+
+// ---------------------------------------------------------------- website ads
+export async function saveAdAction(id: string | null, formData: FormData): Promise<void> {
+  let savedId = id;
+  await formAttempt(id ? `/admin/ads?ad=${id}` : "/admin/ads", async () => {
+    const session = await requireSession("brand_deals.manage");
+    const { creative_wide, creative_mobile, creative_square, ...input } = adSchema.parse(Object.fromEntries(formData));
+    const supabase = await createClient();
+    if (id) check(await supabase.from("ads").update(input).eq("id", id));
+    else savedId = (check(await supabase.from("ads").insert(input).select("id").single()) as { id: string }).id;
+    const creatives = { wide: creative_wide, mobile: creative_mobile, square: creative_square };
+    const keep = AD_SIZES.filter((s) => creatives[s]);
+    const drop = AD_SIZES.filter((s) => !creatives[s]);
+    if (keep.length) check(await supabase.from("ad_creatives").upsert(keep.map((size) => ({ ad_id: savedId, size, media_id: creatives[size] }))));
+    if (drop.length) check(await supabase.from("ad_creatives").delete().eq("ad_id", savedId!).in("size", drop));
+    await audit(session.userId, `ad.${id ? "update" : "create"}`, "ad", savedId, { name: input.name, advertiser: input.advertiser, placement: input.placement, active: input.active });
+    revalidatePath("/admin/ads");
+    revalidatePublic();
+  }, id ? "Ad saved" : "Ad created");
+}
+
+export async function deleteAdAction(id: string): Promise<void> {
+  await formAttempt("/admin/ads", async () => {
+    const session = await requireSession("brand_deals.manage");
+    const supabase = await createClient();
+    check(await supabase.from("ads").delete().eq("id", id));
+    await audit(session.userId, "ad.delete", "ad", id);
+    revalidatePath("/admin/ads");
+    revalidatePublic();
+  }, "Ad deleted");
 }

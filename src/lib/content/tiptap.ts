@@ -56,3 +56,24 @@ export function truncate(text: string, max: number): string {
   const lastSpace = cut.lastIndexOf(" ");
   return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trim()}…`;
 }
+
+/** Every text run in document order (for translation). Whitespace-only runs are skipped. */
+export function docTexts(doc: TiptapDoc | null | undefined): string[] {
+  const out: string[] = [];
+  const walk = (n: TiptapNode) => {
+    if (n.type === "text" && n.text && n.text.trim()) out.push(n.text);
+    n.content?.forEach(walk);
+  };
+  doc?.content?.forEach(walk);
+  return out;
+}
+
+/** Copy of the document with its text runs replaced, in the same order docTexts returned them. Marks and structure are kept. */
+export function replaceDocTexts(doc: TiptapDoc, texts: string[]): TiptapDoc {
+  let i = 0;
+  const walk = (n: TiptapNode): TiptapNode => {
+    if (n.type === "text" && n.text && n.text.trim()) return { ...n, text: texts[i++] ?? n.text };
+    return n.content ? { ...n, content: n.content.map(walk) } : n;
+  };
+  return { ...doc, content: (doc.content ?? []).map(walk) };
+}

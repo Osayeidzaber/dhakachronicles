@@ -7,6 +7,8 @@ import { articlePath } from "@/lib/seo/defaults";
 import { LanguageSwitcher } from "./language-switcher";
 import { MobileMenu } from "./mobile-menu";
 import { NavLink } from "./nav-link";
+import { StaffLink } from "./staff-link";
+import { HeaderSearch } from "./header-search";
 
 function today(lang: Lang) {
   return new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Dhaka" }).format(new Date());
@@ -21,9 +23,7 @@ export function SiteHeader({ lang, siteName, categories, breaking = [] }: { lang
           <span>{today(lang)} · {lang === "bn" ? "ঢাকা" : "Dhaka"}</span>
           <div className="flex items-center gap-4">
             <LanguageSwitcher lang={lang} label={t(lang, "otherEdition")} />
-            <Link href="/login" className="hidden hover:text-white sm:inline">
-              {t(lang, "staff")}
-            </Link>
+            <StaffLink label={t(lang, "staff")} />
           </div>
         </div>
       </div>
@@ -34,20 +34,7 @@ export function SiteHeader({ lang, siteName, categories, breaking = [] }: { lang
           <Link href={`/${lang}`} aria-label={siteName} className="flex flex-1 justify-center transition-opacity duration-300 hover:opacity-85">
             <Logo height={56} priority label={siteName} className="max-w-[62vw] md:max-w-none" />
           </Link>
-          <form action={`/${lang}/search`} role="search" className="hidden md:block">
-            <label className="group flex h-11 items-center gap-2 rounded-full border border-line bg-transparent px-4 text-sm text-muted transition-[border-color,background-color] duration-300 ease-out focus-within:border-white/50 focus-within:bg-white/[0.04] hover:border-white/30">
-              <SearchIcon />
-              <span className="sr-only">{t(lang, "search")}</span>
-              <input
-                name="q"
-                type="search"
-                autoComplete="off"
-                enterKeyHint="search"
-                placeholder={t(lang, "searchPlaceholder")}
-                className="w-40 bg-transparent text-white outline-none transition-[width] duration-300 ease-out placeholder:text-muted focus:w-60 lg:w-48 lg:focus:w-72 [&::-webkit-search-cancel-button]:appearance-none"
-              />
-            </label>
-          </form>
+          <HeaderSearch lang={lang} label={t(lang, "search")} placeholder={t(lang, "searchPlaceholder")} />
           <Link href={`/${lang}/search`} aria-label={t(lang, "search")} className="grid h-11 w-11 place-items-center rounded-full border border-line md:hidden">
             <SearchIcon />
           </Link>

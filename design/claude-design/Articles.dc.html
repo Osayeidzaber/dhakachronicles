@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Articles</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1100px">
+<dc-import name="AdminSidebar" active="articles" hint-size="248px,1100px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Articles</h1>
+<a href="Editor.dc.html" style="height: 40px; padding: 0 16px; background: #fff; color: #000; border-radius: 999px; display: flex; align-items: center; font-size: 14px; font-weight: 500">New article</a>
+</header>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<label style="flex: 1 1 260px; display: flex"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search articles</span><input type="search" placeholder="Search titles…" style="flex: 1; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit; font-size: 14px"></label>
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+<button type="button" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #c4c4c4; font: inherit; font-size: 13px; cursor: pointer">{{f}} ▾</button>
+</sc-for>
+</div>
+<div style="display: flex; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+<a href="#" style="{{t.style}}">{{t.label}}</a>
+</sc-for>
+</div>
+<div style="overflow-x: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px">
+<table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: 14px">
+<thead><tr style="text-align: left; color: #8a8a8a; font-size: 12px">
+<th scope="col" style="padding: 12px 16px; font-weight: 500; width: 32px"><input type="checkbox" aria-label="Select all"></th>
+<th scope="col" style="padding: 12px 16px; font-weight: 500">Title</th>
+<th scope="col" style="padding: 12px 16px; font-weight: 500">Section</th>
+<th scope="col" style="padding: 12px 16px; font-weight: 500">Lang</th>
+<th scope="col" style="padding: 12px 16px; font-weight: 500">Source</th>
+<th scope="col" style="padding: 12px 16px; font-weight: 500">Status</th>
+<th scope="col" style="padding: 12px 16px; font-weight: 500">Date</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<tr style="border-top: 1px solid rgba(255,255,255,0.06)">
+<td style="padding: 14px 16px"><input type="checkbox" aria-label="Select row"></td>
+<td style="padding: 14px 16px"><a href="Editor.dc.html">{{r.title}}</a></td>
+<td style="padding: 14px 16px; color: #c4c4c4">{{r.cat}}</td>
+<td style="padding: 14px 16px; color: #c4c4c4">EN</td>
+<td style="padding: 14px 16px; color: #c4c4c4">Instagram</td>
+<td style="padding: 14px 16px"><span style="font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2)">Draft</span></td>
+<td style="padding: 14px 16px; color: #8a8a8a">{{r.date}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; color: #8a8a8a">
+<span>Bulk: <button type="button" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #c4c4c4; font: inherit; font-size: 13px">Submit</button> <button type="button" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #c4c4c4; font: inherit; font-size: 13px">Archive</button></span>
+<span>Page 1 of [n]</span>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+const tabs = ['All', 'Draft', 'In review', 'Scheduled', 'Published'];
+return {
+filters: ['Language', 'Section', 'Source', 'Author'],
+tabs: tabs.map((label, i) => ({ label, style: 'padding: 10px 14px; font-size: 14px; ' + (i === 1 ? 'color: #fff; border-bottom: 2px solid #fff' : 'color: #8a8a8a') })),
+rows: [
+{ cat: 'Entertainment', date: '13 Nov', title: 'GTA 6 pop-up store opens in Selfridges on Oxford Street' },
+{ cat: 'Sport', date: '13 Nov', title: 'Argentina lose 2-1 to Uruguay in first match since Messi’s retirement' },
+{ cat: 'Tech', date: '13 Nov', title: 'Logitech gives 7,000+ employees an extra day off to play video games' },
+{ cat: 'Bangladesh', date: '13 Nov', title: 'More than 100 teenage gang members stage armed display in Kadamtali' },
+{ cat: 'Bangladesh', date: '13 Nov', title: 'Chinese nationals stop filming in Uttara after police step up surveillance' },
+{ cat: 'World', date: '13 Nov', title: 'FAA halts all departing US flights after communications outage' },
+{ cat: 'Politics', date: '13 Nov', title: 'British politicians urge UK to seek guarantees for Sheikh Hasina' },
+{ cat: 'World', date: '12 Nov', title: 'Abdul El-Sayed to be first US senator sworn in on the Quran' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

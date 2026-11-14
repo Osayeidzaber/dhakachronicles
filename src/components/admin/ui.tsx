@@ -1,16 +1,25 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import StatusMark, { type StatusMarkStatus } from "@/components/ui/vendor/reactbits/StatusMark";
+import { FlashToast } from "./flash-toast";
 import type { ArticleStatus } from "@/lib/db/types";
 
+/** Result of a form action: a toast (FlashToast) plus an inline line for screen readers and no-JS. */
 export function Flash({ ok, error }: { ok?: string; error?: string }) {
   if (!ok && !error) return null;
   return (
-    <p
-      role={error ? "alert" : "status"}
-      className={`reveal my-4 flex items-center gap-2.5 rounded-xl border p-3 text-sm ${error ? "border-red-500/30 bg-red-500/5 text-red-200" : "border-white/15 bg-white/[0.03] text-white"}`}
-    >
-      <span className={`h-2 w-2 shrink-0 rounded-full ${error ? "bg-red-400" : "bg-white"}`} />
-      {error ?? ok}
-    </p>
+    <>
+      <Suspense fallback={null}>
+        <FlashToast ok={ok} error={error} />
+      </Suspense>
+      <p
+        role={error ? "alert" : "status"}
+        className={`reveal my-4 flex items-center gap-2.5 rounded-xl border p-3 text-sm ${error ? "border-red-500/30 bg-red-500/5 text-red-200" : "border-white/15 bg-white/[0.03] text-white"}`}
+      >
+        <StatusMark status={error ? "failed" : "done"} size={16} />
+        {error ?? ok}
+      </p>
+    </>
   );
 }
 
@@ -22,14 +31,32 @@ const STATUS_STYLE: Record<ArticleStatus, string> = {
   archived: "border border-white/10 text-subtle",
 };
 
+const STATUS_MARK: Record<ArticleStatus, { mark: StatusMarkStatus; label: string }> = {
+  draft: { mark: "pending", label: "Draft" },
+  pending_review: { mark: "running", label: "In review" },
+  scheduled: { mark: "pending", label: "Scheduled" },
+  published: { mark: "done", label: "Published" },
+  archived: { mark: "cancelled", label: "Archived" },
+};
+
+/** Article status as an animated StatusMark (tick, spinner, dashes, strike) with its label. */
 export function StatusBadge({ status }: { status: ArticleStatus }) {
-  return <span className={`badge ${STATUS_STYLE[status]}`}>{status.replace("_", " ")}</span>;
+  const s = STATUS_MARK[status];
+  return (
+    <span className={`badge inline-flex items-center gap-1.5 ${STATUS_STYLE[status]}`}>
+      <StatusMark status={s.mark} size={13} strike={false} />
+      {s.label}
+    </span>
+  );
 }
 
-export function PageHeader({ title, children }: { title: string; children?: React.ReactNode }) {
+export function PageHeader({ title, kicker, children }: { title: string; kicker?: string; children?: React.ReactNode }) {
   return (
     <div className="reveal mb-7 flex flex-wrap items-end justify-between gap-3">
-      <h1 className="font-display text-[clamp(2.2rem,4vw,3.2rem)] leading-none">{title}</h1>
+      <div>
+        {kicker && <p className="kicker mb-2">{kicker}</p>}
+        <h1 className="font-display text-[clamp(2.2rem,4vw,3.2rem)] leading-none">{title}</h1>
+      </div>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );

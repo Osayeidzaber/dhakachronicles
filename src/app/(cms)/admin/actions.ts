@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSession } from "@/lib/auth/session";
-import { canAssignRole } from "@/lib/auth/permissions";
+import { can, canAssignRole } from "@/lib/auth/permissions";
 import { AppError, check, toActionError, type ActionResult } from "@/lib/errors";
 import { audit } from "@/lib/audit";
 import { siteUrl } from "@/lib/env";
@@ -21,10 +21,11 @@ import {
   updateArticle,
   type BulkAction,
 } from "@/lib/articles/service";
-import { authorSchema, categorySchema, tagSchema, type TransitionInput } from "@/lib/articles/validation";
+import { authorSchema, brandDealSchema, categorySchema, tagSchema, type TransitionInput } from "@/lib/articles/validation";
 import { deleteMedia, updateMediaMeta } from "@/lib/media/service";
 import { generateSeoSuggestions } from "@/lib/seo/ai";
-import { runSync, syncOptionsSchema, processImport } from "@/lib/instagram/sync";
+import { importSelected, runSync, syncOptionsSchema, processImport } from "@/lib/instagram/sync";
+import { mapLimit } from "@/lib/concurrency";
 import { connectWithToken, disconnect as disconnectInstagram } from "@/lib/instagram/oauth";
 import type { Article, Media } from "@/lib/db/types";
 
@@ -194,7 +195,7 @@ export async function inviteUserAction(formData: FormData): Promise<void> {
     const admin = createAdminClient();
     const { data, error } = await admin.auth.admin.inviteUserByEmail(input.email, {
       data: { full_name: input.full_name },
-      redirectTo: `${siteUrl()}/login`,
+      redirectTo: `${siteUrl()}/set-password`,
     });
     if (error) throw error;
     // Role lives in app_metadata (not user-editable) and in profiles.
@@ -327,4 +328,58 @@ export async function markNotificationsReadAction(): Promise<void> {
   const supabase = await createClient();
   await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("user_id", session.userId).is("read_at", null);
   revalidatePath("/admin");
+}
+
+// ---------------------------------------------------------------- brand deals
+export async function saveBrandDealAction(id: string | null, formData: FormData): Promise<void> {
+  await formAttempt("/admin/brand-deals", async () => {
+    const session = await requireSession("brand_deals.manage");
+    const input = brandDealSchema.parse(Object.fromEntries(formData));
+    const supabase = await createClient();
+    if (id) check(await supabase.from("brand_deals").update(input).eq("id", id));
+    else check(await supabase.from("brand_deals").insert(input));
+    await audit(session.userId, `brand_deal.${id ? "update" : "create"}`, "brand_deal", id, { brand: input.brand_name, stage: input.stage });
+    revalidatePath("/admin/brand-deals");
+  });
+}
+
+export async function deleteBrandDealAction(id: string): Promise<void> {
+  await formAttempt("/admin/brand-deals", async () => {
+    const session = await requireSession("brand_deals.manage");
+    if (session.profile.role !== "admin") throw new AppError("Only admins can delete deals.", "FORBIDDEN");
+    const supabase = await createClient();
+    check(await supabase.from("brand_deals").delete().eq("id", id));
+    await audit(session.userId, "brand_deal.delete", "brand_deal", id);
+    revalidatePath("/admin/brand-deals");
+  }, "Deleted");
+}
+
+// ---------------------------------------------------------------- instagram: pick & approve
+/** Import the posts an editor ticked in the Browse tab; "publish" approves them in the same step. */
+export async function instagramImportSelectedAction(formData: FormData): Promise<void> {
+  const publish = formData.get("intent") === "publish";
+  await formAttempt("/admin/instagram?tab=browse", async () => {
+    const session = await requireSession(publish ? "article.publish" : "instagram.manage");
+    if (publish && !can(session.profile.role, "instagram.manage")) throw new AppError("You can't import from Instagram.", "FORBIDDEN");
+    const category = String(formData.get("category_id") ?? "");
+    const res = await importSelected({ ids: formData.getAll("ids").map(String), publish, categoryId: category || null });
+    await audit(session.userId, "instagram.import_selected", "instagram_account", null, { ...res, publish });
+    revalidatePath("/admin/instagram");
+    if (publish && res.imported) revalidatePublic();
+    if (!res.imported && res.failed) throw new AppError(`${res.failed} post(s) could not be imported.`, "VALIDATION");
+  }, publish ? "Imported and published" : "Imported as drafts");
+}
+
+/** Approve one or more imported drafts: publish them now. */
+export async function instagramApproveAction(formData: FormData): Promise<void> {
+  await formAttempt("/admin/instagram", async () => {
+    const ids = z.array(z.uuid()).min(1, "Pick at least one draft.").max(50).parse(formData.getAll("article_ids").map(String));
+    const results = await mapLimit(ids, 4, (id) => transitionArticle(id, { action: "publish" }));
+    const failed = results.filter((r) => r.status === "rejected");
+    revalidatePath("/admin/instagram");
+    if (failed.length) {
+      const first = (failed[0] as PromiseRejectedResult).reason;
+      throw new AppError(`${ids.length - failed.length} published, ${failed.length} failed: ${first instanceof Error ? first.message : "error"}`, "VALIDATION");
+    }
+  }, "Published");
 }

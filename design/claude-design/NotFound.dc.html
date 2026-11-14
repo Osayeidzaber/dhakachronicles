@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Page not found</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif">
+<dc-import name="SiteHeader" lang="en" hint-size="100%,240px"></dc-import>
+<main style="max-width: 1280px; margin: 0 auto; padding: 80px 32px; display: flex; flex-wrap: wrap; gap: 48px">
+<section style="flex: 999 1 520px; display: flex; flex-direction: column; gap: 20px">
+<span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 160px; line-height: 0.8; color: #2e2e2e" aria-hidden="true">404</span>
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 56px; line-height: 1.05">This page isn’t here.</h1>
+<p style="margin: 0; max-width: 520px; font-size: 17px; line-height: 1.6; color: #a3a3a3">The story may have moved, or the link may be wrong. Try searching, or start from the front page.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<a href="Main.dc.html" style="height: 44px; padding: 0 20px; display: inline-flex; align-items: center; border-radius: 999px; background: #fff; color: #000; font-size: 14px; font-weight: 500">Front page</a>
+<a href="Search.dc.html" style="height: 44px; padding: 0 20px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); font-size: 14px">Search</a>
+</div>
+</section>
+<section style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 12px; padding: 28px; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; background: #070707; align-self: flex-start">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">Error state (error.tsx)</span>
+<p style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-size: 28px; line-height: 1.15">Something went wrong loading this page.</p>
+<button type="button" style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #fff; font: inherit; font-size: 14px; cursor: pointer">Try again</button>
+<span style="margin-top: 16px; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">Loading state (loading.tsx)</span>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="height: 120px; border-radius: 16px; background: #141414"></div>
+<div style="height: 14px; width: 40%; border-radius: 4px; background: #141414"></div>
+<div style="height: 22px; width: 90%; border-radius: 4px; background: #141414"></div>
+<div style="height: 22px; width: 70%; border-radius: 4px; background: #141414"></div>
+</div>
+</section>
+</main>
+<dc-import name="SiteFooter" lang="en" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

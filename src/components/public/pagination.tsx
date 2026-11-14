@@ -5,9 +5,9 @@ import { t } from "@/lib/i18n";
 export function Pagination({ lang, page, totalPages, href }: { lang: Lang; page: number; totalPages: number; href: (p: number) => string }) {
   if (totalPages <= 1) return null;
   return (
-    <nav className="mt-8 flex items-center justify-between border-t border-border pt-4 text-sm" aria-label="Pagination">
+    <nav className="mt-10 flex items-center justify-between text-sm" aria-label="Pagination">
       {page > 1 ? (
-        <Link href={href(page - 1)} rel="prev" className="underline">
+        <Link href={href(page - 1)} rel="prev" className="btn">
           ← {t(lang, "previous")}
         </Link>
       ) : (
@@ -17,7 +17,7 @@ export function Pagination({ lang, page, totalPages, href }: { lang: Lang; page:
         {page} / {totalPages}
       </span>
       {page < totalPages ? (
-        <Link href={href(page + 1)} rel="next" className="underline">
+        <Link href={href(page + 1)} rel="next" className="btn">
           {t(lang, "next")} →
         </Link>
       ) : (

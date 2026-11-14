@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Instagram</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1100px">
+<dc-import name="AdminSidebar" active="instagram" hint-size="248px,1100px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 24px; box-sizing: border-box">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Instagram</h1>
+<section style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px">
+<span style="width: 64px; height: 64px; border-radius: 999px; background: linear-gradient(135deg, #1f1f1f, #000); border: 1px solid rgba(255,255,255,0.2); display: grid; place-items: center; font-family: 'Instrument Serif', Georgia, serif; font-size: 22px" aria-hidden="true">DC</span>
+<div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 18px; font-weight: 500">@dhakachronicles</span>
+<span style="font-size: 13px; color: #8a8a8a">78.2K followers · Connected via Meta Unified Login · Token encrypted</span>
+</div>
+<span style="font-size: 12px; padding: 4px 12px; border-radius: 999px; background: #fff; color: #000; font-weight: 500">Connected</span>
+<button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Sync now</button>
+<button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(239,68,68,0.4); background: transparent; color: #fca5a5; font: inherit; font-size: 14px">Disconnect</button>
+</section>
+<section style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 1 1 300px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">Import settings</h2>
+<label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #c4c4c4">Auto-import new posts <input type="checkbox" checked></label>
+<label style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #c4c4c4">Imports become drafts — never auto-published <input type="checkbox" checked disabled></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Import history from
+<select style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"><option>Last 7 days</option><option>Last 30 days</option><option>Everything</option></select></label>
+</div>
+<div style="flex: 2 1 420px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column">
+<h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 500">Sync history</h2>
+<div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 14px"><span style="color: #c4c4c4">[date, time]</span><span>[n] imported · [n] skipped as duplicates</span></div>
+<div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 14px"><span style="color: #c4c4c4">[date, time]</span><span style="color: #fca5a5">Failed · retrying in [n] min</span></div>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">Recent posts</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px">
+<sc-for list="{{posts}}" as="p" hint-placeholder-count="6">
+<div style="border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; background: #070707; display: flex; flex-direction: column">
+<div style="aspect-ratio: 4 / 5; background: linear-gradient(135deg, #1a1a1a, #000)"></div>
+<div style="padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; line-height: 1.4">{{p.t}}</span>
+<span style="display: flex; justify-content: space-between; font-size: 12px; color: #8a8a8a"><span>{{p.d}}</span><a href="Editor.dc.html" style="color: #c4c4c4">Open draft →</a></span>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return { posts: [
+{ d: '13 Nov · Reel', t: 'The GTA 6 pop-up store can be found in the Selfridges on Oxford Street…' },
+{ d: '13 Nov', t: 'Argentina suffered a 2-1 defeat against Uruguay on Friday…' },
+{ d: '13 Nov', t: 'Technology company Logitech is giving more than 7,000 employees an extra day off…' },
+{ d: '13 Nov', t: 'More than 100 teenage gang members staged an armed display in Dhaka’s Kadamtali area…' },
+{ d: '13 Nov', t: 'A group of Chinese nationals has stopped filming in Dhaka’s Uttara area…' },
+{ d: '13 Nov', t: 'The US Federal Aviation Administration (FAA) halted all departing flights nationwide…' }
+] };
+}
+}
+</script>
+</body>
+</html>

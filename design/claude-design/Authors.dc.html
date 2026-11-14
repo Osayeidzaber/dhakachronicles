@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Authors</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif; min-height: 1000px">
+<dc-import name="AdminSidebar" active="authors" hint-size="248px,1000px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 24px; box-sizing: border-box">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<div><h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Authors</h1>
+<p style="margin: 6px 0 0; font-size: 14px; color: #8a8a8a">Public bylines in both languages. An author can be linked to a staff account.</p></div>
+<button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">New author</button>
+</header>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px">
+<sc-for list="{{authors}}" as="a" hint-placeholder-count="3">
+<div style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; gap: 14px; align-items: center">
+<span style="width: 56px; height: 56px; border-radius: 999px; background: linear-gradient(135deg, #1f1f1f, #000); border: 1px solid rgba(255,255,255,0.14); display: grid; place-items: center; font-size: 15px" aria-hidden="true">{{a.ini}}</span>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 500">{{a.en}}</span><span style="font-size: 14px; color: #a3a3a3">{{a.bn}}</span></div>
+</div>
+<div style="display: flex; justify-content: space-between; font-size: 13px; color: #8a8a8a"><span>{{a.link}}</span><span>[n] articles</span></div>
+<div style="display: flex; gap: 8px">
+<button type="button" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #c4c4c4; font: inherit; font-size: 13px">Edit</button>
+<a href="Author.dc.html" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); color: #c4c4c4; display: flex; align-items: center; font-size: 13px">View page</a>
+</div>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return { authors: [
+{ ini: 'DC', en: 'Dhaka Chronicles', bn: 'ঢাকা ক্রনিকলস', link: 'House byline' },
+{ ini: '[A]', en: '[Author name]', bn: '[লেখকের নাম]', link: 'Linked to [staff account]' },
+{ ini: '[A]', en: '[Author name]', bn: '[লেখকের নাম]', link: 'Not linked' }
+] };
+}
+}
+</script>
+</body>
+</html>

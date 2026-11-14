@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif; min-height: 1200px">
+<dc-import name="AdminSidebar" active="settings" hint-size="248px,1200px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 920px; box-sizing: border-box">
+<header style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Settings</h1>
+<button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Save changes</button>
+</header>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+<section style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<div><h2 style="margin: 0; font-size: 15px; font-weight: 500">{{g.title}}</h2><p style="margin: 4px 0 0; font-size: 13px; color: #8a8a8a">{{g.note}}</p></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px">
+<sc-for list="{{g.fields}}" as="f" hint-placeholder-count="2">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">{{f.k}}<input value="{{f.v}}" style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit; font-size: 14px"></label>
+</sc-for>
+</div>
+</section>
+</sc-for>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+renderVals() {
+return { groups: [
+{ title: 'Site', note: 'Shown in the header, footer and search results.', fields: [{ k: 'Site name (English)', v: 'Dhaka Chronicles' }, { k: 'সাইটের নাম (বাংলা)', v: 'ঢাকা ক্রনিকলস' }, { k: 'Default language', v: 'বাংলা (bn)' }, { k: 'Tagline', v: 'Delivering timely, accurate, and engaging news & media content that resonates.' }] },
+{ title: 'Social links', note: 'Footer and Organization schema.', fields: [{ k: 'Instagram', v: 'https://www.instagram.com/dhakachronicles/' }, { k: 'Facebook', v: 'https://www.facebook.com/share/1ENeULQ5Bp/' }] },
+{ title: 'SEO defaults', note: 'Used when an article has no SEO fields of its own.', fields: [{ k: 'Default meta description', v: '[description]' }, { k: 'Default share image', v: '[choose from Media]' }] },
+{ title: 'Instagram', note: 'Only this account may be connected.', fields: [{ k: 'Expected username', v: 'dhakachronicles' }, { k: 'Auto-publish imports', v: 'Off (drafts only)' }] },
+{ title: 'Discord', note: 'Newsroom notifications.', fields: [{ k: 'Webhook URL', v: '[stored securely]' }, { k: 'Notify on', v: 'Submitted for review, published' }] }
+] };
+}
+}
+</script>
+</body>
+</html>

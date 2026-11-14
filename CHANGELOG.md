@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+- Brand deals pipeline for sponsorships (`/admin/brand-deals`), with RLS and DB tests.
+- Public site redesign: highlight, most read, article tools, mobile menu, presence beacon.
+- Claude Design canvas stored in `design/claude-design/`.
+- Discord: two channels (article log, activity log) with rich embeds; webhooks via `DISCORD_ARTICLE_WEBHOOK_URL` / `DISCORD_ACTIVITY_WEBHOOK_URL`.
+- New logo across the site, newsroom and invite email; emblem favicon/app icon.
+- Instagram: pick specific posts, import & publish in one step, approve drafts in bulk, real video/reel import, parallel processing.
+- Discord Alerts channel for failures, rate limits and suspicious sign-ins; links to site/newsroom/Instagram on every article embed.
+- Staff invitations: custom HTML email, `/auth/confirm` and `/set-password` so invitees can actually sign in.
+
 ## [0.2.0] — 2026-11-13
 
 ### Added

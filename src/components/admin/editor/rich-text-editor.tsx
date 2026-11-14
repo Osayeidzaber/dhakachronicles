@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Embed, FigureImage } from "./extensions";
+import { Embed, FigureImage, Video } from "./extensions";
 import { MediaPicker } from "@/components/admin/media-picker";
 import { parseYouTubeId, safeHref } from "@/lib/content/embeds";
 import type { TiptapDoc } from "@/lib/db/types";
@@ -91,6 +91,7 @@ export function RichTextEditor({ value, onChange, lang, articleId }: { value: Ti
       }),
       FigureImage,
       Embed,
+      Video,
     ],
     content: value,
     editorProps: { attributes: { lang, class: "prose-article" } },

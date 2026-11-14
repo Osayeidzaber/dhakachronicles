@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1000px">
+<dc-import name="AdminSidebar" active="profile" hint-size="248px,1000px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 760px; box-sizing: border-box">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Profile</h1>
+<section style="display: flex; flex-wrap: wrap; align-items: center; gap: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px">
+<span style="width: 88px; height: 88px; border-radius: 999px; background: linear-gradient(135deg, #1f1f1f, #000); border: 1px solid rgba(255,255,255,0.14); display: grid; place-items: center; font-size: 24px" aria-hidden="true">[A]</span>
+<div style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px">[Your name]</span><span style="font-size: 13px; color: #8a8a8a">[email] · Admin</span></div>
+<button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #fff; font: inherit; font-size: 14px">Change photo</button>
+</section>
+<section style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">Details</h2>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Full name<input style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Public byline<select style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"><option>[Linked author]</option></select></label>
+<button type="button" style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Save</button>
+</section>
+<section style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">Password</h2>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">New password<input type="password" style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Confirm password<input type="password" style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<button type="button" style="align-self: flex-start; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #fff; font: inherit; font-size: 14px">Update password</button>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

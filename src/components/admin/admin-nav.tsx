@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, FolderTree, Hash, Image as ImageIcon, Camera as Instagram, LayoutDashboard, PenLine, Settings, UserRound, Users } from "lucide-react";
+import { BadgeDollarSign, FileText, FolderTree, Hash, Image as ImageIcon, Camera as Instagram, LayoutDashboard, PenLine, Settings, UserRound, Users } from "lucide-react";
 
 const ICONS = {
   overview: LayoutDashboard,
@@ -12,6 +12,7 @@ const ICONS = {
   sections: FolderTree,
   tags: Hash,
   authors: PenLine,
+  brand: BadgeDollarSign,
   team: Users,
   profile: UserRound,
   settings: Settings,
@@ -42,7 +43,7 @@ export function AdminNav({ items }: { items: NavItem[] }) {
           >
             <Icon className={`h-4 w-4 transition ${active ? "opacity-100" : "opacity-60 group-hover:opacity-100"}`} aria-hidden="true" />
             <span className="flex-1">{n.label}</span>
-            {n.badge && <span className="text-[11px] text-muted">{n.badge}</span>}
+            {n.badge && <span className="rounded-full bg-white/[0.08] px-2 py-px text-[11px] text-neutral-700">{n.badge}</span>}
           </Link>
         );
       })}

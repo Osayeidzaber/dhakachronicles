@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Site footer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#c4c4c4;text-decoration:none}a:hover{color:#fff}
+</style>
+</helmet>
+<footer style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif; border-top: 1px solid rgba(255,255,255,0.14)">
+<div style="max-width: 1280px; margin: 0 auto; padding: 56px 32px 32px; display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-wrap: wrap; gap: 48px; justify-content: space-between">
+<div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 12px">
+<a href="Main.dc.html" style="color: #fff; font-family: {{t.logoFont}}; font-size: 40px; line-height: 1">{{t.name}}</a>
+<p style="margin: 0; font-size: 14px; line-height: 1.6; color: #a3a3a3; max-width: 360px">{{t.about}}</p>
+</div>
+<nav aria-label="{{t.sectionsLabel}}" style="flex: 2 1 480px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 32px; font-size: 14px">
+<sc-for list="{{t.links}}" as="l" hint-placeholder-count="9">
+<a href="{{l.href}}">{{l.label}}</a>
+</sc-for>
+</nav>
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px; color: #8a8a8a">
+<span>{{t.copy}}</span>
+<div style="display: flex; gap: 20px">
+<a href="https://www.instagram.com/dhakachronicles/">Instagram</a>
+<a href="https://www.facebook.com/share/1ENeULQ5Bp/">Facebook</a>
+<a href="#">RSS</a>
+</div>
+</div>
+</div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lang":{"editor":"enum","options":["en","bn"],"default":"en"},"$preview":{"width":1440,"height":320}}'>
+class Component extends DCLogic {
+renderVals() {
+const bn = (this.props.lang ?? 'en') === 'bn';
+const labels = bn
+? ['সর্বশেষ', 'বাংলাদেশ', 'রাজনীতি', 'বিশ্ব', 'খেলা', 'বিনোদন', 'খুঁজুন', 'গোপনীয়তা', 'English edition']
+: ['Latest', 'Bangladesh', 'Politics', 'World', 'Sport', 'Entertainment', 'Search', 'Privacy', 'বাংলা সংস্করণ'];
+const hrefs = ['Latest.dc.html', 'Category.dc.html', 'Category.dc.html', 'Category.dc.html', 'Category.dc.html', 'Category.dc.html', 'Search.dc.html', 'Privacy.dc.html', bn ? 'Main.dc.html' : 'HomeBn.dc.html'];
+return { t: {
+name: bn ? 'ঢাকা ক্রনিকলস' : 'Dhaka Chronicles',
+logoFont: bn ? "'Hind Siliguri', sans-serif" : "'Instrument Serif', Georgia, serif",
+about: bn ? 'সময়োপযোগী, নির্ভুল ও আকর্ষণীয় সংবাদ ও মিডিয়া কনটেন্ট।' : 'Delivering timely, accurate, and engaging news & media content that resonates.',
+sectionsLabel: bn ? 'বিভাগ' : 'Sections',
+copy: bn ? '© ২০২৬ ঢাকা ক্রনিকলস' : '© 2026 Dhaka Chronicles',
+links: labels.map((label, i) => ({ label, href: hrefs[i] }))
+} };
+}
+}
+</script>
+</body>
+</html>

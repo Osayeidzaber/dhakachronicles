@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import "../globals.css";
+import { fontVars } from "../fonts";
+import { PresenceBeacon } from "@/components/public/presence-beacon";
+import { listBreaking, type ArticleCard } from "@/lib/articles/queries";
 import { LOCALES, isLang, t } from "@/lib/i18n";
 import { siteUrl } from "@/lib/env";
 import { getSiteChrome } from "@/lib/public-data";
@@ -40,17 +43,31 @@ export default async function PublicLayout({ children, params }: { children: Rea
   const { settings, categories, configured } = await getSiteChrome();
   const name = siteName(settings, lang);
   const social = socialLinks(settings);
+  let breaking: ArticleCard[] = [];
+  if (configured) {
+    try {
+      breaking = await listBreaking(lang, 6);
+    } catch {
+      breaking = [];
+    }
+  }
   return (
-    <html lang={lang}>
-      <body className="flex min-h-screen flex-col">
+    <html lang={lang} className={fontVars}>
+      <body className="flex min-h-screen flex-col bg-black text-white">
+        <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-black">
+          {lang === "bn" ? "মূল লেখায় যান" : "Skip to content"}
+        </a>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd({ name, url: siteUrl(), sameAs: Object.values(social) })) }}
         />
-        <SiteHeader lang={lang} siteName={name} categories={categories} />
-        {!configured && <p className="bg-amber-50 p-3 text-center text-sm text-amber-800">{t(lang, "notConfigured")}</p>}
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
-        <SiteFooter lang={lang} siteName={name} social={social} />
+        <SiteHeader lang={lang} siteName={name} categories={categories} breaking={breaking} />
+        {!configured && <p className="border-b border-line p-3 text-center text-sm text-muted">{t(lang, "notConfigured")}</p>}
+        <main id="main" className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-8 md:px-8 md:py-10">
+          {children}
+        </main>
+        <PresenceBeacon lang={lang} />
+        <SiteFooter lang={lang} siteName={name} social={social} categories={categories} />
       </body>
     </html>
   );

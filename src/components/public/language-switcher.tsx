@@ -15,7 +15,7 @@ export function LanguageSwitcher({ lang, label }: { lang: Lang; label: string })
   const rest = pathname.replace(/^\/(bn|en)/, "");
   const target = rest.startsWith("/news/") ? `/${other}` : `/${other}${rest}`;
   return (
-    <Link href={target} hrefLang={other} lang={other} className="rounded border border-border px-2 py-1 text-sm hover:bg-neutral-50">
+    <Link href={target} hrefLang={other} lang={other} className="rounded-full border border-white/15 px-3 py-1 text-white transition hover:border-white/40">
       {label}
     </Link>
   );

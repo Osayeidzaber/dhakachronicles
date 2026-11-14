@@ -1,80 +1,257 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isLang, t } from "@/lib/i18n";
-import { isConfigured } from "@/lib/public-data";
-import { listBreaking, listFeatured, listLatest, type ArticleCard as Card, type Page } from "@/lib/articles/queries";
+import { isLang, localized, otherLang, t } from "@/lib/i18n";
+import type { Lang } from "@/lib/db/types";
+import { getSiteChrome, isConfigured } from "@/lib/public-data";
+import { getCardById, listFeatured, listLatest, listMostRead, type ArticleCard as Card } from "@/lib/articles/queries";
+import { highlightedArticleId } from "@/lib/highlight";
 import { log } from "@/lib/logger";
-import { articlePath } from "@/lib/seo/defaults";
 import { ArticleCard } from "@/components/public/article-card";
+import { Reveal } from "@/components/public/reveal";
+import { InstagramStrip } from "@/components/public/instagram-strip";
+import { articlePath } from "@/lib/seo/defaults";
 
 export const revalidate = 60;
 
+async function safe<T>(p: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await p;
+  } catch (err) {
+    // Database unreachable or not migrated yet: render what we can instead of failing the build.
+    log.error("home.load_failed", { err });
+    return fallback;
+  }
+}
+
+const INSTAGRAM_URL = "https://www.instagram.com/dhakachronicles/";
+const INSTAGRAM_HIGHLIGHTS = ["Int. Women’s Day", "IndieFest ‘26", "OTB Series"];
+
+/**
+ * Front page, laid out as in design/claude-design/Main.dc.html:
+ * lead + featured column → latest grid → section rows + most read → Instagram band → more sections → other edition.
+ */
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLang(lang)) notFound();
   if (!isConfigured()) return null;
+  const other = otherLang(lang);
 
-  let data: [Card[], Card[], Page<Card>];
-  try {
-    data = await Promise.all([listBreaking(lang), listFeatured(lang, 4), listLatest(lang, { pageSize: 13 })]);
-  } catch (err) {
-    // Database unreachable or not migrated yet: render empty instead of failing the build.
-    log.error("home.load_failed", { err });
-    data = [[], [], { items: [], page: 1, pageSize: 13, total: 0, totalPages: 1 }];
-  }
-  const [breaking, featured, latest] = data;
-  const featuredIds = new Set(featured.map((f) => f.id));
-  const lead = featured[0] ?? latest.items[0];
-  const rest = latest.items.filter((a) => a.id !== lead?.id && !featuredIds.has(a.id));
+  const empty = { items: [] as Card[], page: 1, pageSize: 0, total: 0, totalPages: 1 };
+  const [pinnedId, featured, latest, mostRead, otherLatest, { categories }] = await Promise.all([
+    safe(highlightedArticleId(lang), null),
+    safe(listFeatured(lang, 6), []),
+    safe(listLatest(lang, { pageSize: 30 }), empty),
+    safe(listMostRead(lang, 3, 5), []),
+    safe(listLatest(other, { pageSize: 4 }), empty),
+    getSiteChrome(),
+  ]);
+  const pinned = pinnedId ? await safe(getCardById(pinnedId), null) : null;
 
-  if (!lead) return <p className="py-16 text-center text-muted">{t(lang, "noResults")}</p>;
+  const used = new Set<string>();
+  const take = (list: Card[], n: number) => {
+    const out: Card[] = [];
+    for (const a of list) {
+      if (out.length >= n) break;
+      if (used.has(a.id)) continue;
+      used.add(a.id);
+      out.push(a);
+    }
+    return out;
+  };
+
+  const lead = pinned ?? featured[0] ?? latest.items[0];
+  if (!lead) return <p className="py-24 text-center text-muted">{t(lang, "noResults")}</p>;
+  used.add(lead.id);
+  const featuredList = take([...featured, ...latest.items], 4);
+  const latestGrid = take(latest.items, 8);
+  const mostReadList = mostRead.length ? mostRead : latest.items.slice(0, 5);
+
+  // Sections with stories: the first one gets the big "rows + most read" block, the next three a compact column each.
+  const sectionLists = await Promise.all(
+    categories.slice(0, 6).map(async (c) => ({ c, list: (await safe(listLatest(lang, { categoryId: c.id, pageSize: 5 }), empty)).items })),
+  );
+  const withStories = sectionLists.filter((s) => s.list.length);
+  const mainSection = withStories[0];
+  const moreSections = withStories.slice(1, 4);
+  // Until stories have sections, keep the column full with the next recent stories.
+  const moreStories = mainSection ? [] : take(latest.items, 4);
 
   return (
-    <>
-      {breaking.length > 0 && (
-        <section aria-label={t(lang, "breaking")} className="mb-6 flex flex-wrap items-center gap-2 rounded bg-accent px-3 py-2 text-white">
-          <strong className="uppercase">{t(lang, "breaking")}</strong>
-          <ul className="flex flex-wrap gap-x-4">
-            {breaking.map((b) => (
-              <li key={b.id}>
-                <Link href={articlePath(b.language, b.slug)} className="underline">
-                  {b.title}
-                </Link>
+    <div className="flex flex-col gap-16 md:gap-20">
+      {/* Lead + Featured */}
+      <section className="grid gap-10 lg:grid-cols-12">
+        <div className="reveal lg:col-span-8">
+          <ArticleCard a={lead} variant="lead" priority />
+        </div>
+        {featuredList.length > 0 && (
+          <div className="reveal flex flex-col gap-5 lg:col-span-4 lg:border-l lg:border-white/[0.08] lg:pl-8" style={{ animationDelay: "120ms" }}>
+            <h2 className="kicker">{t(lang, "featured")}</h2>
+            {featuredList.map((a) => (
+              <ArticleCard key={a.id} a={a} variant="compact" />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Latest */}
+      {latestGrid.length > 0 && (
+        <Reveal>
+          <section>
+            <SectionTitle title={t(lang, "latest")} href={`/${lang}/latest`} linkLabel={`${t(lang, "allStories")} →`} />
+            <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+              {latestGrid.map((a) => (
+                <ArticleCard key={a.id} a={a} />
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      )}
+
+      {/* Section rows + Most read */}
+      <Reveal>
+        <section className="grid gap-12 lg:grid-cols-12">
+          <div className="min-w-0 lg:col-span-8">
+            {!mainSection && moreStories.length > 0 && (
+              <>
+                <SectionTitle title={lang === "bn" ? "আরও খবর" : "More stories"} href={`/${lang}/latest`} linkLabel={`${t(lang, "more")} →`} />
+                <div>
+                  {moreStories.map((a) => (
+                    <ArticleCard key={a.id} a={a} variant="row" />
+                  ))}
+                </div>
+              </>
+            )}
+            {mainSection && (
+              <>
+                <SectionTitle
+                  title={localized(mainSection.c, "name", lang)}
+                  href={`/${lang}/category/${mainSection.c.slug}`}
+                  linkLabel={`${t(lang, "more")} →`}
+                />
+                <div>
+                  {mainSection.list.slice(0, 4).map((a) => (
+                    <ArticleCard key={a.id} a={a} variant="row" />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <aside className="lg:col-span-4">
+            <div className="card sticky top-6 p-7">
+              <h2 className="font-display text-3xl leading-none">{t(lang, "mostRead")}</h2>
+              <p className="mt-2 text-xs text-muted">{t(lang, "rankedByViews")}</p>
+              <ol className="mt-4">
+                {mostReadList.map((a, i) => (
+                  <li key={a.id} className="grid grid-cols-[36px_1fr] gap-3">
+                    <span className="font-display pt-3.5 text-[34px] leading-none text-subtle" aria-hidden="true">
+                      {numeral(i + 1, lang)}
+                    </span>
+                    <ArticleCard a={a} variant="text" />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </aside>
+        </section>
+      </Reveal>
+
+      {/* Instagram band */}
+      <Reveal>
+        <section className="flex flex-col gap-6 rounded-2xl border border-line py-8">
+          <InstagramStrip
+            label={t(lang, "onInstagram")}
+            items={latest.items
+              .filter((a) => a.featured_image?.public_url)
+              .slice(0, 14)
+              .map((a) => ({ href: articlePath(a.language, a.slug), src: posterUrl(a), alt: a.title }))}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-6 px-8">
+          <div className="flex flex-col gap-1.5">
+            <span className="kicker">{t(lang, "onInstagram")}</span>
+            <span className="font-display text-3xl">@dhakachronicles</span>
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            {INSTAGRAM_HIGHLIGHTS.map((h) => (
+              <li key={h} className="rounded-full border border-line px-3.5 py-2 text-[13px] text-neutral-700">
+                {h}
               </li>
             ))}
           </ul>
+          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="btn btn-primary h-11 px-5">
+            {t(lang, "follow")}
+          </a>
+          </div>
         </section>
+      </Reveal>
+
+      {/* More sections */}
+      {moreSections.length > 0 && (
+        <Reveal>
+          <section className="grid gap-10 md:grid-cols-3">
+            {moreSections.map(({ c, list }) => (
+              <div key={c.id}>
+                <div className="flex items-baseline justify-between border-b border-white pb-2.5">
+                  <h2 className="text-[13px] font-semibold tracking-[0.14em] uppercase">{localized(c, "name", lang)}</h2>
+                  <Link href={`/${lang}/category/${c.slug}`} className="text-[13px] text-muted hover:text-white">
+                    {t(lang, "more")} →
+                  </Link>
+                </div>
+                <div className="pt-5">
+                  <ArticleCard a={list[0]} />
+                </div>
+                <div className="mt-4">
+                  {list.slice(1, 4).map((a) => (
+                    <ArticleCard key={a.id} a={a} variant="text" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+        </Reveal>
       )}
 
-      <section className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2">
-          <ArticleCard a={lead} size="lg" />
-        </div>
-        <div className="space-y-4">
-          <h2 className="border-b border-border pb-1 text-sm font-bold uppercase">{t(lang, "featured")}</h2>
-          {featured
-            .filter((f) => f.id !== lead.id)
-            .map((f) => (
-              <ArticleCard key={f.id} a={f} size="sm" />
-            ))}
-        </div>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="mb-4 border-b border-border pb-1 text-sm font-bold uppercase">{t(lang, "latest")}</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {rest.map((a) => (
-            <ArticleCard key={a.id} a={a} />
-          ))}
-        </div>
-        {latest.totalPages > 1 && (
-          <p className="mt-6 text-center">
-            <Link href={`/${lang}/latest?page=2`} className="underline">
-              {t(lang, "next")} →
-            </Link>
-          </p>
-        )}
-      </section>
-    </>
+      {/* The other edition */}
+      {otherLatest.items.length > 0 && (
+        <Reveal>
+          <section lang={other} className="border-t border-white/[0.08] pt-8">
+            <div className="flex items-baseline justify-between">
+              <h2 className="font-display text-3xl">{t(lang, "readOther")}</h2>
+              <Link href={`/${other}`} className="text-sm text-muted hover:text-white">
+                {t(lang, "otherEdition")} →
+              </Link>
+            </div>
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {otherLatest.items.map((a) => (
+                <ArticleCard key={a.id} a={a} variant="compact" />
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      )}
+    </div>
   );
+}
+
+function numeral(n: number, lang: Lang) {
+  return lang === "bn" ? String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]) : String(n);
+}
+
+function SectionTitle({ title, href, linkLabel }: { title: string; href?: string; linkLabel?: string }) {
+  return (
+    <div className="flex items-baseline justify-between border-t border-white pt-4">
+      <h2 className="font-display text-[clamp(2rem,3.5vw,2.5rem)] leading-none">{title}</h2>
+      {href && (
+        <Link href={href} className="text-sm text-muted transition hover:text-white">
+          {linkLabel}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/** Smallest WebP variant that is still sharp at 120px wide, else the original. */
+function posterUrl(a: Card): string {
+  const img = a.featured_image!;
+  const v = (img.variants ?? []).filter((x) => x.format === "webp" && x.width >= 240).sort((x, y) => x.width - y.width)[0];
+  return v?.url ?? img.public_url;
 }

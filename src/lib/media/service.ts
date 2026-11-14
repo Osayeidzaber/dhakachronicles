@@ -126,6 +126,37 @@ export async function ingestImage(bytes: Buffer, opts: { filename: string; folde
   ) as Media;
 }
 
+/** MP4 signature check: bytes 4..8 are "ftyp". */
+export function looksLikeMp4(bytes: Buffer): boolean {
+  return bytes.length > 12 && bytes.subarray(4, 8).toString("ascii") === "ftyp";
+}
+
+/** Server-side video ingest (Instagram reels/videos). Stored as-is in R2; the cover image is a separate media row. */
+export async function ingestVideo(bytes: Buffer, opts: { filename: string; folder: string; posterUrl?: string | null; width?: number | null; height?: number | null }): Promise<Media> {
+  if (!looksLikeMp4(bytes)) throw new AppError("Downloaded video is not an MP4 file.", "VALIDATION");
+  const id = randomUUID();
+  const key = `${opts.folder}/${id}/video.mp4`;
+  await putObject(key, bytes, "video/mp4");
+  return check(
+    await createAdminClient()
+      .from("media")
+      .insert({
+        id,
+        r2_key: key,
+        public_url: publicUrl(key),
+        original_filename: safeFilename(opts.filename),
+        mime_type: "video/mp4",
+        file_size: bytes.length,
+        folder: opts.folder,
+        status: "ready",
+        source: "instagram",
+        variants: opts.posterUrl ? [{ kind: "poster", url: opts.posterUrl }] : [],
+      })
+      .select("*")
+      .single(),
+  ) as Media;
+}
+
 export const mediaMetaSchema = z.object({
   alt_text_en: z.string().max(300).nullish(),
   alt_text_bn: z.string().max(300).nullish(),

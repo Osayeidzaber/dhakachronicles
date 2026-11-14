@@ -94,6 +94,25 @@ export async function listBreaking(lang: Lang, limit = 5): Promise<ArticleCard[]
   return (data ?? []) as unknown as ArticleCard[];
 }
 
+/** Most read in the last few days (ids from a public SQL function, then cards). */
+export async function listMostRead(lang: Lang, days = 3, limit = 5): Promise<ArticleCard[]> {
+  const sb = createPublicClient();
+  const { data: ids, error } = await sb.rpc("most_read", { p_language: lang, p_days: days, p_limit: limit });
+  if (error) throw error;
+  const order = ((ids ?? []) as { article_id: string }[]).map((r) => r.article_id);
+  if (!order.length) return [];
+  const { data, error: e2 } = await published(sb.from("articles").select(CARD_FIELDS).in("id", order));
+  if (e2) throw e2;
+  const byId = new Map(((data ?? []) as unknown as ArticleCard[]).map((a) => [a.id, a]));
+  return order.map((id) => byId.get(id)).filter((a): a is ArticleCard => !!a);
+}
+
+/** One published card by id (used for the homepage highlight). */
+export async function getCardById(id: string): Promise<ArticleCard | null> {
+  const { data } = await published(createPublicClient().from("articles").select(CARD_FIELDS).eq("id", id)).maybeSingle();
+  return (data as unknown as ArticleCard | null) ?? null;
+}
+
 export async function listFeatured(lang: Lang, limit = 4): Promise<ArticleCard[]> {
   const sb = createPublicClient();
   const { data, error } = await published(sb.from("articles").select(CARD_FIELDS).eq("language", lang))

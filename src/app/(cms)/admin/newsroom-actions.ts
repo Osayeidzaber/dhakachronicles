@@ -8,10 +8,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSession } from "@/lib/auth/session";
 import { AppError, check, toActionError, type ActionResult } from "@/lib/errors";
 import { audit } from "@/lib/audit";
-import { siteUrl } from "@/lib/env";
 import { revalidatePublic } from "@/lib/articles/revalidate";
 import { clearHighlight, searchForHighlight, setHighlight, type PickResult } from "@/lib/highlight";
-import { DISCORD_EVENTS, getDiscordSettings, notifyDiscord, saveDiscordSettings, type DiscordEvent } from "@/lib/discord";
+import { DISCORD_EVENTS, getDiscordSettings, saveDiscordSettings, testDiscordChannel, type DiscordEvent } from "@/lib/discord";
 
 async function attempt<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {
@@ -103,9 +102,13 @@ export async function saveDiscordAction(formData: FormData): Promise<void> {
 export async function testDiscordAction(): Promise<void> {
   await formAttempt("/admin/settings", async () => {
     await requireSession("settings.manage");
-    if (!(await getDiscordSettings()).configured) throw new AppError("Add a webhook URL first.", "VALIDATION");
-    const ok = await notifyDiscord("test", { title: "Dhaka Chronicles is connected", description: "Notifications from the newsroom will appear in this channel.", url: siteUrl() });
-    if (!ok) throw new AppError("Discord did not accept the message. Check the webhook URL.", "VALIDATION");
+    const s = await getDiscordSettings();
+    if (!s.configured && !s.activityConfigured) throw new AppError("Add a webhook URL first.", "VALIDATION");
+    const [article, activity] = await Promise.all([
+      s.configured ? testDiscordChannel("article") : Promise.resolve(true),
+      s.activityConfigured ? testDiscordChannel("activity") : Promise.resolve(true),
+    ]);
+    if (!article || !activity) throw new AppError(`Discord did not accept the ${!article ? "article" : "activity"} log message. Check the webhook URL.`, "VALIDATION");
   }, "Test message sent");
 }
 
@@ -133,7 +136,7 @@ export async function createMemberAction(formData: FormData): Promise<void> {
     if (error) throw new AppError(error.message, "VALIDATION");
     check(await admin.from("profiles").upsert({ id: data.user.id, full_name: input.full_name, role: input.role }));
     await audit(session.userId, "team.create", "user", data.user.id, { email: input.email, role: input.role });
-    await notifyDiscord("team_joined", { title: `${input.full_name} joined the newsroom`, fields: [{ name: "Role", value: input.role }] });
+    await audit(data.user.id, "team.joined", "user", data.user.id, { role: input.role });
   }, "Account created");
 }
 

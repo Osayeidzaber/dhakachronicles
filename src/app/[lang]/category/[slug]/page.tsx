@@ -40,8 +40,10 @@ export default async function CategoryPage({ params, searchParams }: { params: P
       />
       <ArticleListPage
         lang={lang}
+        kicker={t(lang, "section")}
+        layout="feature"
         title={name}
-        intro={localized(category, "description", lang) ? <p className="text-muted">{localized(category, "description", lang)}</p> : null}
+        intro={localized(category, "description", lang) ? <p>{localized(category, "description", lang)}</p> : null}
         page={page}
         href={(p) => `/${lang}/category/${slug}?page=${p}`}
       />

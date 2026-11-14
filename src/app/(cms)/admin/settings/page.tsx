@@ -1,4 +1,6 @@
 import { requirePageSession } from "@/lib/auth/session";
+import { SwitchField } from "@/components/admin/form-controls";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { aiSeoConfig, instagramConfig, r2Config, env } from "@/lib/env";
 import { Flash, PageHeader } from "@/components/admin/ui";
@@ -40,6 +42,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <p className="mt-1 text-[13px] text-muted">
           In Discord: channel settings → Integrations → Webhooks → New webhook → Copy URL. It is stored encrypted and never shown again.
         </p>
+        <ul className="mt-3 flex flex-wrap gap-2 text-xs">
+          <li className="badge">Article log · {discord.configured ? "connected" : "not set"}</li>
+          <li className="badge">Activity log · {discord.activityConfigured ? "connected (server env)" : "set DISCORD_ACTIVITY_WEBHOOK_URL"}</li>
+          <li className="badge">Alerts · {discord.alertsConfigured ? "connected (server env)" : discord.activityConfigured ? "sent to activity log" : "set DISCORD_ALERTS_WEBHOOK_URL"}</li>
+        </ul>
         <form action={saveDiscordAction} className="mt-4 flex flex-col gap-4">
           <label className="block text-[13px] text-neutral-600">
             Webhook URL {discord.configured && <span className="ml-1 text-white">· saved</span>}
@@ -54,14 +61,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           <fieldset className="grid gap-2 sm:grid-cols-2">
             <legend className="mb-2 text-[13px] text-neutral-600">Send a message when</legend>
             {DISCORD_EVENTS.map((e) => (
-              <label key={e} className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-line px-4 py-3 text-sm has-[:checked]:border-white/40">
-                {DISCORD_EVENT_LABELS[e]}
-                <input type="checkbox" name={`event_${e}`} defaultChecked={discord.events[e]} className="h-4 w-4 accent-white" />
-              </label>
+              <div key={e} className="rounded-xl border border-line px-4 py-3">
+                <SwitchField name={`event_${e}`} label={DISCORD_EVENT_LABELS[e]} defaultChecked={discord.events[e]} />
+              </div>
             ))}
           </fieldset>
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-primary">Save</button>
+            <SubmitButton className="btn btn-primary" pendingLabel="Saving…">Save</SubmitButton>
             {discord.configured && (
               <button name="clear" value="1" className="btn btn-danger">
                 Remove webhook
@@ -69,7 +75,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             )}
           </div>
         </form>
-        {discord.configured && (
+        {(discord.configured || discord.activityConfigured) && (
           <form action={testDiscordAction} className="mt-3">
             <button className="btn h-9 text-xs">Send test message</button>
           </form>
@@ -88,7 +94,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           </label>
           <label className="text-sm">
             Default language
-            <select name="default_language" defaultValue={(s.default_language as string) ?? "bn"} className="input mt-1">
+            <select name="default_language" defaultValue={(s.default_language as string) ?? "en"} className="input mt-1">
               <option value="bn">Bangla</option>
               <option value="en">English</option>
             </select>
@@ -122,7 +128,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           Default description (Bangla)
           <textarea name="seo_description_bn" defaultValue={seo.description_bn} className="input mt-1" rows={2} maxLength={300} lang="bn" />
         </label>
-        <button className="btn btn-primary">Save settings</button>
+        <SubmitButton className="btn btn-primary" pendingLabel="Saving…">Save settings</SubmitButton>
       </form>
 
       <section className="card mt-6 max-w-3xl">

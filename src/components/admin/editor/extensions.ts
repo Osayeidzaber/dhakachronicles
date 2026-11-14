@@ -49,3 +49,23 @@ export const Embed = Node.create({
     };
   },
 });
+
+/** Hosted video (R2), e.g. an imported Instagram reel. Stored as src + poster + media id. */
+export const Video = Node.create({
+  name: "video",
+  group: "block",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return { src: { default: null }, poster: { default: null }, mediaId: { default: null } };
+  },
+  parseHTML() {
+    return [{ tag: "video[data-video]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return [
+      "video",
+      mergeAttributes({ "data-video": "", src: HTMLAttributes.src, poster: HTMLAttributes.poster, controls: "true", playsinline: "true", preload: "metadata", class: "w-full rounded-xl bg-black" }),
+    ];
+  },
+});

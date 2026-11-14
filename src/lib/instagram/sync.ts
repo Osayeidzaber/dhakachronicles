@@ -4,21 +4,25 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { instagramConfig } from "@/lib/env";
 import { AppError, check } from "@/lib/errors";
 import { log } from "@/lib/logger";
-import { ingestImage } from "@/lib/media/service";
+import { ingestImage, ingestVideo } from "@/lib/media/service";
+import { mapLimit } from "@/lib/concurrency";
 import { buildFolder } from "@/lib/media/validation";
 import { docToText } from "@/lib/content/tiptap";
 import { decryptSecret } from "@/lib/instagram/crypto";
 import {
   InstagramApiError,
+  getMedia,
   igMediaSchema,
   imageSources,
+  videoSources,
   isAllowedMediaHost,
   listMedia,
   type IgMedia,
 } from "@/lib/instagram/client";
 import { detectLanguage, draftContent, draftSlug, draftTitle } from "@/lib/instagram/draft";
 import type { InstagramAccount, Lang } from "@/lib/db/types";
-import { notifyDiscord } from "@/lib/discord";
+import { notifyAlert, notifyArticle } from "@/lib/discord";
+import { audit } from "@/lib/audit";
 import { revalidateArticle } from "@/lib/articles/revalidate";
 import { articlePath } from "@/lib/seo/defaults";
 import { siteUrl } from "@/lib/env";
@@ -34,6 +38,10 @@ export type SyncOptions = z.infer<typeof syncOptionsSchema>;
 
 export const MAX_ATTEMPTS = 5;
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+/** Parallel downloads per post, and posts processed at once. */
+const MEDIA_CONCURRENCY = 4;
+const POST_CONCURRENCY = 3;
 
 /** Exponential backoff for failed imports: 5m, 20m, 80m, 5h20m. */
 export function nextRetryAt(attempts: number, now = new Date()): Date | null {
@@ -79,14 +87,15 @@ export async function ensureTokenValid(admin: Admin, account: InstagramAccount):
   throw new AppError("Instagram token expired. Reconnect the account.", "UNAUTHORIZED");
 }
 
-async function downloadImage(url: string): Promise<Buffer> {
+async function download(url: string, maxBytes = MAX_IMAGE_BYTES, timeoutMs = 30_000): Promise<Buffer> {
   if (!isAllowedMediaHost(url)) throw new Error("Media URL is not on an Instagram CDN host.");
-  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(30_000), redirect: "follow" });
+  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(timeoutMs), redirect: "follow" });
   if (!res.ok) throw new Error(`Media download failed (${res.status}).`);
+  if (!isAllowedMediaHost(res.url || url)) throw new Error("Media redirected away from the Instagram CDN.");
   const len = Number(res.headers.get("content-length") ?? 0);
-  if (len > MAX_IMAGE_BYTES) throw new Error("Media file is too large.");
+  if (len > maxBytes) throw new Error("Media file is too large.");
   const buf = Buffer.from(await res.arrayBuffer());
-  if (buf.length > MAX_IMAGE_BYTES) throw new Error("Media file is too large.");
+  if (buf.length > maxBytes) throw new Error("Media file is too large.");
   return buf;
 }
 
@@ -94,41 +103,56 @@ async function downloadImage(url: string): Promise<Buffer> {
  * After the draft exists: publish it when the account is in "publish" mode,
  * then tell Discord either way.
  */
-async function finishImport(admin: Admin, articleId: string, accountId: string | null, permalink: string | null) {
-  let mode = "draft";
-  if (accountId) {
+async function finishImport(admin: Admin, articleId: string, accountId: string | null, permalink: string | null, publish?: boolean, categoryId?: string | null) {
+  let mode = publish === undefined ? "draft" : publish ? "publish" : "draft";
+  if (publish === undefined && accountId) {
     const { data } = await admin.from("instagram_accounts").select("import_mode").eq("id", accountId).maybeSingle();
     mode = (data?.import_mode as string | undefined) ?? "draft";
   }
   const { data: art } = await admin
     .from("articles")
-    .update(mode === "publish" ? { status: "published" } : {})
+    .update({ ...(mode === "publish" ? { status: "published" } : {}), ...(categoryId ? { category_id: categoryId } : {}) })
     .eq("id", articleId)
-    .select("id, language, slug, title, status, featured_image:media!articles_featured_image_id_fkey(public_url)")
+    .select("id, language, slug, title, excerpt, content_text, status, category:categories(name_en, name_bn), featured_image:media!articles_featured_image_id_fkey(public_url)")
     .single();
   if (!art) return;
   const image = (art.featured_image as { public_url?: string } | null)?.public_url ?? null;
+  const cat = art.category as { name_en?: string; name_bn?: string } | null;
+  const section = (art.language === "bn" ? cat?.name_bn : cat?.name_en) ?? null;
+  const excerpt = (art.excerpt as string | null) ?? (((art.content_text as string | null) ?? "").replace(/\s+/g, " ").trim().slice(0, 300) || null);
   if (art.status === "published") {
     revalidateArticle({ language: art.language as Lang, slug: art.slug as string });
-    await notifyDiscord("instagram_published", {
+    await notifyArticle({
+      kind: "instagram_published",
       title: art.title as string,
-      description: "New Instagram post published on the site.",
+      excerpt,
+      section,
+      actor: "Instagram import",
+      language: art.language as Lang,
       url: `${siteUrl()}${articlePath(art.language as Lang, art.slug as string)}`,
+      siteUrl: `${siteUrl()}${articlePath(art.language as Lang, art.slug as string)}`,
+      adminUrl: `${siteUrl()}/admin/articles/${art.id}`,
       imageUrl: image,
-      fields: permalink ? [{ name: "Instagram", value: permalink }] : undefined,
+      sourceUrl: permalink ?? null,
     });
   } else {
-    await notifyDiscord("instagram_imported", {
+    await notifyArticle({
+      kind: "instagram_imported",
       title: art.title as string,
-      description: "New Instagram post saved as a draft. Review it before publishing.",
+      excerpt,
+      section,
+      actor: "Instagram import",
+      language: art.language as Lang,
       url: `${siteUrl()}/admin/articles/${art.id}`,
+      adminUrl: `${siteUrl()}/admin/articles/${art.id}`,
       imageUrl: image,
+      sourceUrl: permalink ?? null,
     });
   }
 }
 
 /** Process one import row end to end: media → R2, then an atomic draft creation. */
-export async function processImport(admin: Admin, importId: string): Promise<"imported" | "failed" | "skipped"> {
+export async function processImport(admin: Admin, importId: string, publish?: boolean, categoryId?: string | null): Promise<"imported" | "failed" | "skipped"> {
   const { data: row } = await admin.from("instagram_imports").select("*").eq("id", importId).single();
   if (!row || row.status === "imported") return "imported";
   const attempts = (row.attempts as number) + 1;
@@ -137,24 +161,42 @@ export async function processImport(admin: Admin, importId: string): Promise<"im
   try {
     const media = igMediaSchema.parse(row.raw_metadata);
     const sources = imageSources(media);
+    const videos = videoSources(media);
     const ts = media.timestamp;
-    const mediaIds: string[] = [];
     const folder = buildFolder("instagram");
     const failures: string[] = [];
-    for (const src of sources) {
-      try {
-        const bytes = await downloadImage(src.url);
-        const m = await ingestImage(bytes, { filename: `instagram-${src.id}.jpg`, folder, source: "instagram", caption: null });
-        mediaIds.push(m.id);
-      } catch (err) {
-        failures.push(`${src.id}: ${err instanceof Error ? err.message : "error"}`);
-      }
-    }
-    if (sources.length > 0 && mediaIds.length === 0) throw new Error(`No media could be imported. ${failures.join("; ")}`);
+
+    // Images (and video covers) download in parallel, in carousel order.
+    const imageResults = await mapLimit(sources, MEDIA_CONCURRENCY, async (src) => {
+      const bytes = await download(src.url);
+      return ingestImage(bytes, { filename: `instagram-${src.id}.jpg`, folder, source: "instagram", caption: null });
+    });
+    const mediaIds: string[] = [];
+    const coverBySource = new Map<string, string>();
+    imageResults.forEach((r, i) => {
+      if (r.status === "fulfilled") {
+        mediaIds.push(r.value.id);
+        coverBySource.set(sources[i].id, r.value.public_url);
+      } else failures.push(`${sources[i].id}: ${r.reason instanceof Error ? r.reason.message : "error"}`);
+    });
+
+    // Videos (reels, video posts, carousel videos) are copied to R2 so they keep playing after Instagram's links expire.
+    const videoResults = await mapLimit(videos, 2, async (v) => {
+      const bytes = await download(v.url, MAX_VIDEO_BYTES, 120_000);
+      const poster = coverBySource.get(v.id) ?? null;
+      const m = await ingestVideo(bytes, { filename: `instagram-${v.id}.mp4`, folder, posterUrl: poster });
+      return { src: m.public_url, poster, mediaId: m.id };
+    });
+    const draftVideos = videoResults.flatMap((r, i) => {
+      if (r.status === "fulfilled") return [r.value];
+      failures.push(`video ${videos[i].id}: ${r.reason instanceof Error ? r.reason.message : "error"}`);
+      return [];
+    });
+    if (sources.length + videos.length > 0 && mediaIds.length === 0 && draftVideos.length === 0) throw new Error(`No media could be imported. ${failures.join("; ")}`);
 
     const caption = media.caption ?? "";
     const title = draftTitle(caption, ts);
-    const content = draftContent(caption, media.permalink);
+    const content = draftContent(caption, media.permalink, draftVideos);
     const articleId = check(
       await admin.rpc("create_instagram_draft", {
         p_import_id: importId,
@@ -169,7 +211,16 @@ export async function processImport(admin: Admin, importId: string): Promise<"im
     if (failures.length) {
       await admin.from("instagram_imports").update({ error_message: `Imported with skipped media: ${failures.join("; ")}` }).eq("id", importId);
     }
-    await finishImport(admin, String(articleId), row.account_id as string | null, media.permalink ?? null);
+    await finishImport(admin, String(articleId), row.account_id as string | null, media.permalink ?? null, publish, categoryId);
+    await audit(null, publish ? "instagram.imported_published" : "instagram.imported", "article", String(articleId), {
+      post: media.id,
+      type: media.media_type,
+      posted: ts.slice(0, 16).replace("T", " "),
+      images: mediaIds.length,
+      videos: draftVideos.length,
+      skipped_media: failures.length,
+      attempt: attempts,
+    });
     return "imported";
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
@@ -179,7 +230,17 @@ export async function processImport(admin: Admin, importId: string): Promise<"im
       .update({ status: "failed", error_message: message.slice(0, 1000), next_retry_at: retry?.toISOString() ?? null })
       .eq("id", importId);
     log.warn("instagram.import_failed", { importId, attempts, message });
-    if (!retry) await notifyDiscord("instagram_failed", { title: "Instagram import failed", description: message.slice(0, 500), url: `${siteUrl()}/admin/instagram?tab=failed` });
+    await audit(null, "instagram.import_failed", "instagram_import", importId, { attempt: attempts, error: message.slice(0, 300), will_retry: retry ? "yes" : "no (gave up)" });
+    const permalink = (row.permalink as string | null) ?? null;
+    if (!retry) await notifyArticle({ kind: "instagram_failed", title: "Instagram import failed", error: message.slice(0, 500), url: `${siteUrl()}/admin/instagram?tab=failed`, adminUrl: `${siteUrl()}/admin/instagram?tab=failed`, sourceUrl: permalink });
+    await notifyAlert({
+      title: retry ? "Instagram post failed to import (will retry)" : "Instagram post gave up after 5 attempts",
+      detail: message.slice(0, 800),
+      severity: retry ? "warning" : "critical",
+      source: "instagram.import",
+      url: `${siteUrl()}/admin/instagram?tab=failed`,
+      fields: { Attempt: `${attempts} of ${MAX_ATTEMPTS}`, "Next try": retry ? retry.toISOString().slice(0, 16).replace("T", " ") + " UTC" : "none", Post: permalink },
+    });
     return "failed";
   }
 }
@@ -242,17 +303,17 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
       const { fresh, duplicates } = partitionNew(batch, (known ?? []).map((k: { instagram_media_id: string }) => k.instagram_media_id));
       result.skipped += duplicates.length;
 
-      for (const m of fresh) {
-        const { data: inserted } = await admin
-          .from("instagram_imports")
-          .upsert(rowFor(m, account.id, run.id), { onConflict: "instagram_media_id", ignoreDuplicates: true })
-          .select("id");
-        if (!inserted?.length) {
-          result.skipped++;
-          continue;
-        }
-        const outcome = await processImport(admin, inserted[0].id);
-        if (outcome === "imported") result.imported++;
+      // Register all new posts in one round trip, then import a few at a time.
+      const { data: inserted } = fresh.length
+        ? await admin
+            .from("instagram_imports")
+            .upsert(fresh.map((m) => rowFor(m, account.id, run.id)), { onConflict: "instagram_media_id", ignoreDuplicates: true })
+            .select("id")
+        : { data: [] as { id: string }[] };
+      result.skipped += fresh.length - (inserted?.length ?? 0);
+      const outcomes = await mapLimit(inserted ?? [], POST_CONCURRENCY, (r) => processImport(admin, r.id));
+      for (const o of outcomes) {
+        if (o.status === "fulfilled" && o.value === "imported") result.imported++;
         else result.failed++;
       }
       if (!next) break;
@@ -267,10 +328,8 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
       .lte("next_retry_at", new Date().toISOString())
       .lt("attempts", MAX_ATTEMPTS)
       .limit(10);
-    for (const d of due ?? []) {
-      const outcome = await processImport(admin, d.id);
-      if (outcome === "imported") result.imported++;
-    }
+    const retried = await mapLimit(due ?? [], POST_CONCURRENCY, (d) => processImport(admin, d.id));
+    result.imported += retried.filter((o) => o.status === "fulfilled" && o.value === "imported").length;
 
     const now = new Date().toISOString();
     await admin
@@ -294,6 +353,7 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
         finished_at: now,
       })
       .eq("id", run.id);
+    await audit(startedBy, "instagram.sync_run", "instagram_sync_run", run.id, { trigger, fetched: result.fetched, imported: result.imported, skipped: result.skipped, failed: result.failed });
     return result;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Sync failed";
@@ -315,6 +375,16 @@ export async function runSync(trigger: "manual" | "cron" | "initial" | "retry", 
       })
       .eq("id", run.id);
     log.error("instagram.sync_failed", { runId: run.id, message });
+    await audit(startedBy, "instagram.sync_failed", "instagram_sync_run", run.id, { trigger, error: message.slice(0, 300) });
+    const rateLimited = err instanceof InstagramApiError && err.isRateLimited;
+    await notifyAlert({
+      title: tokenProblem ? "Instagram token expired: reconnect the account" : rateLimited ? "Instagram rate limit reached" : "Instagram sync failed",
+      detail: message.slice(0, 800),
+      severity: tokenProblem ? "critical" : "warning",
+      source: "instagram.sync",
+      url: `${siteUrl()}/admin/instagram`,
+      fields: { Trigger: trigger, Fetched: result.fetched, Imported: result.imported, Failed: result.failed },
+    });
     throw err;
   }
 }
@@ -331,4 +401,101 @@ function rowFor(m: IgMedia, accountId: string, runId: string) {
     status: "pending",
     sync_run_id: runId,
   };
+}
+
+export interface FeedItem {
+  id: string;
+  caption: string;
+  mediaType: string;
+  thumbnail: string | null;
+  permalink: string | null;
+  timestamp: string;
+  slides: number;
+  hasVideo: boolean;
+  importStatus: string | null;
+  articleId: string | null;
+}
+
+/** One page of the live Instagram feed with each post's import status, for picking posts by hand. */
+export async function browseFeed(after?: string, limit = 24): Promise<{ items: FeedItem[]; after?: string }> {
+  const admin = createAdminClient();
+  const conn = await getConnectedAccount(admin);
+  if (!conn) throw new AppError("No Instagram account is connected.", "NOT_CONFIGURED");
+  const page = await listMedia({ token: conn.token, appSecret: conn.appSecret }, conn.account.ig_user_id, { after, limit });
+  const { data: known } = await admin
+    .from("instagram_imports")
+    .select("instagram_media_id, status, article_id")
+    .in("instagram_media_id", page.items.map((m) => m.id));
+  const byId = new Map((known ?? []).map((k: { instagram_media_id: string; status: string; article_id: string | null }) => [k.instagram_media_id, k]));
+  return {
+    after: page.after,
+    items: page.items.map((m) => {
+      const k = byId.get(m.id);
+      const kids = m.children?.data ?? [];
+      return {
+        id: m.id,
+        caption: m.caption ?? "",
+        mediaType: m.media_type,
+        thumbnail: m.media_type === "VIDEO" ? (m.thumbnail_url ?? null) : (m.media_url ?? kids[0]?.media_url ?? kids[0]?.thumbnail_url ?? null),
+        permalink: m.permalink ?? null,
+        timestamp: m.timestamp,
+        slides: m.media_type === "CAROUSEL_ALBUM" ? kids.length : 1,
+        hasVideo: videoSources(m).length > 0 || m.media_type === "VIDEO",
+        importStatus: k?.status ?? null,
+        articleId: k?.article_id ?? null,
+      };
+    }),
+  };
+}
+
+export const importSelectionSchema = z.object({
+  ids: z.array(z.string().regex(/^\d{5,30}$/)).min(1, "Pick at least one post.").max(30, "Pick up to 30 posts at a time."),
+  publish: z.boolean().default(false),
+  categoryId: z.uuid().nullish(),
+});
+
+/**
+ * Import exactly the posts an editor picked (and optionally publish them straight away).
+ * Already-imported posts are skipped; everything runs a few posts at a time.
+ */
+export async function importSelected(input: z.infer<typeof importSelectionSchema>): Promise<{ imported: number; skipped: number; failed: number }> {
+  const { ids, publish, categoryId } = importSelectionSchema.parse(input);
+  const admin = createAdminClient();
+  const conn = await getConnectedAccount(admin);
+  if (!conn) throw new AppError("No Instagram account is connected.", "NOT_CONFIGURED");
+  await ensureTokenValid(admin, conn.account);
+  const auth = { token: conn.token, appSecret: conn.appSecret };
+
+  const { data: known } = await admin.from("instagram_imports").select("instagram_media_id").in("instagram_media_id", ids);
+  const { fresh, duplicates } = partitionNew(ids.map((id) => ({ id })), (known ?? []).map((k: { instagram_media_id: string }) => k.instagram_media_id));
+  const fetched = await mapLimit(fresh, 5, (f) => getMedia(auth, f.id));
+  const posts = fetched.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+  let failed = fetched.length - posts.length;
+
+  const { data: run, error: runErr } = await admin
+    .from("instagram_sync_runs")
+    .insert({ account_id: conn.account.id, trigger: "manual", options: { selected: ids.length, publish } })
+    .select("id")
+    .single();
+  if (runErr) throw runErr.code === "23505" ? new AppError("A sync is already running. Try again in a minute.", "CONFLICT") : runErr;
+  const runId = run.id as string;
+  const { data: rows } = posts.length
+    ? await admin.from("instagram_imports").upsert(posts.map((m) => rowFor(m, conn.account.id, runId)), { onConflict: "instagram_media_id", ignoreDuplicates: true }).select("id")
+    : { data: [] as { id: string }[] };
+  const outcomes = await mapLimit(rows ?? [], POST_CONCURRENCY, (r) => processImport(admin, r.id, publish, categoryId));
+  const imported = outcomes.filter((o) => o.status === "fulfilled" && o.value === "imported").length;
+  failed += outcomes.length - imported;
+  const skipped = duplicates.length;
+  await admin
+    .from("instagram_sync_runs")
+    .update({
+      status: failed ? "partial" : "succeeded",
+      fetched_count: ids.length,
+      imported_count: imported,
+      skipped_count: skipped,
+      failed_count: failed,
+      finished_at: new Date().toISOString(),
+    })
+    .eq("id", runId);
+  return { imported, skipped, failed };
 }

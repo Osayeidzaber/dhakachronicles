@@ -105,3 +105,40 @@ export const authorSchema = z.object({
   profile_id: uuidOrNull,
   avatar_media_id: uuidOrNull,
 });
+
+export const BRAND_DEAL_STAGES = ["lead", "negotiating", "contracted", "in_production", "published", "cancelled"] as const;
+
+const checkbox = z
+  .union([z.literal("on"), z.literal("true"), z.literal(""), z.undefined(), z.null()])
+  .transform((v) => v === "on" || v === "true");
+
+export const brandDealSchema = z
+  .object({
+    brand_name: z.string().trim().min(1).max(200),
+    contact_name: nullableText(200),
+    contact_email: z
+      .union([z.email(), z.literal("")])
+      .nullish()
+      .transform((v) => (v ? v : null)),
+    stage: z.enum(BRAND_DEAL_STAGES).default("lead"),
+    deliverables: nullableText(2000),
+    fee_amount: z
+      .union([z.literal(""), z.coerce.number().min(0).max(9_999_999_999)])
+      .nullish()
+      .transform((v) => (v === "" || v == null ? null : v)),
+    currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/).default("BDT"),
+    due_date: z
+      .union([z.iso.date(), z.literal("")])
+      .nullish()
+      .transform((v) => (v ? v : null)),
+    owner_id: uuidOrNull,
+    article_id: uuidOrNull,
+    brief_approved: checkbox,
+    brand_signoff: checkbox,
+    invoice_sent: checkbox,
+    paid: checkbox,
+    notes: nullableText(5000),
+  })
+  .refine((d) => !d.paid || d.invoice_sent, { message: "Mark the invoice as sent before marking it paid.", path: ["paid"] });
+
+export type BrandDealInput = z.infer<typeof brandDealSchema>;

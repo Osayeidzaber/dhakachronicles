@@ -1,0 +1,373 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "AdminSidebar.dc.html": {
+      "h": 1000,
+      "page": "components",
+      "title": "CMS sidebar",
+      "w": 248,
+      "x": 1520,
+      "y": 0
+    },
+    "Article.dc.html": {
+      "expand": "fill",
+      "h": 2500,
+      "page": "public",
+      "title": "Article — /news/[slug]",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "ArticleCard.dc.html": {
+      "h": 480,
+      "page": "components",
+      "title": "ArticleCard (article-card.tsx) — variant: lead · card · row · compact · text",
+      "w": 400,
+      "x": 1848,
+      "y": 0
+    },
+    "Articles.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "admin",
+      "title": "Articles — /admin/articles",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "Author.dc.html": {
+      "expand": "fill",
+      "h": 1800,
+      "page": "public",
+      "title": "Author — /author/[slug]",
+      "w": 1440,
+      "x": 9120,
+      "y": 0
+    },
+    "Authors.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "admin",
+      "title": "Authors — /admin/authors",
+      "w": 1440,
+      "x": 12160,
+      "y": 0
+    },
+    "BrandDeals.dc.html": {
+      "expand": "fill",
+      "h": 1200,
+      "page": "admin",
+      "title": "Brand deals — /admin/brand-deals (new)",
+      "is_interactive": true,
+      "w": 1440,
+      "x": 21280,
+      "y": 0
+    },
+    "Categories.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "admin",
+      "title": "Categories — /admin/categories",
+      "w": 1440,
+      "x": 9120,
+      "y": 0
+    },
+    "Category.dc.html": {
+      "expand": "fill",
+      "h": 1900,
+      "page": "public",
+      "title": "Category — /category/[slug]",
+      "w": 1440,
+      "x": 6080,
+      "y": 0
+    },
+    "Dashboard.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "admin",
+      "title": "Dashboard — /admin",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Editor.dc.html": {
+      "expand": "fill",
+      "h": 1300,
+      "page": "admin",
+      "title": "Editor — /admin/articles/new · [id]",
+      "w": 1440,
+      "x": 6080,
+      "y": 0
+    },
+    "HomeBn.dc.html": {
+      "expand": "fill",
+      "h": 2700,
+      "page": "public",
+      "title": "Home — /bn (Bangla edition)",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Instagram.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "admin",
+      "title": "Instagram — /admin/instagram",
+      "w": 1440,
+      "x": 15200,
+      "y": 0
+    },
+    "Latest.dc.html": {
+      "expand": "fill",
+      "h": 1900,
+      "page": "public",
+      "title": "Latest — /latest",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "Login.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "admin",
+      "title": "Login — /login",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 2700,
+      "page": "public",
+      "title": "Home — /en",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Media.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "admin",
+      "title": "Media — /admin/media",
+      "w": 1440,
+      "x": 13680,
+      "y": 0
+    },
+    "NotFound.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "public",
+      "title": "404 / error states",
+      "w": 1440,
+      "x": 13680,
+      "y": 0
+    },
+    "Pagination.dc.html": {
+      "h": 120,
+      "page": "components",
+      "title": "Pagination (pagination.tsx)",
+      "w": 800,
+      "x": 2328,
+      "y": 0
+    },
+    "Preview.dc.html": {
+      "expand": "fill",
+      "h": 1200,
+      "page": "admin",
+      "title": "Preview — /admin/articles/[id]/preview",
+      "w": 1440,
+      "x": 7600,
+      "y": 0
+    },
+    "Privacy.dc.html": {
+      "expand": "fill",
+      "h": 1700,
+      "page": "public",
+      "title": "Privacy — /privacy",
+      "w": 1440,
+      "x": 12160,
+      "y": 0
+    },
+    "Profile.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "admin",
+      "title": "Profile — /admin/profile",
+      "w": 1440,
+      "x": 19760,
+      "y": 0
+    },
+    "Search.dc.html": {
+      "expand": "fill",
+      "h": 1600,
+      "page": "public",
+      "title": "Search — /search",
+      "w": 1440,
+      "x": 10640,
+      "y": 0
+    },
+    "Settings.dc.html": {
+      "expand": "fill",
+      "h": 1200,
+      "page": "admin",
+      "title": "Settings — /admin/settings",
+      "w": 1440,
+      "x": 18240,
+      "y": 0
+    },
+    "ShareBar.dc.html": {
+      "h": 140,
+      "page": "components",
+      "title": "ShareBar (article-tools.tsx)",
+      "w": 400,
+      "x": 2328,
+      "y": 240
+    },
+    "SiteFooter.dc.html": {
+      "h": 320,
+      "page": "components",
+      "title": "Site footer",
+      "w": 1440,
+      "x": 0,
+      "y": 360
+    },
+    "SiteHeader.dc.html": {
+      "h": 240,
+      "page": "components",
+      "title": "Site header",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Tag.dc.html": {
+      "expand": "fill",
+      "h": 1600,
+      "page": "public",
+      "title": "Tag — /tag/[slug]",
+      "w": 1440,
+      "x": 7600,
+      "y": 0
+    },
+    "Tags.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "admin",
+      "title": "Tags — /admin/tags",
+      "w": 1440,
+      "x": 10640,
+      "y": 0
+    },
+    "Team.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "page": "admin",
+      "title": "Team — /admin/team",
+      "w": 1440,
+      "x": 16720,
+      "y": 0
+    },
+    "Welcome.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "admin",
+      "title": "Welcome — /welcome",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-14T10:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "page": "public",
+    "view": "canvas"
+  },
+  "notes": {
+    "cmpTitle": {
+      "kind": "title1",
+      "maxW": 3128,
+      "page": "components",
+      "text": "Shared components — mirrors of src/components",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "cmsTitle": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "admin",
+      "text": "Newsroom CMS — every staff route",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "pubTitle": {
+      "kind": "title1",
+      "maxW": 8000,
+      "page": "public",
+      "text": "Public site — every reader-facing route",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "srcNote": {
+      "page": "public",
+      "text": "All stories and figures are real @dhakachronicles Instagram posts from 12–13 Nov 2026. Anything not yet known is shown as [placeholder]. Most-read order is illustrative until real page views exist.",
+      "w": 520,
+      "x": 0,
+      "y": -560
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "HomeBn.dc.html",
+    "Article.dc.html",
+    "Latest.dc.html",
+    "Category.dc.html",
+    "Tag.dc.html",
+    "Author.dc.html",
+    "Search.dc.html",
+    "Privacy.dc.html",
+    "NotFound.dc.html",
+    "Login.dc.html",
+    "Welcome.dc.html",
+    "Dashboard.dc.html",
+    "Articles.dc.html",
+    "Editor.dc.html",
+    "Preview.dc.html",
+    "Categories.dc.html",
+    "Tags.dc.html",
+    "Authors.dc.html",
+    "Media.dc.html",
+    "Instagram.dc.html",
+    "Team.dc.html",
+    "Settings.dc.html",
+    "Profile.dc.html",
+    "BrandDeals.dc.html",
+    "SiteHeader.dc.html",
+    "SiteFooter.dc.html",
+    "AdminSidebar.dc.html",
+    "ArticleCard.dc.html",
+    "Pagination.dc.html",
+    "ShareBar.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "public",
+      "name": "Public site"
+    },
+    {
+      "id": "admin",
+      "name": "Newsroom (CMS)"
+    },
+    {
+      "id": "components",
+      "name": "Shared components"
+    }
+  ],
+  "title": "Dhaka Chronicles — All Pages"
+}

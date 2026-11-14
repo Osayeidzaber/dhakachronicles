@@ -210,4 +210,36 @@ describe("media and instagram functions", () => {
     const e = await as("authenticated", EDITOR, () => db.query("select action from audit_logs where action like 'x.%'"));
     expect(e.rows).toHaveLength(2);
   });
+
+  it("keeps brand deals staff-only: editors manage, admins delete, others see nothing", async () => {
+    const ins = await as("authenticated", EDITOR, () =>
+      db.query<{ id: string }>(`insert into brand_deals (brand_name, fee_amount) values ('Test Brand', 1000) returning id`),
+    );
+    const id = ins.rows[0].id;
+    const w = await as("authenticated", WRITER, () => db.query("select id from brand_deals"));
+    expect(w.rows).toHaveLength(0);
+    await expect(as("authenticated", WRITER, () => db.exec(`insert into brand_deals (brand_name) values ('X')`))).rejects.toThrow();
+    await expect(as("anon", null, () => db.query("select id from brand_deals"))).rejects.toThrow();
+    await as("authenticated", EDITOR, () => db.exec(`delete from brand_deals where id = '${id}'`));
+    const still = await as("authenticated", ADMIN, () => db.query(`select id from brand_deals where id = '${id}'`));
+    expect(still.rows).toHaveLength(1);
+    await as("authenticated", ADMIN, () => db.exec(`delete from brand_deals where id = '${id}'`));
+    const gone = await as("authenticated", ADMIN, () => db.query(`select id from brand_deals where id = '${id}'`));
+    expect(gone.rows).toHaveLength(0);
+  });
+
+  it("validates brand deal fields", async () => {
+    await expect(db.exec(`insert into brand_deals (brand_name) values ('  ')`)).rejects.toThrow();
+    await expect(db.exec(`insert into brand_deals (brand_name, fee_amount) values ('B', -1)`)).rejects.toThrow();
+    await expect(db.exec(`insert into brand_deals (brand_name, currency) values ('B', 'taka')`)).rejects.toThrow();
+    await expect(db.exec(`insert into brand_deals (brand_name, contact_email) values ('B', 'nope')`)).rejects.toThrow();
+    await expect(db.exec(`insert into brand_deals (brand_name, paid) values ('B', true)`)).rejects.toThrow();
+  });
+
+  it("exposes most-read ids to the public without view counts", async () => {
+    const { rows } = await as("anon", null, () => db.query<Record<string, unknown>>("select * from most_read('en', 7, 5)"));
+    for (const r of rows) expect(Object.keys(r)).toEqual(["article_id"]);
+    const bad = await as("anon", null, () => db.query("select * from most_read('fr', 7, 5)"));
+    expect(bad.rows).toHaveLength(0);
+  });
 });

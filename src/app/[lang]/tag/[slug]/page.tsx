@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { isLang, localized } from "@/lib/i18n";
+import { isLang, localized, t } from "@/lib/i18n";
 import { isConfigured } from "@/lib/public-data";
 import { getTagBySlug, listLatest } from "@/lib/articles/queries";
 import { ArticleListPage, pageParam } from "@/components/public/article-list-page";
@@ -21,5 +21,5 @@ export default async function TagPage({ params, searchParams }: { params: Params
   const tag = await getTagBySlug(slug);
   if (!tag) notFound();
   const page = await listLatest(lang, { tagId: tag.id, page: pageParam(sp.page) });
-  return <ArticleListPage lang={lang} title={`#${localized(tag, "name", lang)}`} page={page} href={(p) => `/${lang}/tag/${slug}?page=${p}`} />;
+  return <ArticleListPage lang={lang} kicker={t(lang, "topic")} layout="feature" title={`#${localized(tag, "name", lang)}`} intro={<p className="text-muted">{lang === "bn" ? `${page.total}টি খবর` : `${page.total} ${page.total === 1 ? "story" : "stories"}`}</p>} page={page} href={(p) => `/${lang}/tag/${slug}?page=${p}`} />;
 }

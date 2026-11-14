@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1100px">
+<dc-import name="AdminSidebar" active="overview" hint-size="248px,1100px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 24px; box-sizing: border-box">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<div><span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">Saturday, 14 November 2026</span>
+<h1 style="margin: 6px 0 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Overview</h1></div>
+<div style="display: flex; gap: 8px">
+<a href="Instagram.dc.html" style="height: 40px; padding: 0 16px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; display: flex; align-items: center; font-size: 14px">Sync Instagram</a>
+<a href="Editor.dc.html" style="height: 40px; padding: 0 16px; background: #fff; color: #000; border-radius: 999px; display: flex; align-items: center; font-size: 14px; font-weight: 500">New article</a>
+</div>
+</header>
+<section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+<sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+<div style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">{{s.label}}</span>
+<span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 44px; line-height: 1">{{s.value}}</span>
+<span style="font-size: 12px; color: #8a8a8a">{{s.note}}</span>
+</div>
+</sc-for>
+</section>
+<section style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 2 1 480px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between"><h2 style="margin: 0; font-size: 15px; font-weight: 500">Views · Trend</h2><span style="font-size: 12px; color: #8a8a8a">Last 30 days</span></div>
+<div style="height: 220px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.14); display: grid; place-items: center; font-size: 13px; color: #8a8a8a">Daily views chart from article_daily_views (empty until the site is live)</div>
+</div>
+<div style="flex: 1 1 280px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">Pipeline</h2>
+<sc-for list="{{pipeline}}" as="p" hint-placeholder-count="5">
+<div style="display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 14px"><span style="color: #c4c4c4">{{p.label}}</span><span>{{p.value}}</span></div>
+</sc-for>
+</div>
+</section>
+<section style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 2 1 480px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px">
+<h2 style="margin: 0 0 8px; font-size: 15px; font-weight: 500">Needs review — Instagram drafts</h2>
+<sc-for list="{{drafts}}" as="d" hint-placeholder-count="4">
+<a href="Editor.dc.html" style="display: flex; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.06)">
+<span style="flex: none; width: 40px; height: 50px; border-radius: 8px; background: linear-gradient(135deg, #1f1f1f, #000)"></span>
+<span style="flex: 1; min-width: 0; font-size: 14px">{{d.title}}</span>
+<span style="font-size: 12px; color: #8a8a8a">{{d.cat}} · 13 Nov</span>
+</a>
+</sc-for>
+</div>
+<div style="flex: 1 1 280px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">Notifications</h2>
+<p style="margin: 0; font-size: 14px; color: #c4c4c4; line-height: 1.5">[n] Instagram posts imported as drafts from @dhakachronicles.</p>
+<p style="margin: 0; font-size: 12px; color: #8a8a8a">[time of sync]</p>
+<button type="button" style="align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #fff; font: inherit; font-size: 13px; cursor: pointer">Mark read</button>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+stats: [
+{ label: 'Reading now', value: '[n]', note: 'Live from the presence beacon' },
+{ label: 'Views today', value: '[n]', note: 'Anonymous daily totals' },
+{ label: 'Published', value: '[n]', note: 'Both editions' },
+{ label: 'Drafts to review', value: '[n]', note: 'Imported from Instagram' }
+],
+pipeline: [
+{ label: 'Draft', value: '[n]' }, { label: 'In review', value: '[n]' }, { label: 'Scheduled', value: '[n]' }, { label: 'Published', value: '[n]' }, { label: 'Archived', value: '[n]' }
+],
+drafts: [
+{ cat: 'Bangladesh', title: 'More than 100 teenage gang members stage armed display in Kadamtali' },
+{ cat: 'Politics', title: 'British politicians urge UK to seek guarantees Sheikh Hasina will not face execution' },
+{ cat: 'World', title: 'FAA halts all departing US flights after communications outage' },
+{ cat: 'Sport', title: 'Argentina lose 2-1 to Uruguay' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Search</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif">
+<dc-import name="SiteHeader" lang="en" hint-size="100%,240px"></dc-import>
+<main style="max-width: 960px; margin: 0 auto; padding: 56px 32px 80px; display: flex; flex-direction: column; gap: 32px">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 64px; line-height: 1">Search</h1>
+<form role="search" style="margin: 0; display: flex; gap: 8px">
+<label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search the news</label>
+<input id="q" name="q" type="search" value="Hasina" style="flex: 1; height: 56px; padding: 0 20px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.3); background: #0a0a0a; color: #fff; font: inherit; font-size: 18px; outline: none">
+<button type="submit" style="height: 56px; padding: 0 24px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer">Search</button>
+</form>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 14px; color: #8a8a8a">
+<span>2 results for “Hasina”</span>
+<span>Searching the English edition · <a href="#" style="color: #c4c4c4">বাংলায় খুঁজুন</a></span>
+</div>
+<section style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.08)">
+<sc-for list="{{items}}" as="a" hint-placeholder-count="2">
+<dc-import name="ArticleCard" variant="row" a="{{a}}" hint-size="100%,240px"></dc-import>
+</sc-for>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px; padding: 32px; border: 1px dashed rgba(255,255,255,0.14); border-radius: 16px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">Empty state</span>
+<p style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-size: 28px">No stories match “[query]”.</p>
+<p style="margin: 0; font-size: 15px; color: #a3a3a3">Try fewer words, or search the other edition.</p>
+</section>
+</main>
+<dc-import name="SiteFooter" lang="en" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1600}}'>
+class Component extends DCLogic {
+renderVals() {
+return { items: [
+{ cat: 'Politics', date: '13 Nov', title: 'British politicians urge UK to seek guarantees Sheikh Hasina will not face execution', dek: 'Six politicians also called for an independent review of the legal proceedings.' },
+{ cat: 'Politics', date: '13 Nov', title: 'India wants Bangladesh Army to take responsibility for Hasina’s return', dek: 'New Delhi reportedly wants her return on a Bangladeshi military aircraft, BBC Bangla reported.' }
+] };
+}
+}
+</script>
+</body>
+</html>

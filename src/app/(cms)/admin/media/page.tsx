@@ -1,3 +1,8 @@
+import Link from "next/link";
+import HoverVideoPlayer from "@/components/ui/vendor/cult/hover-video-player";
+import { HoldSubmit } from "@/components/admin/form-controls";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { Progress } from "@/components/ui/progress";
 import { requirePageSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -11,7 +16,7 @@ import type { Media } from "@/lib/db/types";
 export const metadata = { title: "Media" };
 const PAGE_SIZE = 24;
 
-export default async function MediaPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; ok?: string; error?: string }> }) {
+export default async function MediaPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string; ok?: string; error?: string; id?: string }> }) {
   const sp = await searchParams;
   await requirePageSession("media.upload");
   const page = Math.max(1, Number(sp.page) || 1);
@@ -20,6 +25,11 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
   if (sp.q?.trim()) q = q.ilike("original_filename", `%${sp.q.trim().replace(/[%_]/g, "")}%`);
   const { data, count } = await q.order("created_at", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   const rows = (data ?? []) as Media[];
+  let selected = rows.find((m) => m.id === sp.id) ?? null;
+  if (!selected && sp.id && /^[0-9a-f-]{36}$/i.test(sp.id)) {
+    const { data: one } = await supabase.from("media").select("*").eq("id", sp.id).maybeSingle();
+    selected = (one as Media | null) ?? null;
+  }
 
   return (
     <>
@@ -27,7 +37,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
       <Flash ok={sp.ok} error={sp.error} />
       <StorageCard />
       {!r2Config() && (
-        <p className="mb-4 rounded bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="mb-4 rounded-2xl border border-amber-500/30 p-4 text-sm text-amber-200">
           Cloudflare R2 is not configured. Set the R2_* variables (see SETUP docs) to enable uploads.
         </p>
       )}
@@ -37,31 +47,85 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
         <button className="btn">Search</button>
       </form>
       {rows.length === 0 ? (
-        <Empty>No media yet.</Empty>
+        <Empty>{sp.q ? "No files match that search." : "No media yet. Upload images above, or import posts from Instagram."}</Empty>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((m) => (
-            <div key={m.id} className="card space-y-2">
-              <a href={m.public_url} target="_blank" rel="noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element -- admin thumbnail */}
-                <img src={m.variants.find((v) => v.format === "webp" && v.width <= 640)?.url ?? m.public_url} alt={m.alt_text_en ?? ""} className="aspect-video w-full rounded object-cover" />
-              </a>
-              <p className="truncate text-xs text-neutral-500" title={m.original_filename}>
-                {m.original_filename} · {m.width}×{m.height} · {(m.file_size / 1024).toFixed(0)} KB · {m.source} · {fmt(m.created_at)}
-              </p>
-              <p className="font-mono text-[10px] break-all text-neutral-400">{m.id}</p>
-              <form action={updateMediaAction.bind(null, m.id)} className="space-y-1">
-                <input name="alt_text_en" defaultValue={m.alt_text_en ?? ""} placeholder="Alt text (English)" className="input" />
-                <input name="alt_text_bn" defaultValue={m.alt_text_bn ?? ""} placeholder="বিকল্প লেখা (বাংলা)" className="input" lang="bn" />
-                <input name="caption" defaultValue={m.caption ?? ""} placeholder="Caption" className="input" />
-                <input name="credit" defaultValue={m.credit ?? ""} placeholder="Credit" className="input" />
-                <button className="btn">Save</button>
+        <div className="flex flex-col gap-6 xl:flex-row">
+          <ul className="grid min-w-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+            {rows.map((m, i) => {
+              const isVideo = m.mime_type.startsWith("video/");
+              const thumb = isVideo
+                ? ((m.variants as unknown as { kind?: string; url?: string }[]).find((v) => v.kind === "poster")?.url ?? null)
+                : (m.variants.find((v) => v.format === "webp" && v.width <= 640)?.url ?? m.public_url);
+              const on = selected?.id === m.id;
+              return (
+                <li key={m.id} className="reveal" style={{ animationDelay: `${Math.min(i, 16) * 20}ms` }}>
+                  <Link
+                    href={`/admin/media?id=${m.id}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}${page > 1 ? `&page=${page}` : ""}`}
+                    scroll={false}
+                    aria-current={on ? "true" : undefined}
+                    className={`group relative block aspect-[4/5] overflow-hidden rounded-2xl border bg-surface-3 transition ${on ? "border-white ring-2 ring-white/50" : "border-white/[0.08] hover:border-white/40"}`}
+                  >
+                    {isVideo ? (
+                      // Reels play silently on hover, with the cover as the still frame.
+                      <HoverVideoPlayer videoSrc={m.public_url} thumbnailSrc={thumb ?? undefined} muted loop preload="none" className="h-full w-full [&_img]:object-cover [&_video]:h-full [&_video]:w-full [&_video]:object-cover" />
+                    ) : (
+                      thumb && (
+                        // eslint-disable-next-line @next/next/no-img-element -- admin thumbnail from R2
+                        <img src={thumb} alt={m.alt_text_en ?? ""} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+                      )
+                    )}
+                    <span className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 rounded-full bg-black/70 px-2.5 py-1 text-[11px] text-neutral-700 backdrop-blur">
+                      <span className="truncate">{m.source === "instagram" ? "Instagram" : "Upload"}</span>
+                      {isVideo && <span className="text-white">▶ Video</span>}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          {selected && (
+            <aside className="card reveal w-full shrink-0 space-y-3 self-start xl:sticky xl:top-6 xl:w-[360px]">
+              {selected.mime_type.startsWith("video/") ? (
+                <video src={selected.public_url} controls playsInline preload="metadata" className="w-full rounded-xl bg-black" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- admin preview from R2
+                <img src={selected.public_url} alt={selected.alt_text_en ?? ""} className="max-h-[420px] w-full rounded-xl object-contain" />
+              )}
+              <div>
+                <p className="truncate text-sm font-medium" title={selected.original_filename}>
+                  {selected.original_filename}
+                </p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {selected.source === "instagram" ? "From Instagram" : "Uploaded"} · {fmt(selected.created_at)}
+                  {selected.width ? ` · ${selected.width}×${selected.height}` : ""} · {(selected.file_size / 1024 / 1024).toFixed(1)} MB
+                </p>
+              </div>
+              <form action={updateMediaAction.bind(null, selected.id)} className="space-y-2">
+                <label className="block text-xs text-muted">
+                  Alt text (English)
+                  <input name="alt_text_en" defaultValue={selected.alt_text_en ?? ""} placeholder="Describe the image" className="input mt-1" />
+                </label>
+                <label className="block text-xs text-muted">
+                  Alt text (বাংলা)
+                  <input name="alt_text_bn" defaultValue={selected.alt_text_bn ?? ""} className="input mt-1" lang="bn" />
+                </label>
+                <label className="block text-xs text-muted">
+                  Caption
+                  <input name="caption" defaultValue={selected.caption ?? ""} className="input mt-1" />
+                </label>
+                <label className="block text-xs text-muted">
+                  Credit
+                  <input name="credit" defaultValue={selected.credit ?? ""} className="input mt-1" />
+                </label>
+                <SubmitButton className="btn btn-primary w-full" pendingLabel="Saving…">Save details</SubmitButton>
               </form>
-              <form action={deleteMediaAction.bind(null, m.id)}>
-                <button className="btn btn-danger">Delete</button>
+              <p className="text-xs text-muted">Files used by a published or scheduled article can’t be deleted.</p>
+              <form action={deleteMediaAction.bind(null, selected.id)}>
+                <HoldSubmit className="w-full" doneLabel="Deleting…">Hold to delete</HoldSubmit>
               </form>
-            </div>
-          ))}
+              <p className="font-mono text-[10px] break-all text-muted">ID {selected.id}</p>
+            </aside>
+          )}
         </div>
       )}
       <Pager page={page} totalPages={Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE))} href={(p) => `/admin/media?page=${p}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}`} />
@@ -85,9 +149,7 @@ async function StorageCard() {
         <p className="mt-2 text-4xl font-medium tracking-tight tabular-nums">
           {formatBytes(total)} <span className="text-base font-normal text-muted">of 10 GB free tier</span>
         </p>
-        <div className="mt-4 h-1.5 rounded bg-white/10">
-          <div className="h-1.5 rounded bg-white" style={{ width: `${Math.min(100, (total / LIMIT) * 100).toFixed(1)}%` }} />
-        </div>
+        <Progress value={Math.min(100, (total / LIMIT) * 100)} aria-label="Storage used" className="mt-4" />
       </div>
       <dl className="grid grid-cols-2 gap-3 text-xs text-muted">
         <div><dt>Files</dt><dd className="text-lg text-white tabular-nums">{rows.length.toLocaleString()}</dd></div>

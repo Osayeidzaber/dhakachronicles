@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brand deals</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1200px">
+<dc-import name="AdminSidebar" active="brand" hint-size="248px,1200px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-wrap: wrap; box-sizing: border-box">
+<section style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<div><h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Brand deals</h1>
+<p style="margin: 6px 0 0; font-size: 14px; color: #8a8a8a">Sponsored posts, reels and articles. Paid content is always labelled “Sponsored”.</p></div>
+<button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">New deal</button>
+</header>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px">
+<sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+<div style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">{{s.k}}</span>
+<span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 34px; line-height: 1">{{s.v}}</span>
+</div>
+</sc-for>
+</div>
+<div role="tablist" aria-label="View" style="display: flex; gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+<sc-for list="{{views}}" as="v" hint-placeholder-count="2">
+<button type="button" role="tab" aria-selected="{{v.sel}}" onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
+</sc-for>
+</div>
+<sc-if value="{{isBoard}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px">
+<sc-for list="{{columns}}" as="c" hint-placeholder-count="5">
+<div style="flex: 0 0 220px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #8a8a8a; padding: 0 4px"><span style="text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500">{{c.name}}</span><span>{{c.count}}</span></div>
+<sc-for list="{{c.deals}}" as="d" hint-placeholder-count="2">
+<button type="button" onClick="{{d.pick}}" style="{{d.style}}">
+<span style="font-size: 14px; font-weight: 500">{{d.brand}}</span>
+<span style="font-size: 12px; color: #a3a3a3">{{d.what}}</span>
+<span style="display: flex; justify-content: space-between; font-size: 12px; color: #8a8a8a"><span>{{d.fee}}</span><span>{{d.due}}</span></span>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{isList}}" hint-placeholder-val="{{false}}">
+<div style="overflow-x: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px">
+<table style="width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px">
+<thead><tr style="text-align: left; color: #8a8a8a; font-size: 12px"><th scope="col" style="padding: 12px 16px; font-weight: 500">Brand</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Deliverables</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Stage</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Fee</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Due</th></tr></thead>
+<tbody>
+<sc-for list="{{all}}" as="d" hint-placeholder-count="6">
+<tr style="border-top: 1px solid rgba(255,255,255,0.06)"><td style="padding: 14px 16px">{{d.brand}}</td><td style="padding: 14px 16px; color: #c4c4c4">{{d.what}}</td><td style="padding: 14px 16px"><span style="font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2)">{{d.stage}}</span></td><td style="padding: 14px 16px; color: #c4c4c4">{{d.fee}}</td><td style="padding: 14px 16px; color: #8a8a8a">{{d.due}}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</sc-if>
+</section>
+<aside style="flex: 1 1 320px; padding: 32px 24px; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 16px; box-sizing: border-box">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">{{sel.stage}}</span>
+<h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 34px; line-height: 1.05">{{sel.brand}}</h2>
+<div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+<div style="display: flex; justify-content: space-between"><span style="color: #8a8a8a">Contact</span><span>[Name · email]</span></div>
+<div style="display: flex; justify-content: space-between"><span style="color: #8a8a8a">Fee</span><span>{{sel.fee}}</span></div>
+<div style="display: flex; justify-content: space-between"><span style="color: #8a8a8a">Due</span><span>{{sel.due}}</span></div>
+<div style="display: flex; justify-content: space-between"><span style="color: #8a8a8a">Owner</span><span>[Staff member]</span></div>
+</div>
+<div style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<h3 style="margin: 0; font-size: 13px; font-weight: 500">Deliverables</h3>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #c4c4c4"><input type="checkbox" checked> Brief approved</label>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #c4c4c4"><input type="checkbox"> {{sel.what}}</label>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #c4c4c4"><input type="checkbox"> Brand sign-off</label>
+<label style="display: flex; gap: 10px; align-items: center; font-size: 13px; color: #c4c4c4"><input type="checkbox"> Invoice sent</label>
+</div>
+<div style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<h3 style="margin: 0; font-size: 13px; font-weight: 500">Disclosure</h3>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: #a3a3a3">Linked articles show a “Sponsored” label and are kept out of Most read and breaking news. Instagram posts use the Paid partnership tag.</p>
+</div>
+<a href="Editor.dc.html" style="height: 40px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); display: flex; align-items: center; justify-content: center; font-size: 14px">Create linked article</a>
+</aside>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+renderVals() {
+const st = this.state || {};
+const view = st.view || 'board';
+const raw = [
+['Lead', '[Brand A]', 'Instagram reel'], ['Lead', '[Brand B]', 'Sponsored article (EN + BN)'],
+['Negotiating', '[Brand C]', 'Carousel post + story'],
+['Contracted', '[Brand D]', 'Sponsored article (EN)'], ['Contracted', '[Brand E]', '2 Instagram posts'],
+['In production', '[Brand F]', 'Event coverage reel'],
+['Published', '[Brand G]', 'Instagram post']
+];
+const selId = st.sel ?? 3;
+const deals = raw.map(([stage, brand, what], i) => ({ id: i, stage, brand, what, fee: '[BDT amount]', due: '[date]',
+pick: () => this.setState({ sel: i }),
+style: 'text-align: left; display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; background: #070707; color: #fff; font: inherit; cursor: pointer; ' + (i === selId ? 'border: 1px solid #fff' : 'border: 1px solid rgba(255,255,255,0.08)') }));
+const names = ['Lead', 'Negotiating', 'Contracted', 'In production', 'Published'];
+const tab = (k, label) => ({ label, sel: view === k ? 'true' : 'false', pick: () => this.setState({ view: k }),
+style: 'padding: 10px 14px; border: 0; background: transparent; font: inherit; font-size: 14px; cursor: pointer; ' + (view === k ? 'color: #fff; border-bottom: 2px solid #fff' : 'color: #8a8a8a') });
+return {
+stats: [{ k: 'Open deals', v: '[n]' }, { k: 'Contracted value', v: '[BDT]' }, { k: 'Due this week', v: '[n]' }, { k: 'Awaiting payment', v: '[BDT]' }],
+views: [tab('board', 'Pipeline'), tab('list', 'List')],
+isBoard: view === 'board', isList: view === 'list',
+columns: names.map((name) => { const ds = deals.filter((d) => d.stage === name); return { name, count: String(ds.length), deals: ds }; }),
+all: deals,
+sel: deals[selId]
+};
+}
+}
+</script>
+</body>
+</html>

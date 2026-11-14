@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { HoldSubmit, SwitchField } from "@/components/admin/form-controls";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { requirePageSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
@@ -7,21 +9,25 @@ import { Empty, Flash, PageHeader, fmt } from "@/components/admin/ui";
 import { instagramModeAction } from "../newsroom-actions";
 import { HighlightButton } from "@/components/admin/highlight-button";
 import { readHighlight } from "@/lib/highlight";
-import { instagramAutoImportAction, instagramDisconnectAction, instagramTokenConnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
+import { instagramApproveAction, instagramAutoImportAction, instagramDisconnectAction, instagramImportSelectedAction, instagramTokenConnectAction, instagramRetryAction, instagramSyncAction } from "../actions";
+import { InstagramPicker } from "@/components/admin/instagram-picker";
+import { browseFeed, type FeedItem } from "@/lib/instagram/sync";
 import type { InstagramAccount, InstagramImport, SyncRun } from "@/lib/db/types";
 
 export const metadata = { title: "Instagram" };
 
-export default async function InstagramPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string; connected?: string; tab?: string }> }) {
+export default async function InstagramPage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string; connected?: string; tab?: string; after?: string }> }) {
   const sp = await searchParams;
   const session = await requirePageSession("instagram.view");
   const manage = can(session.profile.role, "instagram.manage");
   const supabase = await createClient();
   const cfg = instagramConfig();
-  const tab = sp.tab === "failed" ? "failed" : "all";
+  const tab = sp.tab === "failed" || sp.tab === "drafts" || sp.tab === "browse" ? sp.tab : "all";
+  const canPublish = can(session.profile.role, "article.publish");
 
   let importsQuery = supabase.from("instagram_imports").select("*, article:articles(status)").order("media_timestamp", { ascending: false }).limit(50);
   if (tab === "failed") importsQuery = importsQuery.eq("status", "failed");
+  if (tab === "drafts") importsQuery = importsQuery.eq("status", "imported");
   const [{ data: acc }, { data: runs }, { data: imports }, { count: importedCount }, { count: failedCount }] = await Promise.all([
     supabase.from("instagram_accounts").select("*").limit(1).maybeSingle(),
     supabase.from("instagram_sync_runs").select("*").order("started_at", { ascending: false }).limit(15),
@@ -32,6 +38,21 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
   const account = acc as (InstagramAccount & { import_mode?: string }) | null;
   const pinned = (await readHighlight())?.article_id ?? null;
   const connected = account?.status === "connected" || account?.status === "token_expired" || account?.status === "error";
+
+  const { data: cats } = await supabase.from("categories").select("id, name_en").order("sort_order").order("name_en");
+  const sectionOptions = ((cats ?? []) as { id: string; name_en: string }[]).map((c) => ({ id: c.id, name: c.name_en }));
+  let feed: { items: FeedItem[]; after?: string } | null = null;
+  let feedError: string | null = null;
+  if (tab === "browse" && connected && manage) {
+    try {
+      feed = await browseFeed(sp.after && /^[\w=-]{1,400}$/.test(sp.after) ? sp.after : undefined);
+    } catch (err) {
+      feedError = err instanceof Error ? err.message : "Could not load the Instagram feed.";
+    }
+  }
+  type Row = InstagramImport & { article?: { status: string } | null };
+  const rows = ((imports ?? []) as Row[]).filter((i) => tab !== "drafts" || i.article?.status !== "published");
+  const draftRows = rows.filter((i) => i.article_id && i.article?.status && i.article.status !== "published");
 
   return (
     <>
@@ -72,7 +93,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
           {account?.last_error && (
             <>
               <dt className="text-neutral-500">Last error</dt>
-              <dd className="text-red-700">{account.last_error}</dd>
+              <dd className="text-red-300">{account.last_error}</dd>
             </>
           )}
         </dl>
@@ -83,7 +104,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
             </form>
             {connected && (
               <form action={instagramDisconnectAction}>
-                <button className="btn btn-danger">Disconnect</button>
+                <HoldSubmit className="" doneLabel="Disconnecting…">Hold to disconnect</HoldSubmit>
               </form>
             )}
           </div>
@@ -131,17 +152,15 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                 </label>
               </div>
               {!account.initial_import_completed && <input type="hidden" name="initial" value="1" />}
-              <button className="btn btn-primary">{account.initial_import_completed ? "Sync now" : "Run historical import"}</button>
+              <SubmitButton className="btn btn-primary" pendingLabel="Syncing…">{account.initial_import_completed ? "Sync now" : "Run historical import"}</SubmitButton>
               <p className="text-xs text-neutral-500">Already-imported posts are skipped automatically. Imported posts become drafts; nothing is published automatically.</p>
             </form>
           </section>
           <section className="card">
             <h2 className="mb-2 text-[15px] font-medium">Automatic synchronization</h2>
             <form action={instagramAutoImportAction} className="space-y-2 text-sm">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" name="auto_import" defaultChecked={account.auto_import} /> Check for new posts every 15 minutes (Supabase Cron)
-              </label>
-              <button className="btn">Save</button>
+              <SwitchField name="auto_import" label="Check for new posts every 15 minutes" defaultChecked={account.auto_import} />
+              <SubmitButton className="btn">Save</SubmitButton>
             </form>
           </section>
         </div>
@@ -164,28 +183,58 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                 </span>
               </label>
             ))}
-            <button className="btn btn-primary justify-self-start">Save</button>
+            <SubmitButton className="btn btn-primary justify-self-start" pendingLabel="Saving…">Save</SubmitButton>
           </form>
         </section>
       )}
 
       <section className="card mb-6">
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="text-[15px] font-medium">Imported posts</h2>
-          <Link href="/admin/instagram" className={`badge ${tab === "all" ? "bg-white text-black" : "bg-neutral-100"}`}>
-            All
-          </Link>
-          <Link href="/admin/instagram?tab=failed" className={`badge ${tab === "failed" ? "bg-white text-black" : "bg-neutral-100"}`}>
-            Failed
-          </Link>
+          <h2 className="text-[15px] font-medium">Posts</h2>
+          {(
+            [
+              ["all", "Imported"],
+              ["drafts", "Needs approval"],
+              ["failed", "Failed"],
+              ...(manage && connected ? [["browse", "Pick from Instagram"]] : []),
+            ] as [string, string][]
+          ).map(([k, label]) => (
+            <Link key={k} href={k === "all" ? "/admin/instagram" : `/admin/instagram?tab=${k}`} className={`badge transition ${tab === k ? "bg-white text-black" : "bg-neutral-100 hover:bg-neutral-200"}`}>
+              {label}
+            </Link>
+          ))}
+          {canPublish && draftRows.length > 0 && tab !== "browse" && (
+            <button form="approve-form" className="btn btn-primary ml-auto h-9 text-xs">
+              Approve &amp; publish selected
+            </button>
+          )}
         </div>
-        {!imports?.length ? (
+        {tab === "browse" ? (
+          feedError ? (
+            <p role="alert" className="rounded-xl border border-red-500/30 p-4 text-sm text-red-200">{feedError}</p>
+          ) : !feed?.items.length ? (
+            <Empty>No posts found on Instagram.</Empty>
+          ) : (
+            <>
+              <InstagramPicker items={feed.items} action={instagramImportSelectedAction} canPublish={canPublish} categories={sectionOptions} />
+              {feed.after && (
+                <div className="mt-6 flex justify-center">
+                  <Link href={`/admin/instagram?tab=browse&after=${encodeURIComponent(feed.after)}`} className="btn">
+                    Older posts →
+                  </Link>
+                </div>
+              )}
+            </>
+          )
+        ) : !rows.length ? (
           <Empty>No imports yet.</Empty>
         ) : (
           <div className="overflow-x-auto">
+            <form id="approve-form" action={instagramApproveAction} />
             <table className="table">
               <thead>
                 <tr>
+                  {canPublish && <th className="w-8"><span className="sr-only">Select</span></th>}
                   <th>Posted</th>
                   <th>Type</th>
                   <th>Caption</th>
@@ -195,8 +244,15 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                 </tr>
               </thead>
               <tbody>
-                {(imports as InstagramImport[]).map((i) => (
+                {rows.map((i) => (
                   <tr key={i.id}>
+                    {canPublish && (
+                      <td>
+                        {i.article_id && i.article?.status && i.article.status !== "published" && (
+                          <input type="checkbox" form="approve-form" name="article_ids" value={i.article_id} aria-label="Select draft" className="accent-white" />
+                        )}
+                      </td>
+                    )}
                     <td className="whitespace-nowrap">{fmt(i.media_timestamp)}</td>
                     <td>{i.media_type}</td>
                     <td className="max-w-md">
@@ -206,7 +262,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                           Permalink
                         </a>
                       )}
-                      {i.error_message && <p className="text-xs text-red-700">{i.error_message}</p>}
+                      {i.error_message && <p className="text-xs text-red-300">{i.error_message}</p>}
                     </td>
                     <td>
                       {i.status}
@@ -218,8 +274,12 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                           <Link className="underline" href={`/admin/articles/${i.article_id}`}>
                             Open
                           </Link>
-                          {(i as InstagramImport & { article?: { status: string } | null }).article?.status === "published" && manage && (
-                            <HighlightButton articleId={i.article_id} active={pinned === i.article_id} compact />
+                          {i.article?.status && <span className="badge">{i.article.status === "published" ? "Live" : i.article.status.replace("_", " ")}</span>}
+                          {i.article?.status === "published" && manage && <HighlightButton articleId={i.article_id} active={pinned === i.article_id} compact />}
+                          {canPublish && i.article?.status && i.article.status !== "published" && (
+                            <button form="approve-form" name="article_ids" value={i.article_id} className="btn h-8 text-xs">
+                              Approve &amp; publish
+                            </button>
                           )}
                         </div>
                       ) : (
@@ -269,7 +329,7 @@ export default async function InstagramPage({ searchParams }: { searchParams: Pr
                   <td>{r.imported_count}</td>
                   <td>{r.skipped_count}</td>
                   <td>{r.failed_count}</td>
-                  <td className="text-red-700">{r.error_message}</td>
+                  <td className="text-red-300">{r.error_message}</td>
                 </tr>
               ))}
             </tbody>

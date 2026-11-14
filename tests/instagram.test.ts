@@ -80,7 +80,9 @@ describe("account checks and tokens", () => {
     const enc = encryptSecret("IGAA-secret-token", key);
     expect(enc).not.toContain("secret");
     expect(decryptSecret(enc, key)).toBe("IGAA-secret-token");
-    const tampered = enc.slice(0, -2) + (enc.endsWith("A") ? "B" : "A") + enc.slice(-1);
+    // Flip one character in the middle (always a real change, unlike the old last-char swap).
+    const mid = Math.floor(enc.length / 2);
+    const tampered = enc.slice(0, mid) + (enc[mid] === "A" ? "B" : "A") + enc.slice(mid + 1);
     expect(() => decryptSecret(tampered, key)).toThrow();
     expect(() => decryptSecret(enc, randomBytes(32).toString("base64"))).toThrow();
   });
@@ -113,5 +115,53 @@ describe("account checks and tokens", () => {
     expect(calls[0]).toContain("after=PREV");
     expect(calls[0]).toContain("graph.facebook.com/v27.0/1784/media");
     expect(calls[0]).toContain("appsecret_proof=" + appSecretProof("tok", "sec"));
+  });
+});
+
+describe("videos and parallel imports", () => {
+  it("finds videos in reels and carousels, with their covers", async () => {
+    const { videoSources } = await import("@/lib/instagram/client");
+    const reel = { id: "1", media_type: "VIDEO", media_url: "https://x.cdninstagram.com/v.mp4", thumbnail_url: "https://x.cdninstagram.com/t.jpg", timestamp: "2026-11-13T10:00:00+0000" };
+    expect(videoSources(reel)).toEqual([{ id: "1", url: "https://x.cdninstagram.com/v.mp4", thumb: "https://x.cdninstagram.com/t.jpg" }]);
+    const album = {
+      id: "2",
+      media_type: "CAROUSEL_ALBUM",
+      timestamp: "2026-11-13T10:00:00+0000",
+      children: { data: [{ id: "a", media_type: "IMAGE", media_url: "https://x.cdninstagram.com/a.jpg" }, { id: "b", media_type: "VIDEO", media_url: "https://x.cdninstagram.com/b.mp4" }] },
+    };
+    expect(videoSources(album).map((v) => v.id)).toEqual(["b"]);
+    expect(videoSources({ id: "3", media_type: "IMAGE", media_url: "https://x/i.jpg", timestamp: "t" })).toEqual([]);
+  });
+
+  it("puts imported videos at the top of the draft", async () => {
+    const { draftContent } = await import("@/lib/instagram/draft");
+    const doc = draftContent("Line one\nLine two", "https://instagram.com/p/x", [{ src: "https://media/v.mp4", poster: "https://media/p.jpg", mediaId: "m1" }]);
+    expect(doc.content?.[0]).toEqual({ type: "video", attrs: { src: "https://media/v.mp4", poster: "https://media/p.jpg", mediaId: "m1" } });
+    expect(doc.content?.[1].type).toBe("paragraph");
+  });
+
+  it("runs work in parallel with a limit, keeps order, and isolates failures", async () => {
+    const { mapLimit } = await import("@/lib/concurrency");
+    let running = 0;
+    let peak = 0;
+    const res = await mapLimit([1, 2, 3, 4, 5, 6], 3, async (n) => {
+      running++;
+      peak = Math.max(peak, running);
+      await new Promise((r) => setTimeout(r, 5));
+      running--;
+      if (n === 4) throw new Error("boom");
+      return n * 2;
+    });
+    expect(peak).toBe(3);
+    expect(res.map((r) => (r.status === "fulfilled" ? r.value : "x"))).toEqual([2, 4, 6, "x", 10, 12]);
+  });
+});
+
+describe("headline suggestions", () => {
+  it("uses the first sentence and title-cases shouting captions", async () => {
+    const { draftTitle } = await import("@/lib/instagram/draft");
+    expect(draftTitle("Nvidia CEO Jensen Huang has resigned from his position. The board appointed Colette Kress as interim CEO.", "2026-11-14")).toBe("Nvidia CEO Jensen Huang has resigned from his position");
+    expect(draftTitle("SHAWN MENDES SPEAKS UP FOR PALESTINE, URGES FELLOW ARTISTS\n\nMore text", "2026-11-14")).toBe("Shawn Mendes Speaks Up For Palestine, Urges Fellow Artists");
+    expect(draftTitle("ঢাকায় বৃষ্টি। আরও খবর আসছে", "2026-11-14")).toBe("ঢাকায় বৃষ্টি। আরও খবর আসছে");
   });
 });

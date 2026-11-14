@@ -160,3 +160,21 @@ export function isAllowedMediaHost(url: string): boolean {
     return false;
   }
 }
+
+/** Videos (posts, reels, carousel slides) with their cover image, for download into R2. */
+export function videoSources(m: IgMedia): { id: string; url: string; thumb?: string }[] {
+  const pick = (id: string, type: string, mediaUrl?: string, thumb?: string) => (type === "VIDEO" && mediaUrl ? { id, url: mediaUrl, thumb } : null);
+  const list =
+    m.media_type === "CAROUSEL_ALBUM"
+      ? (m.children?.data ?? []).map((c) => pick(c.id, c.media_type, c.media_url, c.thumbnail_url))
+      : [pick(m.id, m.media_type, m.media_url, m.thumbnail_url)];
+  return list.filter((x): x is NonNullable<typeof x> => x !== null);
+}
+
+/** Fetch one post by id (used when an editor picks specific posts to import). */
+export async function getMedia(auth: GraphAuth, mediaId: string, f?: FetchLike): Promise<IgMedia> {
+  if (!/^\d{5,30}$/.test(mediaId)) throw new InstagramApiError("Invalid Instagram media id.", 400);
+  const u = authed(`/${mediaId}`, auth);
+  u.searchParams.set("fields", MEDIA_FIELDS);
+  return igFetch(u.toString(), igMediaSchema, undefined, f);
+}

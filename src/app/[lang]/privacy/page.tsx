@@ -113,20 +113,36 @@ export default async function PrivacyPage({ params }: { params: Promise<{ lang: 
   const { lang } = await params;
   if (!isLang(lang)) notFound();
   const c = content[lang];
+  const updated = new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", { dateStyle: "long" }).format(new Date(`${UPDATED}T00:00:00Z`));
+  const anchor = (i: number) => `section-${i + 1}`;
   return (
-    <article className="prose-article mx-auto max-w-3xl">
-      <h1 className="text-3xl font-bold">{c.title}</h1>
-      <p className="text-sm text-muted">
-        {c.updated}: <time dateTime={UPDATED}>{UPDATED}</time>
-      </p>
-      {c.sections.map((s) => (
-        <section key={s.h}>
-          <h2>{s.h}</h2>
-          {s.p.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
-        </section>
-      ))}
-    </article>
+    <div className="flex flex-wrap gap-16">
+      <nav aria-label={lang === "bn" ? "এই পাতায়" : "On this page"} className="flex flex-[1_1_220px] flex-col gap-3 self-start text-sm lg:sticky lg:top-8">
+        <span className="kicker">{lang === "bn" ? "এই পাতায়" : "On this page"}</span>
+        {c.sections.map((s, i) => (
+          <a key={s.h} href={`#${anchor(i)}`} className="text-neutral-700 transition hover:text-white">
+            {s.h}
+          </a>
+        ))}
+      </nav>
+      <article className="flex min-w-0 max-w-[720px] flex-[999_1_560px] flex-col gap-9">
+        <header className="reveal flex flex-col gap-2.5 border-b border-white pb-6">
+          <h1 className="font-display text-[clamp(2.8rem,6vw,4.5rem)] leading-none">{c.title}</h1>
+          <p className="text-sm text-muted">
+            {c.updated} <time dateTime={UPDATED}>{updated}</time>
+          </p>
+        </header>
+        {c.sections.map((s, i) => (
+          <section key={s.h} id={anchor(i)} className="flex scroll-mt-8 flex-col gap-3.5">
+            <h2 className="font-display text-3xl">{s.h}</h2>
+            {s.p.map((p) => (
+              <p key={p} className="text-[17px] leading-[1.75] text-neutral-800">
+                {p}
+              </p>
+            ))}
+          </section>
+        ))}
+      </article>
+    </div>
   );
 }

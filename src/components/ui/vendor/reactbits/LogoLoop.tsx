@@ -1072,7 +1072,7 @@ const createEngine = (
 export const LogoLoop = memo<LogoLoopProps>(
   ({
     logos,
-    speed = 120,
+    speed = 40, // Dhaka Chronicles: slow, calm drift
     direction = 'left',
     width = '100%',
     logoHeight = 28,
@@ -1095,7 +1095,7 @@ export const LogoLoop = memo<LogoLoopProps>(
     scrollBoost = 0,
     intro = true,
     renderItem,
-    ariaLabel = 'Partner logos',
+    ariaLabel = 'Latest from Instagram',
     className,
     style
   }) => {

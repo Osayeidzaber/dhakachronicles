@@ -49,6 +49,24 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [x] typecheck, lint, 70 tests and production build all pass
 - [~] Deploy to Vercel + run `supabase/cron.sql`
 
+## M9 — Commercial & design
+- [x] Brand deals: `brand_deals` table (staff-only RLS, admin delete), pipeline + list view, checklist, /admin/brand-deals
+- [x] Claude Design canvas for every page saved in `design/claude-design/`
+- [x] Logo: `<Logo>` component in site header/footer, admin sidebar, login, set-password, invite email; emblem app icons (`src/app/icon.png`, `apple-icon.png`); sources in `design/brand/`
+- [x] Discord: separate article-log and activity-log webhooks (env), rich embeds for publish/review/schedule/unpublish/Instagram; every audited action mirrored to the activity log
+- [x] Custom HTML staff invitation email, `/auth/confirm` token route, `/set-password` page
+- [x] Resend SMTP + custom invite template pushed to live Supabase (`supabase config push`), public sign-up off, email rate limit 30/h
+- [ ] Set Site URL + redirect URLs to the production domain at deploy time
+- [ ] Site analytics: per-page visits, referrers, top pages; admin dashboard + public "trending" widget
+- [x] Instagram: "Pick from Instagram" tab (live feed, tick posts, import as drafts or import & publish), "Needs approval" tab with approve & publish (single/bulk)
+- [x] Instagram videos/reels/carousel videos copied to R2 and played in the article (`video` node); covers kept as images
+- [x] Parallel imports (4 media / 3 posts at a time, batched upserts); every import, failure and sync run in the activity log
+- [x] Discord Alerts channel (`DISCORD_ALERTS_WEBHOOK_URL`, falls back to activity): import failures, sync failures, rate limits, expired token, scheduler failures, sign-in abuse
+- [x] Article-log embeds link to the site, the newsroom and the Instagram post; scheduled stories announce when they go live
+- [ ] Media library: show a video icon/player for video rows (they currently use the image card)
+- [x] `supabase db push`: brand_deals live on Supabase (2026-11-14)
+- [ ] Admin skeletons (loading.tsx), page transitions, smooth scroll; adapt vendor components to the design
+
 ## Next / nice to have
 - [ ] End-to-end tests against a real Supabase project (Playwright) once credentials exist
 - [ ] Generated Supabase types (`supabase gen types`) to replace the hand-written `db/types.ts`

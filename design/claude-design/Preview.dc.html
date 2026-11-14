@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Preview article</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, system-ui, sans-serif">
+<div style="position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 32px; background: #fff; color: #000; font-size: 14px">
+<span><strong style="font-weight: 600">Preview</strong> · Draft, not public. Readers can’t see this page yet.</span>
+<span style="display: flex; gap: 8px">
+<button type="button" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.2); background: transparent; color: #000; font: inherit; font-size: 13px">Desktop</button>
+<button type="button" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.2); background: transparent; color: #000; font: inherit; font-size: 13px">Mobile</button>
+<a href="Editor.dc.html" style="height: 36px; padding: 0 14px; border-radius: 999px; background: #000; color: #fff; display: flex; align-items: center; font-size: 13px">Back to editor</a>
+</span>
+</div>
+<dc-import name="Article" hint-size="100%,2500px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

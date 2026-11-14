@@ -1,4 +1,6 @@
 import { requirePageSession } from "@/lib/auth/session";
+import { SwitchField } from "@/components/admin/form-controls";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { can } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { Flash, PageHeader, fmt, timeAgo } from "@/components/admin/ui";
@@ -41,6 +43,36 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
       </PageHeader>
       <Flash ok={sp.ok} error={sp.error} />
 
+      {isAdmin && (
+        <section className="reveal mb-6 grid gap-4 lg:grid-cols-2">
+          <form action={inviteUserAction} className="card flex flex-col gap-4">
+            <div>
+              <h2 className="text-[15px] font-medium">Invite by email</h2>
+              <p className="mt-1 text-[13px] text-muted">We email them a branded invitation; they choose their own password and name.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Full name" name="full_name" placeholder="Name" />
+              <Field label="Email" name="email" type="email" placeholder="name@dhakachronicles.com" />
+              <RoleSelect />
+            </div>
+            <SubmitButton className="btn btn-primary self-start" pendingLabel="Sending…">Send invitation</SubmitButton>
+          </form>
+          <form action={createMemberAction} className="card flex flex-col gap-4">
+            <div>
+              <h2 className="text-[15px] font-medium">Create an account</h2>
+              <p className="mt-1 text-[13px] text-muted">Set a starting password and share it privately. They can change it on their profile.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Full name" name="full_name" placeholder="Name" />
+              <Field label="Email" name="email" type="email" placeholder="name@dhakachronicles.com" />
+              <Field label="Starting password" name="password" type="password" placeholder="At least 10 characters" autoComplete="new-password" />
+              <RoleSelect />
+            </div>
+            <button className="btn self-start">Create account</button>
+          </form>
+        </section>
+      )}
+
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {members.map((m) => {
           const s = stats.get(m.id) ?? { total: 0, published: 0 };
@@ -77,10 +109,8 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                       <option value="editor">Editor</option>
                       <option value="admin">Admin</option>
                     </select>
-                    <label className="flex items-center gap-1.5 text-sm">
-                      <input type="checkbox" name="is_active" defaultChecked={m.is_active} className="accent-white" /> Active
-                    </label>
-                    <button className="btn h-9 text-xs">Update</button>
+                    <SwitchField name="is_active" label="Active" defaultChecked={m.is_active} />
+                    <SubmitButton className="btn h-9 text-xs">Update</SubmitButton>
                   </form>
                 </details>
               )}
@@ -89,35 +119,6 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
         })}
       </section>
 
-      {isAdmin && (
-        <section className="mt-6 grid gap-4 lg:grid-cols-2">
-          <form action={createMemberAction} className="card flex flex-col gap-4">
-            <div>
-              <h2 className="text-[15px] font-medium">Create an account</h2>
-              <p className="mt-1 text-[13px] text-muted">Set a starting password and share it privately. They can change it on their profile.</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Full name" name="full_name" placeholder="Name" />
-              <Field label="Email" name="email" type="email" placeholder="name@dhakachronicles.com" />
-              <Field label="Starting password" name="password" type="password" placeholder="At least 10 characters" autoComplete="new-password" />
-              <RoleSelect />
-            </div>
-            <button className="btn btn-primary self-start">Create account</button>
-          </form>
-          <form action={inviteUserAction} className="card flex flex-col gap-4">
-            <div>
-              <h2 className="text-[15px] font-medium">Invite by email</h2>
-              <p className="mt-1 text-[13px] text-muted">Supabase emails a link so they set their own password. Needs email delivery set up in Supabase.</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Full name" name="full_name" placeholder="Name" />
-              <Field label="Email" name="email" type="email" placeholder="name@dhakachronicles.com" />
-              <RoleSelect />
-            </div>
-            <button className="btn self-start">Send invitation</button>
-          </form>
-        </section>
-      )}
     </>
   );
 }

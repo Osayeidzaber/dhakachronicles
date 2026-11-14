@@ -69,25 +69,26 @@ const velocityOf = (hist: Sample[]) => {
 };
 
 const SwipeToast: React.FC<SwipeToastProps> = ({
-  title = 'File archived',
+  title = '',
   description = '',
   icon,
   actionLabel = '',
   onAction,
   open = true,
   onClose,
-  background = '#27272a',
-  color = '#f5f5f5',
-  fuseColor = '#f5a524',
-  width = 356,
-  radius = 12,
+  // Dhaka Chronicles: near-black card, white text, white countdown line.
+  background = '#0a0a0a',
+  color = '#ffffff',
+  fuseColor = '#ffffff',
+  width = 360,
+  radius = 16,
   slideMs = 400,
   settleBounce = 0.2,
   swipeDistance = 40,
   duration = 4000,
   fuse = 'bottom',
   pauseOnHover = true,
-  closeButton = false,
+  closeButton = true,
   inline = false,
   dismissible = true,
   className = ''

@@ -73,6 +73,18 @@ function renderNode(n: TiptapNode, key: string): ReactNode {
         </figure>
       );
     }
+    case "video": {
+      const src = safeImageSrc(n.attrs?.src);
+      if (!src) return null;
+      const poster = safeImageSrc(n.attrs?.poster) ?? undefined;
+      return (
+        <figure key={key} className="overflow-hidden rounded-2xl bg-black">
+          <video src={src} poster={poster} controls playsInline preload="metadata" className="mx-auto max-h-[80vh] w-full">
+            <a href={src}>Watch the video</a>
+          </video>
+        </figure>
+      );
+    }
     case "embed": {
       const src = embedSrc(String(n.attrs?.provider ?? ""), String(n.attrs?.id ?? ""));
       if (!src) return null;

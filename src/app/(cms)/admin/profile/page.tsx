@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { requirePageSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { describeActivity } from "@/lib/analytics";
@@ -70,7 +71,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
               <input name="full_name" defaultValue={p.full_name} required maxLength={120} className="input mt-1.5" />
             </label>
             <p className="text-xs text-muted">Your bio and Bangla name appear on your author page; edit them under Authors.</p>
-            <button className="btn btn-primary self-start">Save profile</button>
+            <SubmitButton className="btn btn-primary self-start" pendingLabel="Saving…">Save profile</SubmitButton>
           </form>
           <form action={changePasswordAction} className="card flex flex-col gap-4">
             <h2 className="text-[15px] font-medium">Change password</h2>

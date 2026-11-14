@@ -63,7 +63,7 @@ export function MediaPicker({ open, onClose, onPick, articleId }: { open: boolea
           </label>
           <button type="button" className="btn ml-auto" onClick={onClose}>Close</button>
         </div>
-        {error && <p className="m-3 rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>}
+        {error && <p className="m-3 rounded bg-red-500/10 p-2 text-sm text-red-300">{error}</p>}
         <div className="grid flex-1 grid-cols-3 gap-2 overflow-y-auto p-3 sm:grid-cols-4 md:grid-cols-6">
           {busy && <p className="col-span-full text-sm text-neutral-500">Working…</p>}
           {!busy && items.length === 0 && <p className="col-span-full text-sm text-neutral-500">No images yet. Upload one.</p>}

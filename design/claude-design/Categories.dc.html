@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sections</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif; min-height: 1000px">
+<dc-import name="AdminSidebar" active="sections" hint-size="248px,1000px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-wrap: wrap; gap: 24px; align-content: flex-start; box-sizing: border-box">
+<h1 style="flex: 1 1 100%; margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Sections</h1>
+<div style="flex: 999 1 480px; min-width: 0; overflow-x: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; align-self: flex-start">
+<table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: 14px">
+<thead><tr style="text-align: left; color: #8a8a8a; font-size: 12px">
+<th scope="col" style="padding: 12px 16px; font-weight: 500">English</th><th scope="col" style="padding: 12px 16px; font-weight: 500">বাংলা</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Slug</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Articles</th><th scope="col" style="padding: 12px 16px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Actions</span></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<tr style="border-top: 1px solid rgba(255,255,255,0.06)">
+<td style="padding: 14px 16px">{{r.en}}</td><td style="padding: 14px 16px; color: #c4c4c4">{{r.bn}}</td><td style="padding: 14px 16px; color: #8a8a8a">{{r.slug}}</td><td style="padding: 14px 16px; color: #8a8a8a">[n]</td>
+<td style="padding: 14px 16px; text-align: right"><button type="button" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #c4c4c4; font: inherit; font-size: 13px">Edit</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<form style="flex: 1 1 300px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px; align-self: flex-start">
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">New section</h2>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Name (English)<input style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">নাম (বাংলা)<input style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Slug<input style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Description<textarea rows="3" style="padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></textarea></label>
+<button type="submit" style="height: 40px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Add section</button>
+</form>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return { rows: [
+{ en: 'Bangladesh', bn: 'বাংলাদেশ', slug: 'bangladesh' }, { en: 'Politics', bn: 'রাজনীতি', slug: 'politics' },
+{ en: 'World', bn: 'বিশ্ব', slug: 'world' }, { en: 'Sport', bn: 'খেলা', slug: 'sport' },
+{ en: 'Tech', bn: 'প্রযুক্তি', slug: 'tech' }, { en: 'Entertainment', bn: 'বিনোদন', slug: 'entertainment' }
+] };
+}
+}
+</script>
+</body>
+</html>

@@ -182,3 +182,26 @@ export interface SyncRun {
   started_at: string;
   finished_at: string | null;
 }
+
+export type BrandDealStage = "lead" | "negotiating" | "contracted" | "in_production" | "published" | "cancelled";
+
+export interface BrandDeal {
+  id: string;
+  brand_name: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  stage: BrandDealStage;
+  deliverables: string | null;
+  fee_amount: number | null;
+  currency: string;
+  due_date: string | null;
+  owner_id: string | null;
+  article_id: string | null;
+  brief_approved: boolean;
+  brand_signoff: boolean;
+  invoice_sent: boolean;
+  paid: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}

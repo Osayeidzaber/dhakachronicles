@@ -1,4 +1,6 @@
 import { requirePageSession } from "@/lib/auth/session";
+import { HoldSubmit } from "@/components/admin/form-controls";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { Empty, Flash, PageHeader } from "@/components/admin/ui";
 import { deleteCategoryAction, saveCategoryAction } from "../actions";
@@ -32,7 +34,7 @@ export default async function CategoriesPage({ searchParams }: { searchParams: P
       <form action={saveCategoryAction.bind(null, null)} className="card mb-6 space-y-2">
         <h2 className="font-semibold">Add category</h2>
         <Fields />
-        <button className="btn btn-primary">Add</button>
+        <SubmitButton className="btn btn-primary" pendingLabel="Adding…">Add</SubmitButton>
       </form>
       {rows.length === 0 ? (
         <Empty>No categories yet.</Empty>
@@ -45,7 +47,7 @@ export default async function CategoriesPage({ searchParams }: { searchParams: P
                 <button className="btn">Save</button>
               </form>
               <form action={deleteCategoryAction.bind(null, c.id)}>
-                <button className="btn btn-danger">Delete</button>
+                <HoldSubmit className="" doneLabel="Deleting…">Hold to delete</HoldSubmit>
               </form>
             </div>
           ))}

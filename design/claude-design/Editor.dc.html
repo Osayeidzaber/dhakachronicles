@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit article</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1300px">
+<dc-import name="AdminSidebar" active="articles" hint-size="248px,1300px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; box-sizing: border-box">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 32px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+<div style="display: flex; align-items: center; gap: 12px; font-size: 13px; color: #8a8a8a">
+<a href="Articles.dc.html" style="color: #8a8a8a">← Articles</a>
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2); color: #fff">Draft</span>
+<span>From Instagram · Saved</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<a href="Preview.dc.html" style="height: 40px; padding: 0 16px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; display: flex; align-items: center; font-size: 14px">Preview</a>
+<button type="button" style="height: 40px; padding: 0 16px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; background: transparent; color: #fff; font: inherit; font-size: 14px">Submit for review</button>
+<button type="button" style="height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Publish</button>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; flex: 1">
+<section style="flex: 999 1 520px; min-width: 0; padding: 40px 48px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box">
+<label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; color: #8a8a8a">Title</span>
+<textarea rows="2" style="background: transparent; border: 0; color: #fff; font-family: 'Instrument Serif', Georgia, serif; font-size: 48px; line-height: 1.05; resize: none; outline: none">More than 100 teenage gang members stage armed display in Kadamtali</textarea></label>
+<label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; color: #8a8a8a">Subtitle</span>
+<input value="Residents say police did not respond despite being informed." style="background: transparent; border: 0; border-bottom: 1px solid rgba(255,255,255,0.08); color: #a3a3a3; font: inherit; font-size: 18px; padding: 8px 0; outline: none"></label>
+<div role="toolbar" aria-label="Formatting" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: #070707">
+<sc-for list="{{tools}}" as="t" hint-placeholder-count="10">
+<button type="button" aria-label="{{t.label}}" style="min-width: 36px; height: 36px; padding: 0 10px; border-radius: 8px; border: 0; background: transparent; color: #c4c4c4; font: inherit; font-size: 13px; cursor: pointer">{{t.short}}</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 18px; font-size: 18px; line-height: 1.75; color: #e0e0e0">
+<p style="margin: 0">More than 100 teenage gang members staged an armed display in Dhaka’s Kadamtali area on Friday afternoon, causing fear among local residents.</p>
+<p style="margin: 0">Witnesses said the youths carried machetes, hockey sticks and knives while marching through Palashpur Road No. 4, near Smritidhara PNP School and other areas at around 4:15 pm.</p>
+<div style="aspect-ratio: 4 / 5; max-width: 360px; border-radius: 12px; background: linear-gradient(135deg, #1f1f1f, #000); display: flex; align-items: flex-end; padding: 12px; box-sizing: border-box; font-size: 12px; color: #8a8a8a">Image imported from the Instagram post</div>
+<p style="margin: 0">Kadamtali Police Station Officer-in-Charge Sheikh Ashrafuzzaman said police had been sent to the area…</p>
+</div>
+</section>
+<aside style="flex: 1 1 320px; padding: 24px; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 16px; box-sizing: border-box">
+<sc-for list="{{panels}}" as="p" hint-placeholder-count="5">
+<div style="border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 13px; font-weight: 500">{{p.title}}</h2>
+<sc-for list="{{p.rows}}" as="r" hint-placeholder-count="2">
+<div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px"><span style="color: #8a8a8a">{{r.k}}</span><span style="color: #e0e0e0; text-align: right">{{r.v}}</span></div>
+</sc-for>
+</div>
+</sc-for>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+const tl = [['Heading', 'H2'], ['Bold', 'B'], ['Italic', 'I'], ['Bulleted list', '•'], ['Numbered list', '1.'], ['Quote', '“'], ['Link', 'Link'], ['Image', 'Img'], ['YouTube embed', 'YT'], ['Divider', '—']];
+return {
+tools: tl.map(([label, short]) => ({ label, short })),
+panels: [
+{ title: 'Publishing', rows: [{ k: 'Status', v: 'Draft' }, { k: 'Schedule', v: 'Not set' }, { k: 'Breaking', v: 'Off' }, { k: 'Featured', v: 'Off' }] },
+{ title: 'Details', rows: [{ k: 'Language', v: 'English' }, { k: 'Section', v: 'Bangladesh' }, { k: 'Author', v: '[Choose author]' }, { k: 'Tags', v: 'Kadamtali, Dhaka' }] },
+{ title: 'Translation', rows: [{ k: 'বাংলা', v: 'Not started · Create' }] },
+{ title: 'SEO', rows: [{ k: 'Slug', v: 'kadamtali-teen-gang-armed-display' }, { k: 'Meta title', v: '62 / 60 characters' }, { k: 'Featured image alt', v: 'Missing' }] },
+{ title: 'Instagram source', rows: [{ k: 'Post', v: 'DftA5Xkk3-B' }, { k: 'Posted', v: '13 Nov 2026' }] }
+]
+};
+}
+}
+</script>
+</body>
+</html>

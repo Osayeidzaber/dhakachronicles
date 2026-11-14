@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Site header</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<header style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif; border-bottom: 1px solid rgba(255,255,255,0.08)">
+<div style="border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 12px; color: #8a8a8a">
+<div style="max-width: 1280px; margin: 0 auto; padding: 10px 32px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px">
+<span>{{t.date}}</span>
+<div style="display: flex; gap: 20px">
+<a href="{{t.otherHref}}" style="color: #c4c4c4">{{t.other}}</a>
+<a href="Login.dc.html" style="color: #8a8a8a">{{t.staff}}</a>
+</div>
+</div>
+</div>
+<div style="max-width: 1280px; margin: 0 auto; padding: 28px 32px 0">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<button type="button" aria-label="{{t.menu}}" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #fff; display: grid; place-items: center; cursor: pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+</button>
+<a href="Main.dc.html" style="flex: 1; text-align: center; font-family: {{t.logoFont}}; font-size: 60px; line-height: 1; letter-spacing: -0.01em">{{t.name}}</a>
+<form action="Search.dc.html" role="search" style="margin: 0">
+<label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; color: #8a8a8a; font-size: 14px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">{{t.search}}</span>
+<input name="q" type="search" placeholder="{{t.searchPh}}" style="width: 180px; background: transparent; border: 0; outline: none; color: #fff; font: inherit">
+</label>
+</form>
+</div>
+<p style="margin: 8px 0 0; text-align: center; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #8a8a8a">{{t.tagline}}</p>
+<nav aria-label="Sections" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); overflow-x: auto">
+<ul style="list-style: none; margin: 0; padding: 14px 0; display: flex; justify-content: center; gap: 28px; font-size: 14px; white-space: nowrap">
+<sc-for list="{{t.nav}}" as="n" hint-placeholder-count="10">
+<li><a href="{{n.href}}" style="color: #c4c4c4">{{n.label}}</a></li>
+</sc-for>
+</ul>
+</nav>
+</div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lang":{"editor":"enum","options":["en","bn"],"default":"en"},"$preview":{"width":1440,"height":240}}'>
+class Component extends DCLogic {
+renderVals() {
+const bn = (this.props.lang ?? 'en') === 'bn';
+const cats = bn
+? ['প্রচ্ছদ', 'সর্বশেষ', 'বাংলাদেশ', 'রাজনীতি', 'বিশ্ব', 'খেলা', 'প্রযুক্তি', 'বিনোদন']
+: ['Home', 'Latest', 'Bangladesh', 'Politics', 'World', 'Sport', 'Tech', 'Entertainment'];
+const hrefs = ['Main.dc.html', 'Latest.dc.html'];
+return { t: {
+date: bn ? 'শনিবার, ১৪ নভেম্বর ২০২৬ · ঢাকা' : 'Saturday, 14 November 2026 · Dhaka',
+other: bn ? 'English edition' : 'বাংলা সংস্করণ',
+otherHref: bn ? 'Main.dc.html' : 'HomeBn.dc.html',
+staff: bn ? 'স্টাফ' : 'Staff',
+menu: bn ? 'মেনু' : 'Menu',
+name: bn ? 'ঢাকা ক্রনিকলস' : 'Dhaka Chronicles',
+logoFont: bn ? "'Hind Siliguri', sans-serif" : "'Instrument Serif', Georgia, serif",
+search: bn ? 'খুঁজুন' : 'Search',
+searchPh: bn ? 'খবর খুঁজুন…' : 'Search the news…',
+tagline: bn ? 'সময়োপযোগী, নির্ভুল ও আকর্ষণীয় সংবাদ' : 'Timely, accurate, engaging news & media',
+nav: cats.map((label, i) => ({ label, href: hrefs[i] ?? 'Category.dc.html' }))
+} };
+}
+}
+</script>
+</body>
+</html>

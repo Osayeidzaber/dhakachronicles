@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SpotlightCard from "@/components/ui/vendor/reactbits/SpotlightCard";
 import { Camera as Instagram, Plus, Star } from "lucide-react";
 import { requirePageSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
@@ -55,8 +56,10 @@ export default async function Overview({ searchParams }: { searchParams: Promise
     <>
       <header className="reveal flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted">{today}</p>
-          <h1 className="font-display mt-1 text-[clamp(2.4rem,4vw,3.3rem)] leading-none">Welcome back, {first}.</h1>
+          <p className="kicker">
+            {today} · Welcome back, {first}
+          </p>
+          <h1 className="font-display mt-2 text-[clamp(2.4rem,4vw,3.3rem)] leading-none">Overview</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <nav className="seg" aria-label="Range">
@@ -66,6 +69,9 @@ export default async function Overview({ searchParams }: { searchParams: Promise
               </Link>
             ))}
           </nav>
+          <Link href="/admin/instagram?tab=browse" className="btn">
+            Sync Instagram
+          </Link>
           <Link href="/admin/articles/new" className="btn btn-primary">
             <Plus className="h-4 w-4" aria-hidden="true" /> New article
           </Link>
@@ -76,14 +82,14 @@ export default async function Overview({ searchParams }: { searchParams: Promise
       <Stagger className="mt-7 grid gap-4">
         {/* KPIs */}
         <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <div className="card flex flex-col gap-3.5 border-white/10">
+          <SpotlightCard className="flex flex-col gap-3.5 rounded-2xl p-5">
             <div className="flex items-center justify-between text-[13px] text-muted">
               <span>Reading now</span>
               <span className="live-dot" aria-hidden="true" />
             </div>
             <LiveReaders initial={d.live.total} />
             <span className="text-xs text-muted">Live · last 90 seconds</span>
-          </div>
+          </SpotlightCard>
           <Kpi label={range === "today" ? "Views today" : `Views · ${RANGES.find((r) => r.id === range)!.label}`} value={d.views.current.toLocaleString()} pct={pctChange(d.views.current, d.views.previous)} compare={compare} />
           <Kpi label="Stories published" value={d.publishedInRange.current.toLocaleString()} pct={pctChange(d.publishedInRange.current, d.publishedInRange.previous)} compare={compare} />
           <Kpi
@@ -362,11 +368,11 @@ export default async function Overview({ searchParams }: { searchParams: Promise
 
 function Kpi({ label, value, pct, compare, note }: { label: string; value: string; pct: number | null; compare: string; note?: string }) {
   return (
-    <div className="card flex flex-col gap-3.5">
+    <SpotlightCard className="flex flex-col gap-3.5 rounded-2xl p-5">
       <span className="text-[13px] text-muted">{label}</span>
       <span className="text-[40px] leading-none font-medium tracking-[-0.03em] tabular-nums">{value}</span>
       {note ? <span className="text-xs text-muted">{note}</span> : <Delta pct={pct} suffix={compare} />}
-    </div>
+    </SpotlightCard>
   );
 }
 

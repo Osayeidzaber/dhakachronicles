@@ -221,11 +221,11 @@ export function ArticleEditor(props: EditorProps) {
     <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
       <div className="space-y-4" lang={form.language}>
         {message && (
-          <p role={message.kind === "error" ? "alert" : "status"} className={`rounded p-3 text-sm ${message.kind === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>
+          <p role={message.kind === "error" ? "alert" : "status"} className={`rounded p-3 text-sm ${message.kind === "error" ? "bg-red-500/10 text-red-300" : "bg-emerald-500/10 text-emerald-300"}`}>
             {message.text}
           </p>
         )}
-        {readOnly && <p className="rounded bg-amber-50 p-3 text-sm text-amber-800">You can view this article but not edit it in its current status.</p>}
+        {readOnly && <p className="rounded bg-amber-500/10 p-3 text-sm text-amber-200">You can view this article but not edit it in its current status.</p>}
         <fieldset disabled={readOnly} className="space-y-4">
           <label className={field}>
             Headline
@@ -247,7 +247,7 @@ export function ArticleEditor(props: EditorProps) {
             <input className="input mt-1" value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} maxLength={500} />
           </label>
           <label className={field}>
-            Slug {duplicateSlug && <span className="text-red-700">— already used in this language</span>}
+            Slug {duplicateSlug && <span className="text-red-300">— already used in this language</span>}
             <input
               className="input mt-1 font-mono"
               value={form.slug}
@@ -435,11 +435,11 @@ export function ArticleEditor(props: EditorProps) {
           </label>
           <ul className="space-y-1 text-xs">
             {seoIssues.map((i, n) => (
-              <li key={n} className={i.severity === "error" ? "text-red-700" : i.severity === "warning" ? "text-amber-700" : "text-neutral-500"}>
+              <li key={n} className={i.severity === "error" ? "text-red-300" : i.severity === "warning" ? "text-amber-200" : "text-neutral-500"}>
                 {i.severity === "error" ? "✕" : i.severity === "warning" ? "!" : "·"} {i.message}
               </li>
             ))}
-            {!seoIssues.length && <li className="text-green-700">No SEO issues found.</li>}
+            {!seoIssues.length && <li className="text-emerald-300">No SEO issues found.</li>}
           </ul>
           <p className="text-xs text-neutral-400">This checklist covers metadata quality only; it does not predict search rankings.</p>
         </fieldset>

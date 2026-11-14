@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Latest news</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif">
+<dc-import name="SiteHeader" lang="en" hint-size="100%,240px"></dc-import>
+<main style="max-width: 1280px; margin: 0 auto; padding: 56px 32px 80px; display: flex; flex-direction: column; gap: 40px">
+<header style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #8a8a8a">Live feed</span>
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 72px; line-height: 1">Latest news</h1>
+<p style="margin: 0; font-size: 17px; color: #a3a3a3">Every story as it is published, newest first.</p>
+</header>
+<div style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.08)">
+<sc-for list="{{items}}" as="a" hint-placeholder-count="6">
+<dc-import name="ArticleCard" variant="row" a="{{a}}" hint-size="100%,240px"></dc-import>
+</sc-for>
+</div>
+<dc-import name="Pagination" lang="en" page="{{1}}" total="{{4}}" hint-size="100%,90px"></dc-import>
+</main>
+<dc-import name="SiteFooter" lang="en" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { items: [
+{ date: '13 Nov',cat: 'Entertainment', title: 'GTA 6 pop-up store opens in Selfridges on Oxford Street', dek: 'The store is a few minutes from Bond Street station on the Central, Jubilee and Elizabeth lines.' },
+{ date: '13 Nov',cat: 'Sport', title: 'Argentina lose 2-1 to Uruguay in first match since Messi’s retirement', dek: 'A Balerdi own goal and a Maxi Araujo strike put Uruguay ahead; Julian Alvarez pulled one back in the 73rd minute.' },
+{ date: '13 Nov',cat: 'Tech', title: 'Logitech gives 7,000+ employees an extra day off to play video games', dek: 'The “Logi Game Day” lands as GTA 6 prepares for release on 19 November.' },
+{ date: '13 Nov',cat: 'Bangladesh', title: 'More than 100 teenage gang members stage armed display in Kadamtali', dek: 'Residents say police did not respond despite being informed.' },
+{ date: '13 Nov',cat: 'Bangladesh', title: 'Chinese nationals stop filming in Uttara after police step up surveillance', dek: 'Police checked passports and visas and questioned the group.' },
+{ date: '13 Nov',cat: 'World', title: 'FAA halts all departing US flights after communications outage', dek: 'More than 10,000 delays and around 4,000 cancellations were reported.' }
+] };
+}
+}
+</script>
+</body>
+</html>

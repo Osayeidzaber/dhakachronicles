@@ -49,3 +49,31 @@ npm test
 ```
 Runs every migration in an in-memory Postgres (PGlite) and checks slugs, translations, scheduled publishing,
 duplicate Instagram imports and RLS (anonymous users can't see drafts, writers can't publish, no self-promotion).
+
+## Staff invitation email (custom HTML)
+
+Invites use our own email design in `supabase/templates/invite.html`.
+
+- **Local (`supabase start`)**: already wired in `supabase/config.toml` (`[auth.email.template.invite]`).
+- **Hosted project**: Dashboard → Authentication → Emails → Templates → **Invite user**.
+  Subject: `You're invited to the Dhaka Chronicles newsroom`. Paste the whole HTML file into the body.
+- Dashboard → Authentication → URL Configuration: set **Site URL** to your `SITE_URL`, and add
+  `https://YOUR-DOMAIN/auth/confirm` to the redirect allow-list.
+
+The email links to `/auth/confirm?token_hash=…&type=invite`, which verifies the token on the server,
+signs the person in with an httpOnly cookie, and sends them to `/set-password` to choose a password and name.
+For real delivery volume, configure custom SMTP (Authentication → Emails → SMTP settings); Supabase's
+built-in sender is rate-limited.
+
+### Free plan: custom SMTP is required for the custom email
+
+Supabase's free plan refuses custom email templates while it sends mail itself. To use our invite design:
+1. Pick an SMTP provider (e.g. Resend, Postmark, Brevo or a Google Workspace app password) and verify the sending domain.
+2. Dashboard → Authentication → Emails → SMTP settings, or `[auth.email.smtp]` in `supabase/config.toml`
+   with `pass = "env(SMTP_PASS)"`.
+3. Uncomment `[auth.email.template.invite]` in `supabase/config.toml` and run `npx supabase config push`.
+
+Until then, invites still work: Supabase sends its plain default email, and its link still lands on
+`/auth/confirm` → `/set-password` only if the default template's link is changed. With the default template the
+link goes to the Site URL with a session in the URL fragment, which the app does not read; so set up SMTP before
+inviting staff, or create accounts with a starting password from Team → "Create account".

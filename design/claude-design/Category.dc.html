@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Category — Bangladesh</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif">
+<dc-import name="SiteHeader" lang="en" hint-size="100%,240px"></dc-import>
+<main style="max-width: 1280px; margin: 0 auto; padding: 56px 32px 80px; display: flex; flex-direction: column; gap: 48px">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid #fff">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">Section</span>
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 88px; line-height: 0.95">Bangladesh</h1>
+</div>
+<p style="margin: 0; max-width: 420px; font-size: 16px; line-height: 1.6; color: #a3a3a3">[Section description, set by editors in the CMS]</p>
+</header>
+<section style="display: flex; flex-wrap: wrap; gap: 40px">
+<div style="flex: 999 1 600px; min-width: 0"><dc-import name="ArticleCard" variant="lead" a="{{lead}}" hint-size="100%,760px"></dc-import></div>
+<div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 32px">
+<sc-for list="{{second}}" as="s" hint-placeholder-count="2">
+<dc-import name="ArticleCard" variant="card" a="{{s}}" hint-size="100%,400px"></dc-import>
+</sc-for>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.08)">
+<sc-for list="{{rest}}" as="a" hint-placeholder-count="2">
+<dc-import name="ArticleCard" variant="row" a="{{a}}" hint-size="100%,240px"></dc-import>
+</sc-for>
+</section>
+<dc-import name="Pagination" lang="en" page="{{1}}" total="{{2}}" hint-size="100%,90px"></dc-import>
+</main>
+<dc-import name="SiteFooter" lang="en" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+renderVals() {
+const A = (cat, title, dek) => ({ cat, date: '13 Nov', title, dek, author: 'Dhaka Chronicles' });
+return {
+lead: A('Bangladesh', 'More than 100 teenage gang members stage armed display in Kadamtali', 'Witnesses said the youths carried machetes, hockey sticks and knives along Palashpur Road No. 4.'),
+second: [
+A('Bangladesh', 'Chinese nationals stop filming in Uttara after police step up surveillance', 'Police checked passports and visas and questioned the group.'),
+A('Bangladesh', 'Abdur Rahman Sunny, APS to the Prime Minister, spotted at Durbin Bangla after vandalism', '')
+],
+rest: [
+A('Politics', 'British politicians urge UK to seek guarantees Sheikh Hasina will not face execution', 'The Economic Times reported the letter from six politicians.'),
+A('Politics', 'India wants Bangladesh Army to take responsibility for Hasina’s return', 'According to a BBC Bangla report.')
+]
+};
+}
+}
+</script>
+</body>
+</html>

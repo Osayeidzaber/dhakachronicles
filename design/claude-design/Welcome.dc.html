@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; padding: 48px; box-sizing: border-box">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center; max-width: 640px">
+<span style="width: 96px; height: 96px; border-radius: 999px; background: linear-gradient(135deg, #1f1f1f, #000); border: 1px solid rgba(255,255,255,0.14); display: grid; place-items: center; font-size: 28px" aria-hidden="true">[A]</span>
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">[Role] · Dhaka Chronicles newsroom</span>
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 88px; line-height: 0.95">Welcome back, <br>[first name].</h1>
+<div style="width: 240px; height: 2px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden"><div style="width: 60%; height: 2px; background: #fff"></div></div>
+<a href="Dashboard.dc.html" style="font-size: 14px; color: #a3a3a3">Opening your dashboard… Skip →</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic { renderVals() { return {}; } }
+</script>
+</body>
+</html>

@@ -37,7 +37,7 @@ type Settings = {
 
 const THEMES: Record<'dark' | 'light', Palette> = {
   dark: {
-    surface: '#111111',
+    surface: '#070707', // Dhaka Chronicles surface
     border: 'rgba(255, 255, 255, 0.08)',
     shadow: '0 24px 48px -24px rgba(0, 0, 0, 0.6)',
     light: '#ffffff',
@@ -85,11 +85,11 @@ const SpotlightCard = ({
   className = '',
   style,
   spotlightColor,
-  intensity = 0.15,
-  spotlightSize = 240,
+  intensity = 0.1,
+  spotlightSize = 260,
   softness = 0.7,
   shape = 'circle',
-  borderGlow = 0.6,
+  borderGlow = 0.45,
   proximity = 80,
   smoothing = 0.3,
   ambient = false,

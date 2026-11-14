@@ -123,15 +123,43 @@ export async function transitionArticle(id: string, raw: TransitionInput | unkno
     });
   }
   revalidateArticle(article);
-  if (article.status === "published" && existing.status !== "published") {
-    const { notifyDiscord } = await import("@/lib/discord");
+  const kind =
+    article.status === "published" && existing.status !== "published"
+      ? "published"
+      : article.status === "pending_review" && existing.status !== "pending_review"
+        ? "submitted"
+        : article.status === "scheduled" && existing.status !== "scheduled"
+          ? "scheduled"
+          : existing.status === "published" && article.status === "archived"
+            ? "archived"
+            : existing.status === "published" && article.status !== "published"
+              ? "unpublished"
+              : null;
+  if (kind) {
+    const { notifyArticle } = await import("@/lib/discord");
     const { siteUrl } = await import("@/lib/env");
     const { articlePath } = await import("@/lib/seo/defaults");
-    await notifyDiscord("article_published", {
+    const live = kind === "published";
+    const admin = (await import("@/lib/supabase/admin")).createAdminClient();
+    const { data: extra } = await admin
+      .from("articles")
+      .select("category:categories(name_en, name_bn), featured_image:media!articles_featured_image_id_fkey(public_url)")
+      .eq("id", id)
+      .maybeSingle();
+    const cat = (extra?.category ?? null) as { name_en?: string; name_bn?: string } | null;
+    await notifyArticle({
+      imageUrl: (extra?.featured_image as { public_url?: string } | null)?.public_url ?? null,
+      section: (article.language === "bn" ? cat?.name_bn : cat?.name_en) ?? null,
+      kind,
       title: article.title,
-      description: article.excerpt ?? undefined,
-      url: `${siteUrl()}${articlePath(article.language, article.slug)}`,
-      fields: [{ name: "By", value: session.profile.full_name || session.email || "Staff" }],
+      excerpt: article.excerpt,
+      language: article.language,
+      actor: session.profile.full_name || session.email || "Staff",
+      scheduledFor: kind === "scheduled" ? article.scheduled_at : null,
+      url: live ? `${siteUrl()}${articlePath(article.language, article.slug)}` : `${siteUrl()}/admin/articles/${id}`,
+      siteUrl: live ? `${siteUrl()}${articlePath(article.language, article.slug)}` : null,
+      adminUrl: `${siteUrl()}/admin/articles/${id}`,
+      sourceUrl: article.source_type === "instagram" ? article.source_url : null,
     });
   }
   return article;

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HoldSubmit } from "@/components/admin/form-controls";
 import { notFound } from "next/navigation";
 import { requirePageSession } from "@/lib/auth/session";
 import { can, canEditArticle } from "@/lib/auth/permissions";
@@ -126,7 +127,7 @@ export default async function EditArticlePage({
           </dl>
           {can(session.profile.role, "article.delete") && (
             <form action={deleteArticleAction.bind(null, id)} className="mt-4">
-              <button className="btn btn-danger">Delete permanently</button>
+              <HoldSubmit className="" doneLabel="Deleting…">Hold to delete permanently</HoldSubmit>
             </form>
           )}
         </section>

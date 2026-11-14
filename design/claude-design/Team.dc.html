@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Team</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1000px">
+<dc-import name="AdminSidebar" active="team" hint-size="248px,1000px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 24px; box-sizing: border-box">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Team</h1>
+<form style="display: flex; flex-wrap: wrap; gap: 8px; padding: 20px; border: 1px solid rgba(255,255,255,0.08); background: #070707; border-radius: 16px">
+<label style="flex: 1 1 260px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Email</span><input type="email" placeholder="Invite by email" style="width: 100%; box-sizing: border-box; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit; font-size: 14px"></label>
+<label><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Role</span><select style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit; font-size: 14px"><option>Writer</option><option>Editor</option><option>Admin</option></select></label>
+<button type="submit" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Send invite</button>
+</form>
+<div style="overflow-x: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px">
+<table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px">
+<thead><tr style="text-align: left; color: #8a8a8a; font-size: 12px"><th scope="col" style="padding: 12px 16px; font-weight: 500">Member</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Role</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Status</th><th scope="col" style="padding: 12px 16px; font-weight: 500">Last active</th><th scope="col" style="padding: 12px 16px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Actions</span></th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+<tr style="border-top: 1px solid rgba(255,255,255,0.06)">
+<td style="padding: 14px 16px"><span style="display: flex; align-items: center; gap: 10px"><span style="width: 32px; height: 32px; border-radius: 999px; background: #1f1f1f; display: grid; place-items: center; font-size: 12px" aria-hidden="true">[A]</span><span style="display: flex; flex-direction: column"><span>[Name]</span><span style="font-size: 12px; color: #8a8a8a">[email]</span></span></span></td>
+<td style="padding: 14px 16px; color: #c4c4c4">{{r.role}}</td>
+<td style="padding: 14px 16px"><span style="font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.2)">{{r.status}}</span></td>
+<td style="padding: 14px 16px; color: #8a8a8a">[date]</td>
+<td style="padding: 14px 16px; text-align: right"><button type="button" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #c4c4c4; font: inherit; font-size: 13px">{{r.action}}</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; font-size: 13px; color: #8a8a8a">You can’t change your own role. Public sign-up is off; only admins invite staff.</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return { rows: [
+{ role: 'Admin', status: 'Active', action: 'You' },
+{ role: 'Editor', status: 'Active', action: 'Manage' },
+{ role: 'Writer', status: 'Invited', action: 'Resend' }
+] };
+}
+}
+</script>
+</body>
+</html>

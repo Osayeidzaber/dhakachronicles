@@ -15,5 +15,5 @@ export default async function LatestPage({ params, searchParams }: { params: Pro
   if (!isLang(lang)) notFound();
   if (!isConfigured()) return null;
   const page = await listLatest(lang, { page: pageParam(sp.page) });
-  return <ArticleListPage lang={lang} title={t(lang, "latest")} page={page} href={(p) => `/${lang}/latest?page=${p}`} />;
+  return <ArticleListPage lang={lang} kicker={t(lang, "liveFeed")} title={t(lang, "latest")} intro={<p>{t(lang, "latestIntro")}</p>} page={page} href={(p) => `/${lang}/latest?page=${p}`} />;
 }

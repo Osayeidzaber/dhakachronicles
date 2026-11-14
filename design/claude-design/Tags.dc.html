@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tags</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1000px">
+<dc-import name="AdminSidebar" active="tags" hint-size="248px,1000px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 24px; box-sizing: border-box">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Tags</h1>
+<form style="display: flex; gap: 8px">
+<label><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">New tag</span><input placeholder="New tag name" style="height: 40px; width: 220px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit; font-size: 14px"></label>
+<button type="submit" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Add</button>
+</form>
+</header>
+<label><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Filter tags</span><input type="search" placeholder="Filter tags…" style="width: 100%; max-width: 420px; height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit; font-size: 14px"></label>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<sc-for list="{{tags}}" as="t" hint-placeholder-count="10">
+<span style="display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px 0 16px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; font-size: 14px">#{{t}} <span style="font-size: 12px; color: #8a8a8a">[n]</span>
+<button type="button" aria-label="Edit tag {{t}}" style="width: 28px; height: 28px; border-radius: 999px; border: 0; background: #141414; color: #c4c4c4; font: inherit; font-size: 12px; cursor: pointer">✎</button></span>
+</sc-for>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return { tags: ['Kadamtali', 'Dhaka', 'Uttara', 'SheikhHasina', 'GTA6', 'Gaming', 'Argentina', 'FAA', 'Palestine', 'USSenate'] };
+}
+}
+</script>
+</body>
+</html>

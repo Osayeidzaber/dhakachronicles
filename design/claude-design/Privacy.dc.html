@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Privacy Policy</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif">
+<dc-import name="SiteHeader" lang="en" hint-size="100%,240px"></dc-import>
+<main style="max-width: 1280px; margin: 0 auto; padding: 56px 32px 80px; display: flex; flex-wrap: wrap; gap: 64px">
+<nav aria-label="On this page" style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; align-self: flex-start">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">On this page</span>
+<sc-for list="{{sections}}" as="s" hint-placeholder-count="6"><a href="#" style="color: #c4c4c4; text-decoration: none">{{s.h}}</a></sc-for>
+</nav>
+<article style="flex: 999 1 560px; min-width: 0; max-width: 720px; display: flex; flex-direction: column; gap: 36px">
+<header style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 24px; border-bottom: 1px solid #fff">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 72px; line-height: 1">Privacy Policy</h1>
+<span style="font-size: 14px; color: #8a8a8a">Last updated 13 November 2026</span>
+</header>
+<sc-for list="{{sections}}" as="s" hint-placeholder-count="6">
+<section style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 32px">{{s.h}}</h2>
+<sc-for list="{{s.p}}" as="p" hint-placeholder-count="2"><p style="margin: 0; font-size: 17px; line-height: 1.75; color: #e0e0e0">{{p}}</p></sc-for>
+</section>
+</sc-for>
+</article>
+</main>
+<dc-import name="SiteFooter" lang="en" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() {
+return { sections: [
+{ h: 'Who we are', p: ['Dhaka Chronicles (dhakachronicles.com) is a news publication. This policy explains what information our website collects and how we use it.'] },
+{ h: 'Readers', p: ['You can read the site without an account. We do not run advertising trackers and we do not sell personal information.', 'We count article views as anonymous daily totals. Your IP address is processed briefly for security (rate limiting) and is not stored with your reading history.', 'Our hosting and media providers (Vercel and Cloudflare) process standard request data, such as IP address and browser type, to deliver the site securely.'] },
+{ h: 'Staff accounts', p: ['Editorial staff sign in with an email address and password managed by Supabase Auth. A secure, httpOnly cookie keeps them signed in. These accounts are created by our administrators only.', 'We keep an audit log of editorial actions (for example, publishing an article) to protect the integrity of our journalism.'] },
+{ h: 'Instagram integration', p: ['We use Meta’s official Instagram API only to read posts from our own Instagram account, @dhakachronicles. We import those posts’ captions, images, timestamps and links into our editorial system as drafts.', 'We do not access, collect or store data about other Instagram users. The access token for our account is stored encrypted and is used only by our servers.'] },
+{ h: 'Data deletion', p: ['To disconnect our Instagram account, an administrator uses the Disconnect option in our dashboard, which deletes the stored access token. You can also remove the app from Instagram under Settings → Website permissions → Apps and websites.', 'Staff may ask an administrator to delete their account. Readers may contact us to ask about any data related to them.'] },
+{ h: 'Contact', p: ['For privacy questions or deletion requests, contact us through our Instagram account @dhakachronicles.'] }
+] };
+}
+}
+</script>
+</body>
+</html>

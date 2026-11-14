@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Author</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif">
+<dc-import name="SiteHeader" lang="en" hint-size="100%,240px"></dc-import>
+<main style="max-width: 1280px; margin: 0 auto; padding: 56px 32px 80px; display: flex; flex-direction: column; gap: 48px">
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 32px; padding-bottom: 40px; border-bottom: 1px solid #fff">
+<div style="width: 128px; height: 128px; border-radius: 999px; background: linear-gradient(135deg, #161616, #000); border: 1px solid rgba(255,255,255,0.14); display: grid; place-items: center; font-family: 'Instrument Serif', Georgia, serif; font-size: 44px" aria-hidden="true">DC</div>
+<div style="flex: 1 1 400px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">[Role, e.g. Staff reporter]</span>
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 72px; line-height: 1">[Author name]</h1>
+<p style="margin: 0; max-width: 620px; font-size: 17px; line-height: 1.6; color: #a3a3a3">[Short bio from the Authors page in the CMS]</p>
+<div style="display: flex; gap: 8px; margin-top: 8px">
+<a href="#" style="height: 40px; padding: 0 16px; display: inline-flex; align-items: center; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; font-size: 14px">[Social link]</a>
+</div>
+</div>
+</header>
+<section style="display: flex; flex-direction: column">
+<h2 style="margin: 0 0 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">Stories</h2>
+<sc-for list="{{items}}" as="a" hint-placeholder-count="4">
+<dc-import name="ArticleCard" variant="row" a="{{a}}" hint-size="100%,240px"></dc-import>
+</sc-for>
+</section>
+<dc-import name="Pagination" lang="en" page="{{1}}" total="{{3}}" hint-size="100%,90px"></dc-import>
+</main>
+<dc-import name="SiteFooter" lang="en" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+renderVals() {
+const A = (cat, title, dek) => ({ cat, date: '13 Nov', title, dek });
+return { items: [
+A('Bangladesh', 'More than 100 teenage gang members stage armed display in Kadamtali', 'Residents say police did not respond despite being informed.'),
+A('World', 'FAA halts all departing US flights after communications outage', 'More than 10,000 delays and around 4,000 cancellations were reported.'),
+A('Sport', 'Argentina lose 2-1 to Uruguay in first match since Messi’s international retirement', 'Julian Alvarez pulled one back in the 73rd minute.'),
+A('Tech', 'Logitech gives 7,000+ employees an extra day off to play video games', 'The “Logi Game Day” initiative was announced on Tuesday.')
+] };
+}
+}
+</script>
+</body>
+</html>

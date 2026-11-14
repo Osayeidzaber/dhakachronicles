@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dhaka Chronicles — Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: Inter, 'Hind Siliguri', system-ui, sans-serif; min-height: 100vh">
+<dc-import name="SiteHeader" lang="en" hint-size="100%,240px"></dc-import>
+
+<div style="border-bottom: 1px solid rgba(255,255,255,0.08)">
+<div style="max-width: 1280px; margin: 0 auto; padding: 12px 32px; display: flex; gap: 16px; align-items: center; overflow: hidden">
+<span style="flex: none; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; background: #fff; color: #000; padding: 2px 8px; border-radius: 2px">Breaking</span>
+<a href="Article.dc.html" style="font-size: 14px; white-space: nowrap">FAA halts all departing US flights after air traffic communications outage</a>
+<span style="color: #5c5c5c" aria-hidden="true">/</span>
+<a href="Article.dc.html" style="font-size: 14px; white-space: nowrap; color: #a3a3a3">Chinese nationals stop filming in Uttara after police step up surveillance</a>
+</div>
+</div>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 40px 32px 80px; display: flex; flex-direction: column; gap: 64px">
+<section style="display: flex; flex-wrap: wrap; gap: 40px">
+<div style="flex: 999 1 640px; min-width: 0">
+<dc-import name="ArticleCard" variant="lead" a="{{lead}}" hint-size="100%,780px"></dc-import>
+</div>
+<div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 20px; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 32px">
+<h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">Featured</h2>
+<sc-for list="{{featured}}" as="f" hint-placeholder-count="4">
+<dc-import name="ArticleCard" variant="compact" a="{{f}}" hint-size="100%,96px"></dc-import>
+</sc-for>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid #fff; padding-top: 16px">
+<h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 36px">Latest</h2>
+<a href="Latest.dc.html" style="font-size: 14px; color: #a3a3a3">All latest news →</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 40px 32px">
+<sc-for list="{{latest}}" as="a" hint-placeholder-count="8">
+<dc-import name="ArticleCard" variant="card" a="{{a}}" hint-size="100%,420px"></dc-import>
+</sc-for>
+</div>
+</section>
+
+<section style="display: flex; flex-wrap: wrap; gap: 48px">
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<div style="border-top: 1px solid #fff; padding-top: 16px; display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 36px">Politics</h2>
+<a href="Category.dc.html" style="font-size: 14px; color: #a3a3a3">More →</a>
+</div>
+<sc-for list="{{politics}}" as="s" hint-placeholder-count="2">
+<dc-import name="ArticleCard" variant="row" a="{{s}}" hint-size="100%,240px"></dc-import>
+</sc-for>
+</div>
+<aside style="flex: 1 1 300px; align-self: flex-start; background: #070707; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; display: flex; flex-direction: column">
+<h2 style="margin: 0 0 4px; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 30px">Most read</h2>
+<p style="margin: 0 0 12px; font-size: 12px; color: #8a8a8a">Ranked from real page views once live</p>
+<sc-for list="{{mostRead}}" as="m" hint-placeholder-count="5">
+<dc-import name="ArticleCard" variant="text" a="{{m}}" hint-size="100%,72px"></dc-import>
+</sc-for>
+</aside>
+</section>
+
+<section style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; padding: 32px; border: 1px solid rgba(255,255,255,0.14); border-radius: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8a8a">On Instagram · 78.2K followers</span>
+<span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 32px">@dhakachronicles</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="font-size: 13px; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px">Int. Women’s Day</span>
+<span style="font-size: 13px; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px">IndieFest ‘26</span>
+<span style="font-size: 13px; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px">OTB Series</span>
+</div>
+<a href="https://www.instagram.com/dhakachronicles/" style="height: 44px; padding: 0 20px; border-radius: 999px; background: #fff; color: #000; display: flex; align-items: center; font-size: 14px; font-weight: 500">Follow</a>
+</section>
+</main>
+<dc-import name="SiteFooter" lang="en" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+renderVals() {
+const A = (cat, title, dek, extra) => Object.assign({ cat, date: '13 Nov', title, dek, author: 'Dhaka Chronicles', breaking: false }, extra || {});
+const kadamtali = A('Bangladesh', 'More than 100 teenage gang members stage armed display in Kadamtali', 'Witnesses said the youths carried machetes, hockey sticks and knives along Palashpur Road No. 4 on Friday afternoon, causing fear among residents.');
+const ukMps = A('Politics', 'British politicians urge UK to seek guarantees Sheikh Hasina will not face execution', 'Six politicians also called for an independent review of the proceedings behind her death sentence, The Economic Times reported.');
+const india = A('Politics', 'India wants Bangladesh Army to take responsibility for Hasina’s return', 'New Delhi reportedly wants her return on a Bangladeshi military aircraft, according to BBC Bangla.');
+const faa = A('World', 'FAA halts all departing US flights after communications outage', 'More than 10,000 delays and around 4,000 cancellations were reported.', { breaking: true });
+const arg = A('Sport', 'Argentina lose 2-1 to Uruguay in first match since Messi’s international retirement', 'Julian Alvarez pulled one back in the 73rd minute, but Uruguay held on.');
+const uttara = A('Bangladesh', 'Chinese nationals stop filming in Uttara after police step up surveillance', 'Police checked passports and visas and questioned the group.', { breaking: true });
+return {
+lead: kadamtali,
+featured: [ukMps, faa, arg, uttara],
+latest: [
+A('Entertainment', 'GTA 6 pop-up store opens in Selfridges on Oxford Street', 'A few minutes from Bond Street station on the Central, Jubilee and Elizabeth lines.'),
+A('Tech', 'Logitech gives 7,000+ employees an extra day off to play video games', 'The “Logi Game Day” lands as GTA 6 prepares for release on 19 November.'),
+india,
+A('Entertainment', 'Shawn Mendes speaks up for Palestine, urges fellow artists to raise their voices', 'The Canadian singer posted in support of children and families in Gaza.'),
+A('Entertainment', 'Sydney trains take on GTA VI colours ahead of global launch', 'The game releases worldwide on 19 November.'),
+A('Bangladesh', 'Abdur Rahman Sunny, APS to the Prime Minister, spotted at Durbin Bangla after vandalism', ''),
+A('World', 'Abdul El-Sayed to be first US senator sworn in on the Quran', 'Michigan’s senator-elect confirmed the plan in an interview with NPR.', { date: '12 Nov' }),
+faa
+],
+politics: [ukMps, india],
+mostRead: [kadamtali, ukMps, faa, arg, uttara]
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Media library</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; min-height: 1100px">
+<dc-import name="AdminSidebar" active="media" hint-size="248px,1100px"></dc-import>
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-wrap: wrap; box-sizing: border-box">
+<section style="flex: 999 1 520px; min-width: 0; padding: 32px 40px 48px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 48px">Media</h1>
+<span style="font-size: 13px; color: #8a8a8a">Storage: [used] of [limit] · Cloudflare R2</span>
+</header>
+<label style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 32px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 16px; text-align: center; cursor: pointer">
+<span style="font-size: 15px">Drop images here or <span style="text-decoration: underline">browse</span></span>
+<span style="font-size: 12px; color: #8a8a8a">JPG, PNG, WebP · resized to WebP and AVIF · EXIF removed</span>
+<input type="file" multiple style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">
+</label>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px">
+<sc-for list="{{items}}" as="m" hint-placeholder-count="12">
+<button type="button" aria-label="{{m.alt}}" style="{{m.style}}"><span style="position: absolute; left: 8px; bottom: 8px; font-size: 11px; color: #8a8a8a">{{m.src}}</span></button>
+</sc-for>
+</div>
+</section>
+<aside style="flex: 1 1 300px; padding: 32px 24px; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 14px; box-sizing: border-box">
+<div style="aspect-ratio: 4 / 5; border-radius: 12px; background: linear-gradient(135deg, #1f1f1f, #000)"></div>
+<h2 style="margin: 0; font-size: 15px; font-weight: 500">DftA5Xkk3-B.jpg</h2>
+<span style="font-size: 12px; color: #8a8a8a">From Instagram · 13 Nov 2026 · [W×H]</span>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Alt text (English)<input placeholder="Describe the image" style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Alt text (বাংলা)<input style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #c4c4c4">Credit<input style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: #0a0a0a; color: #fff; font: inherit"></label>
+<p style="margin: 0; font-size: 12px; color: #8a8a8a">Used in 1 article. Images used by a published article can’t be deleted.</p>
+<div style="display: flex; gap: 8px">
+<button type="button" style="flex: 1; height: 40px; border-radius: 999px; border: 0; background: #fff; color: #000; font: inherit; font-size: 14px; font-weight: 500">Save</button>
+<button type="button" style="height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(239,68,68,0.4); background: transparent; color: #fca5a5; font: inherit; font-size: 14px">Delete</button>
+</div>
+</aside>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+const ids = ['DftGJm9zzzD', 'DftDPRmEzo8', 'DftBwtuE5Tm', 'DftA5Xkk3-B', 'Dfs_demEyIQ', 'Dfs-rBbk_Qv', 'Dfs9tD5E9ij', 'DfsEBdLTjS8', 'DfrlY5hztl9', 'DfrflX6TpjW', 'DfrZTThziou', 'DfrHtslh-c0'];
+return { items: ids.map((id, i) => ({ src: 'IG · ' + id.slice(0, 6), alt: 'Image from Instagram post ' + id,
+style: 'position: relative; aspect-ratio: 4 / 5; border-radius: 12px; background: linear-gradient(135deg, #1a1a1a, #000); cursor: pointer; ' + (i === 3 ? 'border: 2px solid #fff' : 'border: 1px solid rgba(255,255,255,0.08)') })) };
+}
+}
+</script>
+</body>
+</html>

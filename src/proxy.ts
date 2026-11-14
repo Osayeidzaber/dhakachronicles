@@ -17,7 +17,7 @@ export async function proxy(request: NextRequest) {
   }
   if (path === "/") {
     const url = request.nextUrl.clone();
-    url.pathname = `/${process.env.DEFAULT_LANGUAGE === "en" ? "en" : "bn"}`;
+    url.pathname = `/${process.env.DEFAULT_LANGUAGE === "bn" ? "bn" : "en"}`;
     return NextResponse.redirect(url);
   }
 
@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getUser();
-  if ((path.startsWith("/admin") || path === "/welcome") && !data.user) {
+  if ((path.startsWith("/admin") || path === "/welcome" || path === "/set-password") && !data.user) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
     login.search = `?next=${encodeURIComponent(path)}`;
@@ -50,5 +50,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/privacy", "/admin/:path*", "/login", "/welcome", "/api/media/:path*", "/api/instagram/:path*"],
+  matcher: ["/", "/privacy", "/admin/:path*", "/login", "/welcome", "/set-password", "/auth/:path*", "/api/media/:path*", "/api/instagram/:path*"],
 };

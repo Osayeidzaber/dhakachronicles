@@ -17,7 +17,8 @@ export type Permission =
   | "instagram.manage"
   | "team.manage"
   | "settings.manage"
-  | "audit.view";
+  | "audit.view"
+  | "brand_deals.manage";
 
 const MATRIX: Record<AppRole, readonly Permission[]> = {
   admin: [
@@ -34,6 +35,7 @@ const MATRIX: Record<AppRole, readonly Permission[]> = {
     "team.manage",
     "settings.manage",
     "audit.view",
+    "brand_deals.manage",
   ],
   editor: [
     "article.create",
@@ -44,6 +46,7 @@ const MATRIX: Record<AppRole, readonly Permission[]> = {
     "media.upload",
     "media.manage_any",
     "instagram.view",
+    "brand_deals.manage",
   ],
   writer: ["article.create", "media.upload"],
 };

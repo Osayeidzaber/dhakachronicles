@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>ঢাকা ক্রনিকলস — প্রচ্ছদ</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600&amp;family=Hind+Siliguri:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#000}
+a{color:#fff;text-decoration:none}a:hover{color:#c4c4c4}
+</style>
+</helmet>
+<div style="background: #000; color: #fff; font-family: 'Hind Siliguri', Inter, sans-serif; min-height: 100vh">
+<dc-import name="SiteHeader" lang="bn" hint-size="100%,240px"></dc-import>
+<div style="border-bottom: 1px solid rgba(255,255,255,0.08)">
+<div style="max-width: 1280px; margin: 0 auto; padding: 12px 32px; display: flex; gap: 16px; align-items: center; overflow: hidden">
+<span style="flex: none; font-size: 13px; font-weight: 600; background: #fff; color: #000; padding: 3px 12px; border-radius: 999px">ব্রেকিং</span>
+<a href="Article.dc.html" style="font-size: 16px; white-space: nowrap">যোগাযোগ বিভ্রাটে যুক্তরাষ্ট্রজুড়ে সব ফ্লাইট ছাড়া বন্ধ করল এফএএ</a>
+<span style="color: #5c5c5c" aria-hidden="true">/</span>
+<a href="Article.dc.html" style="font-size: 16px; white-space: nowrap; color: #a3a3a3">পুলিশের নজরদারির পর উত্তরায় ভিডিও ধারণ বন্ধ করলেন চীনা নাগরিকেরা</a>
+</div>
+</div>
+<main style="max-width: 1280px; margin: 0 auto; padding: 40px 32px 80px; display: flex; flex-direction: column; gap: 64px">
+<section style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px">
+<a href="Article.dc.html" style="grid-column: span 8; display: flex; flex-direction: column; gap: 18px">
+<div style="aspect-ratio: 16 / 9; background: #141414; border-radius: 12px; display: flex; align-items: flex-end; padding: 16px; box-sizing: border-box"><span style="font-size: 13px; color: #8a8a8a">প্রধান ছবি</span></div>
+<span style="font-size: 14px; color: #8a8a8a">হাইলাইট · বাংলাদেশ</span>
+<h1 style="margin: 0; font-weight: 700; font-size: 50px; line-height: 1.25">কদমতলীতে শতাধিক কিশোর গ্যাং সদস্যের অস্ত্র নিয়ে মহড়া</h1>
+<p style="margin: 0; font-size: 19px; line-height: 1.7; color: #a3a3a3; max-width: 680px">প্রত্যক্ষদর্শীরা জানান, শুক্রবার বিকেলে পলাশপুর ৪ নম্বর সড়কে কিশোরেরা রামদা, হকিস্টিক ও ছুরি নিয়ে মিছিল করে, এতে এলাকাবাসীর মধ্যে আতঙ্ক ছড়ায়।</p>
+<span style="font-size: 14px; color: #8a8a8a">ঢাকা ক্রনিকলস · ১৩ নভেম্বর ২০২৬</span>
+</a>
+<div style="grid-column: span 4; display: flex; flex-direction: column; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 32px">
+<h2 style="margin: 0 0 8px; font-size: 15px; color: #8a8a8a; font-weight: 600">নির্বাচিত</h2>
+<sc-for list="{{featured}}" as="f" hint-placeholder-count="4">
+<a href="Article.dc.html" style="display: flex; flex-direction: column; gap: 6px; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.08)">
+<span style="font-size: 13px; color: #8a8a8a">{{f.cat}}</span>
+<span style="font-size: 22px; font-weight: 600; line-height: 1.4">{{f.title}}</span>
+</a>
+</sc-for>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid #fff; padding-top: 16px">
+<h2 style="margin: 0; font-weight: 700; font-size: 32px">সর্বশেষ</h2>
+<a href="Latest.dc.html" style="font-size: 15px; color: #a3a3a3">সব খবর →</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 32px">
+<sc-for list="{{latest}}" as="a" hint-placeholder-count="8">
+<a href="Article.dc.html" style="display: flex; flex-direction: column; gap: 10px">
+<div style="aspect-ratio: 3 / 2; background: #141414; border-radius: 10px"></div>
+<span style="font-size: 13px; color: #8a8a8a">{{a.cat}} · {{a.time}}</span>
+<span style="font-size: 20px; font-weight: 600; line-height: 1.45">{{a.title}}</span>
+</a>
+</sc-for>
+</div>
+</section>
+<section style="display: flex; flex-wrap: wrap; gap: 48px">
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+<div style="border-top: 1px solid #fff; padding-top: 16px"><h2 style="margin: 0; font-weight: 700; font-size: 32px">বাংলাদেশ</h2></div>
+<sc-for list="{{section}}" as="s" hint-placeholder-count="3">
+<a href="Article.dc.html" style="display: flex; gap: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+<div style="flex: none; width: 200px; aspect-ratio: 3 / 2; background: #141414; border-radius: 10px"></div>
+<span style="font-size: 22px; font-weight: 600; line-height: 1.45">{{s.title}}</span>
+</a>
+</sc-for>
+</div>
+<aside style="flex: 1 1 300px; align-self: flex-start; background: #070707; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; display: flex; flex-direction: column">
+<h2 style="margin: 0 0 12px; font-weight: 700; font-size: 26px">সর্বাধিক পঠিত</h2>
+<sc-for list="{{mostRead}}" as="m" hint-placeholder-count="5">
+<a href="Article.dc.html" style="display: flex; gap: 16px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.08)">
+<span style="font-size: 30px; font-weight: 700; line-height: 1; color: #5c5c5c; width: 28px" aria-hidden="true">{{m.n}}</span>
+<span style="font-size: 17px; line-height: 1.5">{{m.title}}</span>
+</a>
+</sc-for>
+</aside>
+</section>
+</main>
+<dc-import name="SiteFooter" lang="bn" hint-size="100%,320px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {
+featured: [
+{ cat: 'রাজনীতি', title: 'শেখ হাসিনার মৃত্যুদণ্ড কার্যকর না করার নিশ্চয়তা চাইতে যুক্তরাজ্য সরকারকে আহ্বান ব্রিটিশ রাজনীতিকদের' },
+{ cat: 'বিশ্ব', title: 'যোগাযোগ বিভ্রাটে যুক্তরাষ্ট্রজুড়ে সব ফ্লাইট ছাড়া বন্ধ করল এফএএ' },
+{ cat: 'খেলা', title: 'মেসির অবসরের পর প্রথম ম্যাচে উরুগুয়ের কাছে ২-১ গোলে হারল আর্জেন্টিনা' },
+{ cat: 'বাংলাদেশ', title: 'পুলিশের নজরদারির পর উত্তরায় ভিডিও ধারণ বন্ধ করলেন চীনা নাগরিকেরা' }
+],
+latest: [
+{ cat: 'বিনোদন', time: '১৩ নভেম্বর', title: 'অক্সফোর্ড স্ট্রিটের সেলফ্রিজেসে জিটিএ ৬-এর পপ-আপ স্টোর' },
+{ cat: 'প্রযুক্তি', time: '১৩ নভেম্বর', title: 'ভিডিও গেম খেলতে ৭ হাজারের বেশি কর্মীকে এক দিনের বাড়তি ছুটি দিল লজিটেক' },
+{ cat: 'রাজনীতি', time: '১৩ নভেম্বর', title: 'হাসিনাকে ফেরানোর দায়িত্ব বাংলাদেশ সেনাবাহিনীকে নিতে চায় ভারত: বিবিসি বাংলা' },
+{ cat: 'বিনোদন', time: '১৩ নভেম্বর', title: 'ফিলিস্তিনের পক্ষে মুখ খুললেন শন মেন্ডেস' },
+{ cat: 'বিনোদন', time: '১৩ নভেম্বর', title: 'জিটিএ ৬ মুক্তির আগে সিডনির ট্রেনে গেমের রং' },
+{ cat: 'বাংলাদেশ', time: '১৩ নভেম্বর', title: 'ভাঙচুরের পর দুর্বিন বাংলায় প্রধানমন্ত্রীর সহকারী একান্ত সচিব আব্দুর রহমান সানি' },
+{ cat: 'বিশ্ব', time: '১২ নভেম্বর', title: 'কোরআন ছুঁয়ে শপথ নেওয়া প্রথম মার্কিন সিনেটর হতে যাচ্ছেন আব্দুল এল-সায়েদ' },
+{ cat: 'বিশ্ব', time: '১৩ নভেম্বর', title: 'এফএএর নির্দেশে ১০ হাজারের বেশি ফ্লাইট বিলম্বিত' }
+],
+section: [
+{ title: 'কদমতলীতে শতাধিক কিশোর গ্যাং সদস্যের অস্ত্র নিয়ে মহড়া' },
+{ title: 'পুলিশের নজরদারির পর উত্তরায় ভিডিও ধারণ বন্ধ করলেন চীনা নাগরিকেরা' },
+{ title: 'ভাঙচুরের পর দুর্বিন বাংলায় প্রধানমন্ত্রীর সহকারী একান্ত সচিব' }
+],
+mostRead: [
+{ n: '১', title: 'কদমতলীতে শতাধিক কিশোর গ্যাং সদস্যের অস্ত্র নিয়ে মহড়া' },
+{ n: '২', title: 'শেখ হাসিনার নিরাপত্তার নিশ্চয়তা চাইলেন ব্রিটিশ রাজনীতিকেরা' },
+{ n: '৩', title: 'যুক্তরাষ্ট্রজুড়ে সব ফ্লাইট ছাড়া বন্ধ করল এফএএ' },
+{ n: '৪', title: 'উরুগুয়ের কাছে হারল আর্জেন্টিনা' },
+{ n: '৫', title: 'সেলফ্রিজেসে জিটিএ ৬-এর পপ-আপ স্টোর' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

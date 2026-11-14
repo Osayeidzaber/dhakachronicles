@@ -80,7 +80,9 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [x] "Report an error" on every story → Discord alerts
 - [x] Automatic EN↔BN translation into a draft (AI endpoint), editor reviews before publishing
 - [x] Client guide: `docs/CLIENT_GUIDE.md`
-- [ ] Push migration `20261114000008_ads_and_enquiries.sql` to production
+- [x] Push migration `20261114000008_ads_and_enquiries.sql` to production
+- [x] A–Z newsroom guide with screenshots (`docs/guide/README.md`) and detailed README
+- [ ] Set AI_SEO_* env vars (needed for automatic translation and AI SEO)
 
 ## Next / nice to have
 - [ ] End-to-end tests against a real Supabase project (Playwright) once credentials exist

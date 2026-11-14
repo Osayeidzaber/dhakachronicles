@@ -318,8 +318,8 @@ export function ArticleEditor(props: EditorProps) {
           <label className={field}>
             Language
             <select className="input mt-1" value={form.language} onChange={(e) => set("language", e.target.value as Lang)} disabled={!!articleId}>
-              <option value="bn">Bangla</option>
               <option value="en">English</option>
+              <option value="bn">Bangla</option>
             </select>
           </label>
           <label className={field}>

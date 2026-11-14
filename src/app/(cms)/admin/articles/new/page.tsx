@@ -16,7 +16,7 @@ export default async function NewArticlePage({ searchParams }: { searchParams: P
       <PageHeader title="New article" />
       <ArticleEditor
         article={null}
-        initialLanguage={lang === "en" ? "en" : "bn"}
+        initialLanguage={lang === "bn" ? "bn" : "en"}
         {...options}
         tagIds={[]}
         featuredImage={null}

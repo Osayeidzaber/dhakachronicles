@@ -1,6 +1,7 @@
 import { requirePageSession } from "@/lib/auth/session";
 import { SwitchField } from "@/components/admin/form-controls";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { ImageField } from "@/components/admin/image-field";
 import { createClient } from "@/lib/supabase/server";
 import { aiSeoConfig, instagramConfig, r2Config, env } from "@/lib/env";
 import { Flash, PageHeader } from "@/components/admin/ui";
@@ -27,6 +28,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const supabase = await createClient();
   const { data } = await supabase.from("site_settings").select("setting_key, setting_value");
   const s = Object.fromEntries((data ?? []).map((r: { setting_key: string; setting_value: unknown }) => [r.setting_key, r.setting_value]));
+  const logoId = logoMediaId(s);
+  const logoUrl = logoId ? ((await supabase.from("media").select("public_url").eq("id", logoId).maybeSingle()).data?.public_url ?? null) : null;
   const name = (s.site_name ?? {}) as { en?: string; bn?: string };
   const social = socialLinks(s);
   const seo = seoDefaults(s);
@@ -99,10 +102,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <option value="en">English</option>
             </select>
           </label>
-          <label className="text-sm">
-            Logo media ID (upload in Media → Branding)
-            <input name="logo_media_id" defaultValue={logoMediaId(s) ?? ""} className="input mt-1 font-mono text-xs" />
-          </label>
+          <ImageField name="logo_media_id" label="Logo (optional; the built-in logo is used if empty)" defaultId={logoMediaId(s)} defaultUrl={logoUrl} hint="PNG with a transparent background" />
         </div>
 
         <h2 className="font-semibold">Social links</h2>

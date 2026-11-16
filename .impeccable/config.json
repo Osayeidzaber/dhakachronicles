@@ -14,6 +14,24 @@
         "value": "inter",
         "createdAt": "2026-11-14T06:42:11.103Z",
         "reason": "Project brand font: src/app/globals.css declares Instrument Serif headlines + Inter UI; email matches the site"
+      },
+      {
+        "rule": "wide-tracking",
+        "value": "*",
+        "files": [
+          "brag-output/work/video.html"
+        ],
+        "createdAt": "2026-11-15T08:34:09.562Z",
+        "reason": "Claude: tracking applies only to short uppercase mono labels in OZ Studio's established house style"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "brag-output/work/video.html"
+        ],
+        "createdAt": "2026-11-15T08:34:10.339Z",
+        "reason": "Claude: video-frame mock browser chrome and step pills, 1080px render file not UI"
       }
     ]
   }

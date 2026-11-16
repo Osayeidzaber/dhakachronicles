@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Check, Link2, Share2 } from "lucide-react";
 import WarmTooltip from "@/components/ui/vendor/reactbits/WarmTooltip";
+
+const LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(:\d+)?(\/|$)/i;
+const noopSubscribe = () => () => {};
 
 /** Thin white bar at the top that fills as you read. */
 export function ReadingProgress() {
@@ -38,8 +41,10 @@ export function ReadingProgress() {
 }
 
 /** Copy link, native share, and WhatsApp / Facebook / X / LinkedIn links. */
-export function ShareBar({ url, title, labels }: { url: string; title: string; labels: { share: string; copy: string; copied: string } }) {
+export function ShareBar({ url: serverUrl, title, labels }: { url: string; title: string; labels: { share: string; copy: string; copied: string } }) {
   const [copied, setCopied] = useState(false);
+  // Safety net: if the server built a localhost link but the reader is on the real site, share the real address.
+  const url = useSyncExternalStore(noopSubscribe, () => (LOCAL.test(serverUrl) && !LOCAL.test(window.location.origin) ? `${window.location.origin}${window.location.pathname}` : serverUrl), () => serverUrl);
   const enc = encodeURIComponent;
   const links = [
     ["WhatsApp", `https://wa.me/?text=${enc(`${title} ${url}`)}`],

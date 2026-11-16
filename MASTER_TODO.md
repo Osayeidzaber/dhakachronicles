@@ -97,3 +97,5 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [ ] Generated Supabase types (`supabase gen types`) to replace the hand-written `db/types.ts`
 - [ ] Analytics dashboard built on `article_daily_views`
 - [ ] Final public frontend design (owner)
+
+- [x] Share links / canonicals never use localhost on Vercel: a localhost SITE_URL falls back to the production domain; share bar also guards on the client.

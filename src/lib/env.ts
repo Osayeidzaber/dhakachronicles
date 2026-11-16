@@ -45,9 +45,15 @@ export function env(): ServerEnv {
   return schema.parse(process.env);
 }
 
+const isLocal = (u: string) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(:\d+)?(\/|$)/i.test(u);
+
 export function siteUrl(): string {
   const e = env();
-  const url = e.SITE_URL || (e.VERCEL_PROJECT_PRODUCTION_URL ? `https://${e.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+  const vercel = e.VERCEL_PROJECT_PRODUCTION_URL ? `https://${e.VERCEL_PROJECT_PRODUCTION_URL.replace(/^https?:\/\//, "")}` : undefined;
+  const configured = e.SITE_URL?.trim() || undefined;
+  // A localhost SITE_URL (e.g. copied from .env.example) must never leak into share links,
+  // canonicals or emails on a deployed site: prefer Vercel's production domain there.
+  const url = configured && !(isLocal(configured) && vercel) ? configured : (vercel ?? configured ?? "http://localhost:3000");
   return url.replace(/\/+$/, "");
 }
 

@@ -42,3 +42,4 @@ yarn-error.log*
 next-env.d.ts
 docs/pdf/guide.html
 design/social/*/.build/
+brag-output/

@@ -114,3 +114,23 @@ describe("structured data and feeds", () => {
     expect(rss).toContain(`${SITE}/en/rss.xml`);
   });
 });
+
+describe("siteUrl", () => {
+  const keep = { ...process.env };
+  const run = async (vars: Record<string, string | undefined>) => {
+    process.env = { ...keep, SITE_URL: undefined, VERCEL_PROJECT_PRODUCTION_URL: undefined, ...vars };
+    const { siteUrl } = await import("@/lib/env");
+    const out = siteUrl();
+    process.env = keep;
+    return out;
+  };
+  it("uses SITE_URL when it is a real domain", async () => {
+    expect(await run({ SITE_URL: "https://dhakachronicles.com/", VERCEL_PROJECT_PRODUCTION_URL: "x.vercel.app" })).toBe("https://dhakachronicles.com");
+  });
+  it("ignores a localhost SITE_URL on Vercel", async () => {
+    expect(await run({ SITE_URL: "http://localhost:3000", VERCEL_PROJECT_PRODUCTION_URL: "dhakachronicles.com" })).toBe("https://dhakachronicles.com");
+  });
+  it("falls back to localhost only in local dev", async () => {
+    expect(await run({})).toBe("http://localhost:3000");
+  });
+});

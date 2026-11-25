@@ -180,3 +180,44 @@ export async function getMedia(auth: GraphAuth, mediaId: string, f?: FetchLike):
   u.searchParams.set("fields", MEDIA_FIELDS);
   return igFetch(u.toString(), igMediaSchema, undefined, f);
 }
+
+/** Per-post Insights metrics. Needs the `instagram_manage_insights` permission on the connection. */
+export const INSIGHT_METRICS = ["views", "reach", "saved", "shares", "total_interactions"] as const;
+export type InsightMetric = (typeof INSIGHT_METRICS)[number];
+export type MediaInsights = { values: Partial<Record<InsightMetric, number>>; missingPermission: boolean };
+
+const insightSchema = z.object({
+  data: z.array(
+    z.object({
+      name: z.string(),
+      values: z.array(z.object({ value: z.number() })).optional(),
+      total_value: z.object({ value: z.number() }).optional(),
+    }),
+  ),
+});
+
+/**
+ * Fetch each metric on its own: some aren't available for every post type (e.g. older posts or
+ * carousels), and one unsupported metric would otherwise fail the whole request.
+ */
+export async function getMediaInsights(auth: GraphAuth, mediaId: string, f?: FetchLike): Promise<MediaInsights> {
+  if (!/^\d{5,30}$/.test(mediaId)) throw new InstagramApiError("Invalid Instagram media id.", 400);
+  const values: MediaInsights["values"] = {};
+  let missingPermission = false;
+  await Promise.all(
+    INSIGHT_METRICS.map(async (metric) => {
+      const u = authed(`/${mediaId}/insights`, auth);
+      u.searchParams.set("metric", metric);
+      try {
+        const res = await igFetch(u.toString(), insightSchema, undefined, f);
+        const row = res.data.find((d) => d.name === metric);
+        const value = row?.total_value?.value ?? row?.values?.[0]?.value;
+        if (typeof value === "number") values[metric] = value;
+      } catch (err) {
+        // Code 10 / 200 = permission not granted; anything else just leaves this metric empty.
+        if (err instanceof InstagramApiError && (err.igCode === 10 || err.igCode === 200 || err.status === 403)) missingPermission = true;
+      }
+    }),
+  );
+  return { values, missingPermission: missingPermission && Object.keys(values).length === 0 };
+}

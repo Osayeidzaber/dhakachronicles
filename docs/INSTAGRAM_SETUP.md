@@ -25,7 +25,7 @@ The integration uses only Meta's official **Instagram API with Unified Login** (
 1. **Make @dhakachronicles a Professional account** (Business or Creator) and make sure it belongs to a Meta business portfolio.
 2. **Create a Meta app** (Business type) with the Instagram API use case.
 3. In **Use cases → Instagram API → API setup with Unified login**:
-   - **Configure your app:** create a configuration ("Instagram API (unified login)") that includes the Instagram account and `instagram_basic`. Copy its **Configuration ID** → `INSTAGRAM_CONFIG_ID`.
+   - **Configure your app:** create a configuration ("Instagram API (unified login)") that includes the Instagram account and `instagram_basic`. Optional: also add `instagram_manage_insights` to show per-post views, reach, saves and shares in the article editor; everything works without it. Copy its **Configuration ID** → `INSTAGRAM_CONFIG_ID`.
    - **Redirect URL:** register `https://dhakachronicles.com/api/instagram/callback`. It must match `INSTAGRAM_REDIRECT_URI` exactly.
    - **Webhooks (if Meta requires it):** callback `https://dhakachronicles.com/api/instagram/webhook`, verify token = `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`.
 4. **App ID and secret:** App settings → Basic → **App ID** → `INSTAGRAM_APP_ID`, **App secret** → `INSTAGRAM_APP_SECRET`.

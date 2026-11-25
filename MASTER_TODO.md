@@ -87,6 +87,8 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [x] Audit (2026-11-14): provider-neutral error messages, own session cookie name, provider wording removed from UI, 400 for malformed JSON, admin error screen, tests (`tests/session-cookie.test.ts`)
 - [x] Real 404 status for unknown section, tag, author, ad-report and other URLs, and for page numbers past the end (loading skeleton now only on latest, search and article routes)
 - [x] Phone lead photo no longer cropped (4:5 on all screens); default site description, WebSite alternate names and Vercel-domain fallback for `SITE_URL` (was localhost in production); favicon and app icons re-cropped to fill the square
+- [x] Instagram stats in the article editor: likes, comments, live views/reach/saves/shares/interactions, and views on our site
+- [ ] Optional: add `instagram_manage_insights` to the Meta configuration and reconnect to show views, reach, saves and shares (not required)
 - [x] Main admins can permanently delete staff accounts from the Staff page (hold to confirm; stories stay)
 - [ ] Supabase Auth → URL Configuration: Site URL `https://dhakachronicles.com` (invite emails use `{{ .SiteURL }}` and showed localhost)
 - [ ] Set `SITE_URL=https://dhakachronicles.com` in Vercel production env, redeploy, then request re-indexing in Google Search Console

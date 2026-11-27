@@ -56,7 +56,7 @@ export function IntervieweeGrid({ people, lang }: { people: Interviewee[]; lang:
               </a>
             </span>
           ))}
-          {lang === "bn" ? "। অন্যান্য ছবি উইকিমিডিয়া কমন্স থেকে (পাবলিক ডোমেইন)।" : ". Other photos: Wikimedia Commons (public domain)."}
+          {lang === "bn" ? "। অন্যান্য ছবি ঢাকা ক্রনিকলস ও উইকিমিডিয়া কমন্স (পাবলিক ডোমেইন) থেকে।" : ". Other photos: Dhaka Chronicles and Wikimedia Commons (public domain)."}
         </p>
       )}
     </div>

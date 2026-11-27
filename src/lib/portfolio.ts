@@ -10,6 +10,7 @@ import mahbubUddinKhokon from "../../public/interviews/mahbub-uddin-khokon.jpg";
 import masoodKamal from "../../public/interviews/masood-kamal.jpg";
 import murtazaQizilbash from "../../public/interviews/murtaza-qizilbash.jpg";
 import nayabYusuf from "../../public/interviews/nayab-yusuf.jpg";
+import rashnaImam from "../../public/interviews/rashna-imam.jpg";
 import otilia from "../../public/interviews/otilia.jpg";
 import nolbertoSolano from "../../public/interviews/nolberto-solano.jpg";
 import sumayaMatsushima from "../../public/interviews/sumaya-matsushima.jpg";
@@ -35,27 +36,27 @@ export const PAST_BRANDS: PastBrand[] = [
   { name: "Footsteps" },
   { name: "Drinko" },
   { name: "Clemon" },
-  { name: "Abul Khair Group" },
+  { name: "Abul Khair Group", logo: "/brands/abul-khair-group.svg" },
   { name: "Marks" },
   { name: "Walton Lift", logo: "/brands/walton.png" },
-  { name: "Gold Kinen" },
-  { name: "Unimart" },
-  { name: "Kinokuniya" },
+  { name: "Gold Kinen", logo: "/brands/gold-kinen.svg" },
+  { name: "Unimart", logo: "/brands/unimart.png" },
+  { name: "Kinokuniya", logo: "/brands/kinokuniya.png" },
   { name: "Houston" },
   { name: "Adonis Salon" },
-  { name: "Banglalink" },
-  { name: "Cirkle" },
+  { name: "Banglalink", logo: "/brands/banglalink.svg" },
+  { name: "Cirkle", logo: "/brands/cirkle.svg" },
   { name: "Shah Cement" },
   { name: "Seylon Tea" },
   { name: "Walton Refrigerator", logo: "/brands/walton.png" },
   { name: "M-Rise" },
   { name: "JTI", logo: "/brands/jti.svg" },
-  { name: "PRAN" },
-  { name: "Le d’Or" },
+  { name: "PRAN", logo: "/brands/pran.png" },
+  { name: "Le d’Or", logo: "/brands/le-dor.png" },
   { name: "Fiero" },
-  { name: "Fair Electronics" },
-  { name: "Philip Morris" },
-  { name: "United Group" },
+  { name: "Fair Electronics", logo: "/brands/fair-electronics.png" },
+  { name: "Philip Morris", logo: "/brands/philip-morris.svg" },
+  { name: "United Group", logo: "/brands/united-group.svg" },
   { name: "Club House DHK" },
 ];
 
@@ -144,6 +145,8 @@ export const INTERVIEWEES: Interviewee[] = [
   {
     name: { en: "Rashna Imam", bn: "রাশনা ইমাম" },
     role: { en: "Senior Advocate, Supreme Court of Bangladesh", bn: "সিনিয়র অ্যাডভোকেট, বাংলাদেশ সুপ্রিম কোর্ট" },
+    photo: rashnaImam,
+    focus: "50% 20%",
   },
   {
     name: { en: "Barrister A. M. Mahbub Uddin Khokon", bn: "ব্যারিস্টার এ এম মাহবুব উদ্দিন খোকন" },

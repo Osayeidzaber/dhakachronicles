@@ -8,6 +8,7 @@ import habiburRashidHabib from "../../public/interviews/habibur-rashid-habib.jpg
 import mahbubUddinKhokon from "../../public/interviews/mahbub-uddin-khokon.jpg";
 import masoodKamal from "../../public/interviews/masood-kamal.jpg";
 import murtazaQizilbash from "../../public/interviews/murtaza-qizilbash.jpg";
+import nayabYusuf from "../../public/interviews/nayab-yusuf.jpg";
 import otilia from "../../public/interviews/otilia.jpg";
 import nolbertoSolano from "../../public/interviews/nolberto-solano.jpg";
 import sumayaMatsushima from "../../public/interviews/sumaya-matsushima.jpg";
@@ -152,6 +153,8 @@ export const INTERVIEWEES: Interviewee[] = [
     name: { en: "Nayab Yusuf", bn: "নায়াব ইউসুফ" },
     role: { en: "Member of Parliament", bn: "সংসদ সদস্য" },
     seat: mp("Faridpur-3", "ফরিদপুর-৩", BNP),
+    photo: nayabYusuf,
+    focus: "50% 20%",
   },
   {
     name: { en: "Sumaya Matsushima", bn: "সুমাইয়া মাতসুশিমা" },

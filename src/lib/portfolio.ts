@@ -7,6 +7,7 @@ import bobbyHajjaj from "../../public/interviews/bobby-hajjaj.jpg";
 import habiburRashidHabib from "../../public/interviews/habibur-rashid-habib.jpg";
 import mahbubUddinKhokon from "../../public/interviews/mahbub-uddin-khokon.jpg";
 import masoodKamal from "../../public/interviews/masood-kamal.jpg";
+import murtazaQizilbash from "../../public/interviews/murtaza-qizilbash.jpg";
 import nolbertoSolano from "../../public/interviews/nolberto-solano.jpg";
 import sumayaMatsushima from "../../public/interviews/sumaya-matsushima.jpg";
 
@@ -95,6 +96,8 @@ export const INTERVIEWEES: Interviewee[] = [
   {
     name: { en: "Murtaza Qizilbash", bn: "মুর্তজা কিজিলবাশ" },
     role: { en: "Singer-songwriter, Lahore", bn: "গায়ক ও গীতিকার, লাহোর" },
+    photo: murtazaQizilbash,
+    focus: "50% 22%",
   },
   {
     name: { en: "Abdul Hannan Masud", bn: "আব্দুল হান্নান মাসউদ" },

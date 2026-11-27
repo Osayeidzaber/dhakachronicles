@@ -69,7 +69,7 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 
 - [x] Brand deals → public: "Brands we've worked with" (logo, what we did, proof link) on Advertise + homepage; staff-only fees/contacts stay private (`public_partners()`)
 - [x] Past brands (28) and "People we've interviewed" (13, roles/seats checked Nov 2026) hard-coded in `src/lib/portfolio.ts`, shown on Advertise (brands also on homepage after CMS partners)
-- [ ] Logos still missing (shown as names): Footsteps, Drinko, Clemon, Marks, Houston, Adonis Salon, Shah Cement, Seylon Tea, M-Rise, Fiero, Club House DHK. Drop files in `public/brands/`, set `logo` in `src/lib/portfolio.ts`
+- [x] Logos for all 28 past brands in `public/brands/` (official sites, Wikimedia Commons, Google Images), shown in colour on light tiles
 - [x] Website ads from brand deals: image + link, placement (home / article / both), date window, labelled "Advertisement", `rel="sponsored nofollow"` (`active_ads()`)
 - [x] Admin → Team page: hand-edited people (photo, EN/BN name, role, bio, Instagram, byline link, order, visible)
 - [x] Image upload field (R2, AVIF/WebP) for logos, ads, team photos and author photos

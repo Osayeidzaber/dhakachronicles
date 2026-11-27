@@ -3,6 +3,7 @@ import type { Partner } from "@/lib/articles/queries";
 import type { Lang } from "@/lib/db/types";
 import abdulAwalMintoo from "../../public/interviews/abdul-awal-mintoo.jpg";
 import abdulHannanMasud from "../../public/interviews/abdul-hannan-masud.jpg";
+import asfarHussain from "../../public/interviews/asfar-hussain.jpg";
 import bobbyHajjaj from "../../public/interviews/bobby-hajjaj.jpg";
 import habiburRashidHabib from "../../public/interviews/habibur-rashid-habib.jpg";
 import mahbubUddinKhokon from "../../public/interviews/mahbub-uddin-khokon.jpg";
@@ -110,6 +111,8 @@ export const INTERVIEWEES: Interviewee[] = [
   {
     name: { en: "Asfar Hussain", bn: "আসফার হুসেইন" },
     role: { en: "Lead vocalist, Bayaan", bn: "প্রধান কণ্ঠশিল্পী, বায়ান" },
+    photo: asfarHussain,
+    focus: "50% 15%",
   },
   {
     name: { en: "Otilia", bn: "ওটিলিয়া" },

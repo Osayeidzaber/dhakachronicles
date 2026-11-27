@@ -68,6 +68,8 @@ Legend: [x] done · [ ] to do · [~] waiting on external credentials or approval
 - [ ] Admin skeletons (loading.tsx), page transitions, smooth scroll; adapt vendor components to the design
 
 - [x] Brand deals → public: "Brands we've worked with" (logo, what we did, proof link) on Advertise + homepage; staff-only fees/contacts stay private (`public_partners()`)
+- [x] Past brands (28) and "People we've interviewed" (13, roles/seats checked Nov 2026) hard-coded in `src/lib/portfolio.ts`, shown on Advertise (brands also on homepage after CMS partners)
+- [ ] Logos for the 22 past brands still shown as names (drop files in `public/brands/`, set `logo` in `src/lib/portfolio.ts`); own interview photos for Murtaza Qizilbash, Asfar Hussain, Otilia, Rashna Imam, Nayab Yusuf, Masood Kamal
 - [x] Website ads from brand deals: image + link, placement (home / article / both), date window, labelled "Advertisement", `rel="sponsored nofollow"` (`active_ads()`)
 - [x] Admin → Team page: hand-edited people (photo, EN/BN name, role, bio, Instagram, byline link, order, visible)
 - [x] Image upload field (R2, AVIF/WebP) for logos, ads, team photos and author photos

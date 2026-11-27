@@ -4,6 +4,8 @@ import { altLanguages, isLang } from "@/lib/i18n";
 import { isConfigured } from "@/lib/public-data";
 import { listPartners } from "@/lib/articles/queries";
 import { PartnerGrid } from "@/components/public/partner-grid";
+import { IntervieweeGrid } from "@/components/public/interviewee-grid";
+import { INTERVIEWEES, withPastBrands } from "@/lib/portfolio";
 import { AdEnquiryForm } from "@/components/public/ad-enquiry-form";
 import { CONTACT_EMAIL, OFFICIAL_SOCIAL } from "@/lib/settings";
 
@@ -29,6 +31,7 @@ const T = {
     lede: "Reach more than 78,000 followers on Instagram and readers of dhakachronicles.com, in English and Bangla.",
     cta: "Start a campaign",
     worked: "Brands we've worked with",
+    interviewed: "People we've interviewed",
     ways: "Ways to advertise",
     sizes: "Website banner sizes",
     sizesNote: "Send any or all three. The site shows the right one for each screen. PNG, JPG or WebP; we optimise them.",
@@ -52,6 +55,7 @@ const T = {
     lede: "৭৮ হাজারের বেশি ইনস্টাগ্রাম অনুসারী ও ওয়েবসাইটের পাঠকদের কাছে পৌঁছান, বাংলা ও ইংরেজিতে।",
     cta: "ক্যাম্পেইন শুরু করুন",
     worked: "যাঁদের সঙ্গে কাজ করেছি",
+    interviewed: "যাঁদের সাক্ষাৎকার নিয়েছি",
     ways: "বিজ্ঞাপনের ধরন",
     sizes: "ওয়েবসাইট ব্যানারের মাপ",
     sizesNote: "একটি বা তিনটিই পাঠাতে পারেন। প্রতিটি স্ক্রিনে সঠিকটি দেখানো হয়। PNG, JPG বা WebP।",
@@ -99,7 +103,12 @@ export default async function AdvertisePage({ params }: { params: Promise<{ lang
   const { lang } = await params;
   if (!isLang(lang)) notFound();
   const c = T[lang];
-  const partners = isConfigured() ? await listPartners().catch(() => []) : [];
+  const cms = isConfigured() ? await listPartners().catch(() => []) : [];
+  // CMS deals carry a blurb and proof link, so they get full cards; past brands form a logo wall below.
+  const all = withPastBrands(cms);
+  const partners = all.slice(0, cms.length);
+  const past = all.slice(cms.length);
+  const brandCount = all.length;
   return (
     <div className="flex flex-col gap-16">
       <header className="reveal flex flex-col gap-5 border-b border-white pb-9">
@@ -111,17 +120,28 @@ export default async function AdvertisePage({ params }: { params: Promise<{ lang
         </a>
       </header>
 
-      {partners.length > 0 && (
+      {brandCount > 0 && (
         <section aria-labelledby="worked-h" className="flex flex-col gap-6">
           <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white pb-3">
             <h2 id="worked-h" className="font-display text-[clamp(2rem,4vw,2.75rem)] leading-none">
               {c.worked}
             </h2>
-            <span className="text-[13px] text-muted">{lang === "bn" ? `${partners.length}টি ব্র্যান্ড` : `${partners.length} brand${partners.length === 1 ? "" : "s"}`}</span>
+            <span className="text-[13px] text-muted">{lang === "bn" ? `${brandCount}টি ব্র্যান্ড` : `${brandCount} brand${brandCount === 1 ? "" : "s"}`}</span>
           </div>
-          <PartnerGrid partners={partners} lang={lang} detailed />
+          {partners.length > 0 && <PartnerGrid partners={partners} lang={lang} detailed />}
+          {past.length > 0 && <PartnerGrid partners={past} lang={lang} />}
         </section>
       )}
+
+      <section aria-labelledby="interviewed-h" className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white pb-3">
+          <h2 id="interviewed-h" className="font-display text-[clamp(2rem,4vw,2.75rem)] leading-none">
+            {c.interviewed}
+          </h2>
+          <span className="text-[13px] text-muted">{lang === "bn" ? `${INTERVIEWEES.length} জন` : `${INTERVIEWEES.length} people`}</span>
+        </div>
+        <IntervieweeGrid people={INTERVIEWEES} lang={lang} />
+      </section>
 
       <section aria-labelledby="ways-h" className="flex flex-col gap-6">
         <h2 id="ways-h" className="font-display border-b border-white pb-3 text-[clamp(2rem,4vw,2.75rem)] leading-none">

@@ -6,6 +6,8 @@ import { getSiteChrome, isConfigured } from "@/lib/public-data";
 import { getCardById, getTagBySlug, listActiveAds, listFeatured, listLatest, listMostRead, listPartners, type ArticleCard as Card } from "@/lib/articles/queries";
 import { AdSlot } from "@/components/public/ad-slot";
 import { PartnerGrid } from "@/components/public/partner-grid";
+import { IntervieweeGrid } from "@/components/public/interviewee-grid";
+import { INTERVIEWEES, withPastBrands } from "@/lib/portfolio";
 import { highlightedArticleId } from "@/lib/highlight";
 import { log } from "@/lib/logger";
 import { ArticleCard } from "@/components/public/article-card";
@@ -47,7 +49,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
     safe(listLatest(other, { pageSize: 4 }), empty),
     getSiteChrome(),
     safe(listActiveAds("home"), []),
-    safe(listPartners(), []),
+    safe(listPartners(), []).then(withPastBrands),
   ]);
   // Second wave, all in parallel: the pinned story, Sponsored stories and every section's latest.
   const sponsored = async () => {
@@ -232,6 +234,21 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           </section>
         </Reveal>
       )}
+
+      {/* People we've interviewed: those with photos first, two rows on wide screens */}
+      <Reveal>
+        <section aria-labelledby="interviewed-h" className="flex flex-col gap-5">
+          <div className="flex items-baseline justify-between border-b border-white pb-2.5">
+            <h2 id="interviewed-h" className="text-[13px] font-semibold tracking-[0.14em] uppercase">
+              {lang === "bn" ? "যাঁদের সাক্ষাৎকার নিয়েছি" : "People we've interviewed"}
+            </h2>
+            <Link href={`/${lang}/advertise#interviewed-h`} className="text-[13px] text-muted hover:text-white">
+              {lang === "bn" ? `সবাই (${INTERVIEWEES.length}) →` : `All ${INTERVIEWEES.length} →`}
+            </Link>
+          </div>
+          <IntervieweeGrid people={[...INTERVIEWEES].sort((a, b) => Number(!!b.photo) - Number(!!a.photo)).slice(0, 10)} lang={lang} />
+        </section>
+      </Reveal>
 
       {ads[1] && <AdSlot ad={ads[1]} lang={lang} />}
 
